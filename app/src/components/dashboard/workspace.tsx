@@ -7,6 +7,7 @@ import { Download, GripVertical, Plus, Upload } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import * as XLSX from "xlsx";
+import { parseRosterText } from "@/lib/roster/parse-roster";
 import type { Group, GroupResultMembers } from "@/lib/types/domain";
 
 type Person = { age: number; gender: "M" | "F"; id: string; name: string };
@@ -49,22 +50,15 @@ export function Workspace({ initialGroups, initialResultId, project }: Props) {
     if (!response.ok) throw new Error((await response.json() as { error?: string }).error ?? "요청을 처리하지 못했습니다.");
     return response.json() as Promise<T>;
   }
-  function parseRoster(text: string) {
-    const lines = text.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
-    const people = lines.map((line, index) => {
-      const [name, gender, age, extra] = line.split(",").map((value) => value.trim());
-      if (!name || !age || extra || !["남", "여", "남자", "여자"].includes(gender)) throw new Error(`${index + 1}번째 줄의 형식이 올바르지 않습니다.`);
-      return { age: Number(age), gender, name };
-    });
-    if (people.some((person) => !Number.isInteger(person.age) || person.age < 0)) throw new Error("나이는 0 이상의 정수여야 합니다.");
-    return people;
-  }
   async function createProject() {
-    try { await jsonRequest("/api/projects", "POST", { title: projectTitle }); router.refresh(); } catch (error) { showError(error instanceof Error ? error.message : "프로젝트를 만들지 못했습니다."); }
+    try {
+      const created = await jsonRequest<{ id: string }>("/api/projects", "POST", { title: projectTitle });
+      router.push(`/dashboard?project=${created.id}`);
+    } catch (error) { showError(error instanceof Error ? error.message : "프로젝트를 만들지 못했습니다."); }
   }
   async function saveRoster() {
     if (!project) return;
-    try { await jsonRequest(`/api/projects/${project.id}/people`, "POST", { people: parseRoster(rosterText) }); setRosterText(""); router.refresh(); } catch (error) { showError(error instanceof Error ? error.message : "명단을 저장하지 못했습니다."); }
+    try { await jsonRequest(`/api/projects/${project.id}/people`, "POST", { people: parseRosterText(rosterText) }); setRosterText(""); router.refresh(); } catch (error) { showError(error instanceof Error ? error.message : "명단을 저장하지 못했습니다."); }
   }
   async function uploadFile(file: File) {
     try {
