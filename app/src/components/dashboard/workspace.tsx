@@ -7,6 +7,7 @@ import { Download, GripVertical, Plus, Upload } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import * as XLSX from "xlsx";
+import { UI_MESSAGES } from "@/lib/config/app";
 import { parseRosterText } from "@/lib/roster/parse-roster";
 import { readRosterFile } from "@/lib/roster/read-roster-file";
 import type { Group, GroupResultMembers } from "@/lib/types/domain";
@@ -50,6 +51,20 @@ export function Workspace({ initialGroups, initialResultId, project }: Props) {
   const [activeName, setActiveName] = useState("");
   const capacity = useMemo(() => groupSizes.reduce((sum, size) => sum + size, 0), [groupSizes]);
   const personCount = project?.people.length ?? 0;
+  const canCreateProject = projectTitle.trim().length > 0;
+  const canSaveRoster = rosterText.trim().length > 0;
+  const canCreateGroupSizes = personCount > 0;
+  const hasGroupSizes = groupSizes.length > 0;
+  const displayedGroupSizes = hasGroupSizes ? groupSizes : Array.from({ length: groupCount }, () => "");
+  const canRunGrouping = hasGroupSizes && capacity === personCount;
+  const canExport = groups.length > 0;
+  const groupSetupMessage = !canCreateGroupSizes
+    ? UI_MESSAGES.savedRosterRequired
+    : !hasGroupSizes
+      ? UI_MESSAGES.groupSizesRequired
+      : !canRunGrouping
+        ? UI_MESSAGES.groupCapacityMismatch
+        : `정원 합계: ${capacity} / ${personCount}`;
 
   function showError(message: string) { setNotice(message); }
   async function jsonRequest<T>(url: string, method: "POST" | "PATCH" | "PUT", body: unknown): Promise<T> {
@@ -97,6 +112,59 @@ export function Workspace({ initialGroups, initialResultId, project }: Props) {
     const rows = groups.flatMap((group) => group.members.map((member) => ({ "그룹명": group.name, "나이": member.age, "성별": member.gender === "M" ? "male" : "female", "이름": member.name })));
     const workbook = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(workbook, XLSX.utils.json_to_sheet(rows), "그룹 결과"); XLSX.writeFile(workbook, `${project?.title ?? "프로젝트"}_그룹결과.xlsx`);
   }
-  if (!project) return <main className="flex min-h-screen items-center justify-center bg-[var(--canvas)] p-6"><section className="w-full max-w-md text-center"><p className="text-sm text-[var(--muted)]">새 작업을 시작하세요</p><h1 className="mt-3 text-2xl font-semibold">첫 프로젝트를 만들어 보세요.</h1><p className="mt-2 text-sm text-[var(--muted)]">명단을 붙여넣고 균형 잡힌 그룹을 바로 구성할 수 있습니다.</p><div className="mt-6 border border-[var(--border)] bg-[var(--surface)] p-5 text-left"><input className="w-full border border-[var(--border)] p-3" value={projectTitle} onChange={(event) => setProjectTitle(event.target.value)} placeholder="프로젝트 이름" /><button className="mt-3 flex items-center gap-2 bg-[var(--accent)] px-4 py-3 text-white" onClick={createProject} type="button"><Plus size={16} />새 프로젝트 시작</button></div></section></main>;
-  return <main className="min-h-screen bg-[var(--canvas)] p-4 md:p-8"><div className="mx-auto max-w-7xl"><header className="mb-6 flex justify-between"><div><p className="text-sm text-[var(--muted)]">GroupFlow</p><h1 className="text-2xl font-semibold">{project.title}</h1></div><span className="text-sm text-[var(--muted)]">{personCount}명</span></header>{notice && <div role="alert" className="mb-4 border border-red-300 bg-red-50 p-3 text-sm text-red-800">{notice}</div>}<div className="grid gap-5 lg:grid-cols-[360px_1fr]"><aside className="space-y-5"><section className="border border-[var(--border)] bg-[var(--surface)] p-4"><h2 className="font-semibold">명단 입력</h2><textarea className="mt-3 min-h-48 w-full border border-[var(--border)] p-3 text-sm" value={rosterText} onChange={(event) => setRosterText(event.target.value)} placeholder="이름, 성별, 나이" /><label className="mt-3 flex cursor-pointer items-center gap-2 text-sm"><Upload size={16} />Excel 또는 CSV 불러오기<input className="hidden" accept=".csv,.xls,.xlsx" type="file" onChange={(event) => event.target.files?.[0] && uploadFile(event.target.files[0])} /></label><button className="mt-3 w-full bg-[var(--accent)] py-2 text-sm text-white" onClick={saveRoster} type="button">명단 저장</button></section><section className="border border-[var(--border)] bg-[var(--surface)] p-4"><h2 className="font-semibold">그룹 설정</h2><input className="mt-3 w-full border border-[var(--border)] p-2" min="1" max={personCount || 1} type="number" value={groupCount} onChange={(event) => setGroupCount(Number(event.target.value))} /><button className="mt-2 border border-[var(--border)] px-3 py-2 text-sm" onClick={() => setGroupSizes(defaultGroupSizes(personCount, groupCount))} type="button">기본 정원 만들기</button>{groupSizes.map((size, index) => <label className="mt-2 flex justify-between text-sm" key={index}>그룹 {index + 1}<input className="w-16 border border-[var(--border)] p-1" min="1" type="number" value={size} onChange={(event) => setGroupSizes(groupSizes.map((item, itemIndex) => itemIndex === index ? Number(event.target.value) : item))} /></label>)}{groupSizes.length > 0 && <><p className="mt-3 text-xs text-[var(--muted)]">정원 합계: {capacity} / {personCount}</p><button className="mt-3 w-full bg-[var(--ink)] py-2 text-sm text-black disabled:opacity-40 border" disabled={capacity !== personCount} onClick={runGrouping} type="button">자동 그룹화</button></>}</section></aside><section className="min-w-0 border border-[var(--border)] bg-[var(--surface)] p-4"><div className="flex justify-between"><h2 className="font-semibold">그룹 결과</h2><button className="flex items-center gap-2 border border-[var(--border)] px-3 py-2 text-sm" onClick={exportExcel} type="button"><Download size={16} />내보내기</button></div>{groups.length === 0 ? <p className="py-16 text-center text-sm text-[var(--muted)]">그룹 설정 후 자동 그룹화를 실행하세요.</p> : <DndContext onDragEnd={onDragEnd} onDragStart={(event) => { const member = groups.flatMap((group) => group.members).find((item) => item.id === event.active.id); setActiveName(member?.name ?? ""); }}><div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">{groups.map((group) => <GroupColumn key={group.id} group={group} />)}</div><DragOverlay>{activeName && <div className="border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm shadow">{activeName}</div>}</DragOverlay></DndContext>}</section></div></div></main>;
+  if (!project) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-[var(--canvas)] p-6">
+        <section className="w-full max-w-md text-center">
+          <p className="text-sm text-[var(--muted)]">새 작업을 시작하세요</p>
+          <h1 className="mt-3 text-2xl font-semibold">첫 프로젝트를 만들어 보세요.</h1>
+          <p className="mt-2 text-sm text-[var(--muted)]">명단을 붙여넣고 균형 잡힌 그룹을 바로 구성할 수 있습니다.</p>
+          <div className="mt-6 border border-[var(--border)] bg-[var(--surface)] p-5 text-left">
+            <input className="w-full border border-[var(--border)] p-3" onChange={(event) => setProjectTitle(event.target.value)} placeholder="프로젝트 이름" value={projectTitle} />
+            <button className="mt-3 flex items-center gap-2 bg-[var(--accent)] px-4 py-3 text-white disabled:cursor-not-allowed disabled:bg-[var(--canvas)] disabled:text-[var(--muted)]" disabled={!canCreateProject} onClick={createProject} type="button"><Plus size={16} />새 프로젝트 시작</button>
+            {!canCreateProject ? <p className="mt-2 text-xs text-[var(--muted)]">{UI_MESSAGES.projectTitleRequired}</p> : null}
+          </div>
+        </section>
+      </main>
+    );
+  }
+
+  return (
+    <main className="min-h-screen bg-[var(--canvas)] p-4 md:p-8">
+      <div className="mx-auto max-w-7xl">
+        <header className="mb-6 flex justify-between">
+          <div><p className="text-sm text-[var(--muted)]">GroupFlow</p><h1 className="text-2xl font-semibold">{project.title}</h1></div>
+          <span className="text-sm text-[var(--muted)]">{personCount}명</span>
+        </header>
+        {notice ? <div className="mb-4 border border-red-300 bg-red-50 p-3 text-sm text-red-800" role="alert">{notice}</div> : null}
+        <div className="grid gap-5 lg:grid-cols-[360px_1fr]">
+          <aside className="space-y-5">
+            <section className="border border-[var(--border)] bg-[var(--surface)] p-4">
+              <h2 className="font-semibold">명단 입력</h2>
+              <textarea className="mt-3 min-h-48 w-full border border-[var(--border)] p-3 text-sm" onChange={(event) => setRosterText(event.target.value)} placeholder="이름, 성별, 나이" value={rosterText} />
+              <label className="mt-3 flex cursor-pointer items-center gap-2 text-sm"><Upload size={16} />Excel 또는 CSV 불러오기<input accept=".csv,.xls,.xlsx" className="hidden" onChange={(event) => event.target.files?.[0] && uploadFile(event.target.files[0])} type="file" /></label>
+              <button className="mt-3 w-full bg-[var(--accent)] py-2 text-sm text-white disabled:cursor-not-allowed disabled:bg-[var(--canvas)] disabled:text-[var(--muted)]" disabled={!canSaveRoster} onClick={saveRoster} type="button">명단 저장</button>
+              {!canSaveRoster ? <p className="mt-2 text-xs text-[var(--muted)]">{UI_MESSAGES.saveRosterRequired}</p> : null}
+            </section>
+            <section className="border border-[var(--border)] bg-[var(--surface)] p-4">
+              <h2 className="font-semibold">그룹 설정</h2>
+              <input className="mt-3 w-full border border-[var(--border)] p-2 disabled:bg-[var(--canvas)] disabled:text-[var(--muted)]" disabled={!canCreateGroupSizes} max={personCount || groupCount} min="1" onChange={(event) => setGroupCount(Number(event.target.value))} type="number" value={groupCount} />
+              <button className="mt-2 border border-[var(--border)] px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-[var(--canvas)] disabled:text-[var(--muted)]" disabled={!canCreateGroupSizes} onClick={() => setGroupSizes(defaultGroupSizes(personCount, groupCount))} type="button">기본 정원 만들기</button>
+              {displayedGroupSizes.map((size, index) => <label className="mt-2 flex justify-between text-sm" key={index}>그룹 {index + 1}<input className="w-16 border border-[var(--border)] p-1 disabled:bg-[var(--canvas)] disabled:text-[var(--muted)]" disabled={!hasGroupSizes || !canCreateGroupSizes} min="1" onChange={(event) => setGroupSizes(groupSizes.map((item, itemIndex) => itemIndex === index ? Number(event.target.value) : item))} placeholder="정원" type="number" value={size} /></label>)}
+              <p className="mt-3 text-xs text-[var(--muted)]">{groupSetupMessage}</p>
+              <button className="mt-3 w-full border border-[var(--border)] bg-[var(--ink)] py-2 text-sm text-black disabled:cursor-not-allowed disabled:bg-[var(--canvas)] disabled:text-[var(--muted)]" disabled={!canRunGrouping} onClick={runGrouping} type="button">자동 그룹화</button>
+            </section>
+          </aside>
+          <section className="min-w-0 border border-[var(--border)] bg-[var(--surface)] p-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <h2 className="font-semibold">그룹 결과</h2>
+              <button className="flex items-center gap-2 border border-[var(--border)] px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-[var(--canvas)] disabled:text-[var(--muted)]" disabled={!canExport} onClick={exportExcel} type="button"><Download size={16} />내보내기</button>
+            </div>
+            {!canExport ? <p className="mt-2 text-xs text-[var(--muted)]">{UI_MESSAGES.groupResultsRequired}</p> : null}
+            {groups.length === 0 ? <p className="py-16 text-center text-sm text-[var(--muted)]">그룹 설정 후 자동 그룹화를 실행하세요.</p> : <DndContext onDragEnd={onDragEnd} onDragStart={(event) => { const member = groups.flatMap((group) => group.members).find((item) => item.id === event.active.id); setActiveName(member?.name ?? ""); }}><div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">{groups.map((group) => <GroupColumn group={group} key={group.id} />)}</div><DragOverlay>{activeName ? <div className="border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm shadow">{activeName}</div> : null}</DragOverlay></DndContext>}
+          </section>
+        </div>
+      </div>
+    </main>
+  );
 }
