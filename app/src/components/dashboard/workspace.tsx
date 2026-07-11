@@ -20,6 +20,12 @@ function defaultGroupSizes(total: number, count: number) {
   return Array.from({ length: count }, (_, index) => base + (index < total % count ? 1 : 0));
 }
 
+function formatRosterText(people: Person[]) {
+  return people
+    .map((person) => `${person.name}, ${person.gender === "M" ? "남" : "여"}, ${person.age}`)
+    .join("\n");
+}
+
 function MemberCard({ member }: { member: Person }) {
   /* eslint-disable react-hooks/refs */
   const sortable = useSortable({ id: member.id });
@@ -37,7 +43,7 @@ export function Workspace({ initialGroups, initialResultId, project }: Props) {
   const [groups, setGroups] = useState<Group[]>(initialGroups?.groups ?? []);
   const [resultId, setResultId] = useState(initialResultId);
   const [projectTitle, setProjectTitle] = useState("");
-  const [rosterText, setRosterText] = useState("");
+  const [rosterText, setRosterText] = useState(() => formatRosterText(project?.people ?? []));
   const [groupCount, setGroupCount] = useState(2);
   const [groupSizes, setGroupSizes] = useState<number[]>([]);
   const [notice, setNotice] = useState<string | null>(null);
@@ -46,7 +52,7 @@ export function Workspace({ initialGroups, initialResultId, project }: Props) {
   const personCount = project?.people.length ?? 0;
 
   function showError(message: string) { setNotice(message); }
-  async function jsonRequest<T>(url: string, method: "POST" | "PATCH", body: unknown): Promise<T> {
+  async function jsonRequest<T>(url: string, method: "POST" | "PATCH" | "PUT", body: unknown): Promise<T> {
     const response = await fetch(url, { body: JSON.stringify(body), headers: { "Content-Type": "application/json" }, method });
     if (!response.ok) throw new Error((await response.json() as { error?: string }).error ?? "요청을 처리하지 못했습니다.");
     return response.json() as Promise<T>;
@@ -59,7 +65,11 @@ export function Workspace({ initialGroups, initialResultId, project }: Props) {
   }
   async function saveRoster() {
     if (!project) return;
-    try { await jsonRequest(`/api/projects/${project.id}/people`, "POST", { people: parseRosterText(rosterText) }); setRosterText(""); router.refresh(); } catch (error) { showError(error instanceof Error ? error.message : "명단을 저장하지 못했습니다."); }
+    try {
+      const result = await jsonRequest<{ people: Person[] }>(`/api/projects/${project.id}/people`, "PUT", { people: parseRosterText(rosterText) });
+      setRosterText(formatRosterText(result.people));
+      router.refresh();
+    } catch (error) { showError(error instanceof Error ? error.message : "명단을 저장하지 못했습니다."); }
   }
   async function uploadFile(file: File) {
     try {
