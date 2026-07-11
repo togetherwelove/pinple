@@ -41,5 +41,11 @@ export const UI_MESSAGES = {
   invalidInput: "입력 형식을 확인해 주세요.",
   noPeople: "먼저 인원 정보를 등록해 주세요.",
   saveFailed: "저장하지 못했습니다. 다시 시도해 주세요.",
+  signOutFailed: "로그아웃하지 못했습니다. 다시 시도해 주세요.",
+  signingOut: "로그아웃 중",
   unknownError: "예상하지 못한 오류가 발생했습니다.",
+} as const;
+
+export const UI_LABELS = {
+  signOut: "로그아웃",
 } as const;
