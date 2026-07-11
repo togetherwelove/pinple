@@ -37,6 +37,7 @@ export const EXCEL_EXPORT = {
 
 export const UI_MESSAGES = {
   authenticationRequired: "로그인이 필요합니다.",
+  emptyWorkbook: "파일에 읽을 수 있는 시트가 없습니다.",
   invalidFile: "지원하지 않는 파일입니다.",
   invalidInput: "입력 형식을 확인해 주세요.",
   noPeople: "먼저 인원 정보를 등록해 주세요.",

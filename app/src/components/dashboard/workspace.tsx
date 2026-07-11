@@ -8,6 +8,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import * as XLSX from "xlsx";
 import { parseRosterText } from "@/lib/roster/parse-roster";
+import { readRosterFile } from "@/lib/roster/read-roster-file";
 import type { Group, GroupResultMembers } from "@/lib/types/domain";
 
 type Person = { age: number; gender: "M" | "F"; id: string; name: string };
@@ -62,10 +63,7 @@ export function Workspace({ initialGroups, initialResultId, project }: Props) {
   }
   async function uploadFile(file: File) {
     try {
-      const workbook = XLSX.read(await file.arrayBuffer(), { type: "array" });
-      const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-      const rows = XLSX.utils.sheet_to_json<(string | number)[]>(firstSheet, { header: 1 });
-      setRosterText(rows.filter((row) => row.length >= 3).map((row) => row.slice(0, 3).join(", ")).join("\n"));
+      setRosterText(await readRosterFile(file));
     } catch { showError("파일을 읽지 못했습니다. CSV 또는 Excel 파일인지 확인해 주세요."); }
   }
   async function runGrouping() {
