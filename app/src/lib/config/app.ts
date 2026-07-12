@@ -64,6 +64,18 @@ export const GROUPING_STRATEGY_LABELS = {
   [GROUPING_STRATEGIES.genderSeparated]: GROUPING_TOGGLE_LABELS.genderSeparated,
 } as const;
 
+export const LEADER_SELECTION_MODES = {
+  none: "none",
+  oldest: "oldest",
+  random: "random",
+} as const;
+
+export const LEADER_SELECTION_OPTIONS = [
+  { label: "선출 안 함", value: LEADER_SELECTION_MODES.none },
+  { label: "무작위 선출", value: LEADER_SELECTION_MODES.random },
+  { label: "연장자 우선 선출", value: LEADER_SELECTION_MODES.oldest },
+] as const;
+
 export const EXCEL_EXPORT = {
   fileNameSuffix: "조결과",
   sheetName: "조 결과",
@@ -76,6 +88,7 @@ export const UI_MESSAGES = {
   groupResultsRequired: "조 편성 결과를 만든 뒤 내보낼 수 있습니다.",
   invalidFile: "지원하지 않는 파일입니다.",
   invalidInput: "입력 형식을 확인해 주세요.",
+  leaderConflict: "대상 조에 이미 조장이 있습니다.",
   noPeople: "먼저 인원 정보를 등록해 주세요.",
   projectTitleRequired: "명단 이름을 입력한 뒤 시작할 수 있습니다.",
   saveFailed: "저장하지 못했습니다. 다시 시도해 주세요.",
@@ -87,5 +100,11 @@ export const UI_MESSAGES = {
 } as const;
 
 export const UI_LABELS = {
+  appointLeader: "조장으로 임명",
+  assignMovingLeader: "B. 이동한 사람을 조장으로 지정",
+  leader: "조장",
+  leaderAssignmentMode: "조장 선출 방식",
+  retainExistingLeader: "A. 기존 조장 유지",
+  revokeLeader: "조장 해제",
   signOut: "로그아웃",
 } as const;

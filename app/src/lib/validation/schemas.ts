@@ -3,6 +3,7 @@ import {
   GROUPING_LIMITS,
   GROUPING_STRATEGIES,
   INPUT_GENDER,
+  LEADER_SELECTION_MODES,
 } from "@/lib/config/app";
 
 export const projectSchema = z.object({
@@ -26,6 +27,13 @@ export const groupSizeSchema = z
 
 export const groupingRequestSchema = z.object({
   groupSizes: groupSizeSchema,
+  leaderSelectionMode: z
+    .enum([
+      LEADER_SELECTION_MODES.none,
+      LEADER_SELECTION_MODES.random,
+      LEADER_SELECTION_MODES.oldest,
+    ])
+    .default(LEADER_SELECTION_MODES.none),
   strategy: z.enum([
     GROUPING_STRATEGIES.even,
     GROUPING_STRATEGIES.ageSimilar,
@@ -38,18 +46,28 @@ export const groupMemberSchema = z.object({
   age: z.number().int().min(GROUPING_LIMITS.minimumAge),
   gender: z.enum(["M", "F"]),
   id: z.string().uuid(),
+  isLeader: z.boolean().optional(),
   name: z.string().min(1),
 });
 
-export const groupResultMembersSchema = z.object({
-  groups: z.array(
-    z.object({
+const groupSchema = z
+  .object({
       id: z.string().min(1),
       members: z.array(groupMemberSchema),
       name: z.string().min(1),
       targetSize: z.number().int().min(GROUPING_LIMITS.minimumPeoplePerGroup),
-    }),
-  ),
+  })
+  .superRefine((group, context) => {
+    if (group.members.filter((member) => member.isLeader).length > 1) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "A team can have at most one leader.",
+      });
+    }
+  });
+
+export const groupResultMembersSchema = z.object({
+  groups: z.array(groupSchema),
   strategy: z
     .enum([
       GROUPING_STRATEGIES.even,

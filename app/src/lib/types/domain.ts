@@ -1,9 +1,16 @@
-import type { GENDER, GROUPING_STRATEGIES } from "@/lib/config/app";
+import type {
+  GENDER,
+  GROUPING_STRATEGIES,
+  LEADER_SELECTION_MODES,
+} from "@/lib/config/app";
 
 export type StoredGender = (typeof GENDER)[keyof typeof GENDER];
 
 export type GroupingStrategy =
   (typeof GROUPING_STRATEGIES)[keyof typeof GROUPING_STRATEGIES];
+
+export type LeaderSelectionMode =
+  (typeof LEADER_SELECTION_MODES)[keyof typeof LEADER_SELECTION_MODES];
 
 export type PersonInput = {
   age: number;
@@ -13,6 +20,7 @@ export type PersonInput = {
 
 export type GroupMember = PersonInput & {
   id: string;
+  isLeader?: boolean;
 };
 
 export type Group = {

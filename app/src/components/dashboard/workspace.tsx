@@ -8,7 +8,7 @@ import {
 } from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { useDroppable } from "@dnd-kit/core";
-import { Download, GripVertical, Plus, Upload } from "lucide-react";
+import { Crown, Download, GripVertical, Plus, Upload } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import * as XLSX from "xlsx";
@@ -19,22 +19,35 @@ import {
   GROUPING_TOGGLE_LABELS,
   GROUP_RESULT_DND_CONTEXT_ID,
   EXCEL_EXPORT,
+  LEADER_SELECTION_MODES,
+  LEADER_SELECTION_OPTIONS,
   UI_MESSAGES,
+  UI_LABELS,
   displayGroupName,
   formatGroupName,
 } from "@/lib/config/app";
+import { LeaderConflictDialog } from "@/components/dashboard/leader-conflict-dialog";
+import { setGroupLeader } from "@/lib/grouping/leader-assignment";
 import { reorderGroupMembers } from "@/lib/grouping/reorder-group-members";
 import { parseRosterText } from "@/lib/roster/parse-roster";
 import { readRosterFile } from "@/lib/roster/read-roster-file";
 import type {
   Group,
+  GroupMember,
   GroupResultMembers,
   GroupingStrategy,
+  LeaderSelectionMode,
 } from "@/lib/types/domain";
 
 type Person = { age: number; gender: "M" | "F"; id: string; name: string };
 type Project = { id: string; people: Person[]; title: string };
 type Props = { initialGroups: GroupResultMembers | null; initialResultId: string | null; project: Project | null };
+type LeaderConflict = {
+  leaderId: string;
+  nextGroups: Group[];
+  previousGroups: Group[];
+  targetGroupId: string;
+};
 
 function defaultGroupSizes(total: number, count: number) {
   const base = Math.floor(total / count);
@@ -73,20 +86,28 @@ function resolveGroupingStrategy(
   return GROUPING_STRATEGIES.even;
 }
 
-function MemberCard({ member }: { member: Person }) {
+type MemberCardProps = {
+  groupId: string;
+  member: GroupMember;
+  onLeaderAction: (groupId: string, member: GroupMember) => void;
+};
+
+function MemberCard({ groupId, member, onLeaderAction }: MemberCardProps) {
   /* eslint-disable react-hooks/refs */
   const sortable = useSortable({ id: member.id });
   const transform = sortable.transform
     ? `translate3d(${sortable.transform.x}px, ${sortable.transform.y}px, 0)`
     : undefined;
 
-  return <li ref={sortable.setNodeRef} {...sortable.attributes} {...sortable.listeners} className="flex touch-none cursor-grab items-center gap-2 border-b border-[var(--border)] px-3 py-2 text-sm active:cursor-grabbing" style={{ opacity: sortable.isDragging ? 0.35 : undefined, transform, transition: sortable.transition }}><GripVertical size={14} className="text-[var(--muted)]" /><span>{member.name}</span><span className="ml-auto text-xs text-[var(--muted)]">{member.gender === "M" ? "male" : "female"} · {member.age}</span></li>;
+  const leaderActionLabel = member.isLeader ? UI_LABELS.revokeLeader : UI_LABELS.appointLeader;
+
+  return <li ref={sortable.setNodeRef} {...sortable.attributes} {...sortable.listeners} className={`flex touch-none cursor-grab items-center gap-2 border-b border-[var(--border)] px-3 py-2 text-sm active:cursor-grabbing ${member.isLeader ? "bg-amber-50" : ""}`} style={{ opacity: sortable.isDragging ? 0.35 : undefined, transform, transition: sortable.transition }}><GripVertical size={14} className="text-[var(--muted)]" />{member.isLeader ? <Crown aria-label={UI_LABELS.leader} className="shrink-0 text-amber-600" fill="currentColor" size={14} /> : null}<span>{member.name}</span><span className="ml-auto text-xs text-[var(--muted)]">{member.gender === "M" ? "male" : "female"} · {member.age}</span><button aria-label={leaderActionLabel} className="flex size-7 shrink-0 items-center justify-center text-[var(--muted)] hover:bg-[var(--canvas)] hover:text-amber-700" onClick={() => onLeaderAction(groupId, member)} onKeyDown={(event) => event.stopPropagation()} onPointerDown={(event) => event.stopPropagation()} title={leaderActionLabel} type="button"><Crown fill={member.isLeader ? "currentColor" : "none"} size={14} /><span className="sr-only">{leaderActionLabel}</span></button></li>;
 }
 
-function GroupColumn({ group }: { group: Group }) {
+function GroupColumn({ group, onLeaderAction }: { group: Group; onLeaderAction: MemberCardProps["onLeaderAction"] }) {
   /* eslint-disable react-hooks/refs */
   const droppable = useDroppable({ id: group.id });
-  return <section ref={droppable.setNodeRef} className="min-h-40 border border-[var(--border)] bg-[var(--surface)]"><header className="flex items-center justify-between border-b border-[var(--border)] px-3 py-2"><strong className="text-sm">{displayGroupName(group.name)}</strong><span className="text-xs text-[var(--muted)]">{group.members.length} / {group.targetSize}</span></header><SortableContext items={group.members.map((member) => member.id)} strategy={verticalListSortingStrategy}><ul>{group.members.map((member) => <MemberCard key={member.id} member={member} />)}</ul></SortableContext></section>;
+  return <section ref={droppable.setNodeRef} className="min-h-40 border border-[var(--border)] bg-[var(--surface)]"><header className="flex items-center justify-between border-b border-[var(--border)] px-3 py-2"><strong className="text-sm">{displayGroupName(group.name)}</strong><span className="text-xs text-[var(--muted)]">{group.members.length} / {group.targetSize}</span></header><SortableContext items={group.members.map((member) => member.id)} strategy={verticalListSortingStrategy}><ul>{group.members.map((member) => <MemberCard groupId={group.id} key={member.id} member={member} onLeaderAction={onLeaderAction} />)}</ul></SortableContext></section>;
 }
 
 export function Workspace({ initialGroups, initialResultId, project }: Props) {
@@ -113,6 +134,10 @@ export function Workspace({ initialGroups, initialResultId, project }: Props) {
   const [resultStrategy, setResultStrategy] = useState<GroupingStrategy>(
     initialGroups?.strategy ?? GROUPING_STRATEGIES.even,
   );
+  const [leaderSelectionMode, setLeaderSelectionMode] = useState<LeaderSelectionMode>(
+    LEADER_SELECTION_MODES.none,
+  );
+  const [leaderConflict, setLeaderConflict] = useState<LeaderConflict | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [activeName, setActiveName] = useState("");
   const capacity = useMemo(() => groupSizes.reduce((sum, size) => sum + size, 0), [groupSizes]);
@@ -161,20 +186,62 @@ export function Workspace({ initialGroups, initialResultId, project }: Props) {
       setRosterText(await readRosterFile(file));
     } catch { showError("파일을 읽지 못했습니다. CSV 또는 Excel 파일인지 확인해 주세요."); }
   }
+  async function persistGroupChanges(previousGroups: Group[], nextGroups: Group[]) {
+    if (!resultId) return;
+    setGroups(nextGroups);
+    try {
+      await jsonRequest(`/api/group-results/${resultId}`, "PATCH", {
+        groups: nextGroups,
+        strategy: resultStrategy,
+      });
+    } catch (error) {
+      setGroups(previousGroups);
+      showError(error instanceof Error ? error.message : "변경 사항을 저장하지 못했습니다.");
+    }
+  }
   async function runGrouping() {
     if (!project) return;
     try {
-      const result = await jsonRequest<{ id: string; members: GroupResultMembers }>(`/api/projects/${project.id}/group-results`, "POST", { groupSizes, strategy: selectedStrategy });
+      const result = await jsonRequest<{ id: string; members: GroupResultMembers }>(`/api/projects/${project.id}/group-results`, "POST", { groupSizes, leaderSelectionMode, strategy: selectedStrategy });
       setGroups(result.members.groups); setResultId(result.id); setResultStrategy(result.members.strategy ?? selectedStrategy); router.refresh();
     } catch (error) { showError(error instanceof Error ? error.message : "조 편성에 실패했습니다."); }
+  }
+  function handleLeaderAction(groupId: string, member: GroupMember) {
+    const nextGroups = setGroupLeader(groups, groupId, member.isLeader ? null : member.id);
+    void persistGroupChanges(groups, nextGroups);
+  }
+  function resolveLeaderConflict(replaceTargetLeader: boolean) {
+    if (!leaderConflict) return;
+    const targetGroup = leaderConflict.nextGroups.find(
+      (group) => group.id === leaderConflict.targetGroupId,
+    );
+    const targetLeader = targetGroup?.members.find(
+      (member) => member.isLeader && member.id !== leaderConflict.leaderId,
+    );
+    const leaderId = replaceTargetLeader ? leaderConflict.leaderId : targetLeader?.id ?? null;
+    const nextGroups = setGroupLeader(
+      leaderConflict.nextGroups,
+      leaderConflict.targetGroupId,
+      leaderId,
+    );
+
+    setLeaderConflict(null);
+    void persistGroupChanges(leaderConflict.previousGroups, nextGroups);
   }
   async function onDragEnd(event: DragEndEvent) {
     const memberId = String(event.active.id); const targetId = event.over ? String(event.over.id) : "";
     setActiveName(""); if (!resultId) return;
     const previous = groups; const next = reorderGroupMembers(groups, memberId, targetId);
     if (!next) return;
-    setGroups(next);
-    try { await jsonRequest(`/api/group-results/${resultId}`, "PATCH", { groups: next, strategy: resultStrategy }); } catch (error) { setGroups(previous); showError(error instanceof Error ? error.message : "변경 사항을 저장하지 못했습니다."); }
+    const targetGroup = next.find((group) => group.members.some((member) => member.id === memberId));
+    const movingMember = targetGroup?.members.find((member) => member.id === memberId);
+
+    if (movingMember?.isLeader && targetGroup?.members.filter((member) => member.isLeader).length === 2) {
+      setLeaderConflict({ leaderId: memberId, nextGroups: next, previousGroups: previous, targetGroupId: targetGroup.id });
+      return;
+    }
+
+    await persistGroupChanges(previous, next);
   }
   function exportExcel() {
     const rows = groups.flatMap((group) => group.members.map((member) => ({ "조명": displayGroupName(group.name), "나이": member.age, "성별": member.gender === "M" ? "male" : "female", "이름": member.name })));
@@ -205,6 +272,7 @@ export function Workspace({ initialGroups, initialResultId, project }: Props) {
           <span className="text-sm text-[var(--muted)]">{personCount}명</span>
         </header>
         {notice ? <div className="mb-4 border border-red-300 bg-red-50 p-3 text-sm text-red-800" role="alert">{notice}</div> : null}
+        {leaderConflict ? <LeaderConflictDialog onReplaceTargetLeader={() => resolveLeaderConflict(true)} onRetainTargetLeader={() => resolveLeaderConflict(false)} /> : null}
         <div className="grid gap-5 lg:grid-cols-[360px_1fr]">
           <aside className="space-y-5">
             <section className="border border-[var(--border)] bg-[var(--surface)] p-4">
@@ -225,6 +293,7 @@ export function Workspace({ initialGroups, initialResultId, project }: Props) {
                   <label className="flex cursor-pointer items-center gap-2 text-sm disabled:cursor-not-allowed"><input checked={separateGender} disabled={!canCreateGroupSizes} onChange={(event) => setSeparateGender(event.target.checked)} type="checkbox" />{GROUPING_TOGGLE_LABELS.genderSeparated}</label>
                 </div>
               </fieldset>
+              <label className="mt-4 block text-sm font-medium">{UI_LABELS.leaderAssignmentMode}<select className="mt-2 w-full border border-[var(--border)] bg-[var(--surface)] p-2 text-sm disabled:bg-[var(--canvas)] disabled:text-[var(--muted)]" disabled={!canCreateGroupSizes} onChange={(event) => setLeaderSelectionMode(event.target.value as LeaderSelectionMode)} value={leaderSelectionMode}>{LEADER_SELECTION_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>
               <p className="mt-3 text-xs text-[var(--muted)]">{groupSetupMessage}</p>
               <button className="mt-3 w-full border border-[var(--border)] bg-[var(--ink)] py-2 text-sm text-black disabled:cursor-not-allowed disabled:bg-[var(--canvas)] disabled:text-[var(--muted)]" disabled={!canRunGrouping} onClick={runGrouping} type="button">자동 조 편성</button>
             </section>
@@ -235,7 +304,7 @@ export function Workspace({ initialGroups, initialResultId, project }: Props) {
               <button className="flex items-center gap-2 border border-[var(--border)] px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-[var(--canvas)] disabled:text-[var(--muted)]" disabled={!canExport} onClick={exportExcel} type="button"><Download size={16} />내보내기</button>
             </div>
             {!canExport ? <p className="mt-2 text-xs text-[var(--muted)]">{UI_MESSAGES.groupResultsRequired}</p> : null}
-            {groups.length === 0 ? <p className="py-16 text-center text-sm text-[var(--muted)]">조 설정 후 자동 조 편성을 실행하세요.</p> : <DndContext collisionDetection={closestCenter} id={GROUP_RESULT_DND_CONTEXT_ID} onDragEnd={onDragEnd} onDragStart={(event) => { const member = groups.flatMap((group) => group.members).find((item) => item.id === event.active.id); setActiveName(member?.name ?? ""); }}><div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">{groups.map((group) => <GroupColumn group={group} key={group.id} />)}</div><DragOverlay>{activeName ? <div className="border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm shadow">{activeName}</div> : null}</DragOverlay></DndContext>}
+            {groups.length === 0 ? <p className="py-16 text-center text-sm text-[var(--muted)]">조 설정 후 자동 조 편성을 실행하세요.</p> : <DndContext collisionDetection={closestCenter} id={GROUP_RESULT_DND_CONTEXT_ID} onDragEnd={onDragEnd} onDragStart={(event) => { const member = groups.flatMap((group) => group.members).find((item) => item.id === event.active.id); setActiveName(member?.name ?? ""); }}><div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">{groups.map((group) => <GroupColumn group={group} key={group.id} onLeaderAction={handleLeaderAction} />)}</div><DragOverlay>{activeName ? <div className="border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm shadow">{activeName}</div> : null}</DragOverlay></DndContext>}
           </section>
         </div>
       </div>
