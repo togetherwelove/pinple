@@ -23,6 +23,7 @@ import {
   GENDER_LABELS,
   LEADER_SELECTION_MODES,
   LEADER_SELECTION_OPTIONS,
+  ROUTES,
   UNKNOWN_AGE_LABEL,
   UI_MESSAGES,
   UI_LABELS,
@@ -189,7 +190,7 @@ export function Workspace({ initialGroups, initialResultId, project }: Props) {
 
     try {
       const created = await jsonRequest<{ id: string }>("/api/projects", "POST", { title: projectTitle });
-      router.push(`/dashboard?project=${created.id}`);
+      router.push(`${ROUTES.rosters}?project=${created.id}`);
     } catch (error) { showError(error instanceof Error ? error.message : "명단을 만들지 못했습니다."); }
     finally { setIsCreatingProject(false); }
   }

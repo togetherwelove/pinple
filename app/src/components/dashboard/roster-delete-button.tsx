@@ -36,7 +36,7 @@ export function RosterDeleteButton({
       }
 
       if (isActive) {
-        router.push(ROUTES.dashboard);
+        router.push(ROUTES.rosters);
         return;
       }
 

@@ -3,10 +3,29 @@ export const APP_NAME = "GroupFlow";
 export const APP_DESCRIPTION = "인원 정보를 균형 있게 조로 나누는 작업 공간";
 
 export const ROUTES = {
-  dashboard: "/dashboard",
   login: "/login",
+  rosters: "/rosters",
   root: "/",
 } as const;
+
+export const LOGIN_CONTENT = {
+  description: "명단을 정리하고, 조건에 맞는 조를 빠르게 구성하세요.",
+  googleContinue: "Google로 계속하기",
+  previewNewRoster: "새로운 명단",
+  previewRosterHeading: "명단",
+  previewRosterLabel: "최근 명단",
+  previewDescription: "명단을 저장하면 조 편성 결과를 바로 확인할 수 있습니다.",
+  previewStatus: "자동 편성 완료",
+  previewTitle: "부산 워크숍",
+  previewTotal: "12명",
+  title: "명단 관리와 조 편성을 한 곳에서",
+} as const;
+
+export const LOGIN_PREVIEW_GROUPS = [
+  { members: ["민서", "도윤", "수아", "지훈"], name: "1조" },
+  { members: ["서준", "하린", "유진", "현우"], name: "2조" },
+  { members: ["지아", "건우", "채원", "민재"], name: "3조" },
+] as const;
 
 export const GENDER = {
   female: "F",
@@ -109,6 +128,8 @@ export const UI_MESSAGES = {
   saveRosterRequired: "명단을 입력한 뒤 저장할 수 있습니다.",
   savedRosterRequired: "저장된 명단이 있어야 조 정원을 계산할 수 있습니다.",
   signOutFailed: "로그아웃하지 못했습니다. 다시 시도해 주세요.",
+  signInFailed: "로그인을 시작하지 못했습니다. 다시 시도해 주세요.",
+  signingIn: "로그인으로 이동 중...",
   signingOut: "로그아웃 중",
   unknownError: "예상하지 못한 오류가 발생했습니다.",
 } as const;

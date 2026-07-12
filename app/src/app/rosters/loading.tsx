@@ -3,7 +3,7 @@ import { UI_LABELS } from "@/lib/config/app";
 
 const SKELETON_ROWS = 4;
 
-export default function DashboardLoading() {
+export default function RosterLoading() {
   return (
     <main className="min-h-screen bg-[var(--canvas)] p-4 md:p-8">
       <div className="mx-auto max-w-7xl animate-pulse">

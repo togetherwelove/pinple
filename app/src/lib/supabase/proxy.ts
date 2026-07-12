@@ -28,7 +28,7 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user && request.nextUrl.pathname.startsWith(ROUTES.dashboard)) {
+  if (!user && request.nextUrl.pathname.startsWith(ROUTES.rosters)) {
     const loginUrl = request.nextUrl.clone();
     loginUrl.pathname = ROUTES.login;
     return NextResponse.redirect(loginUrl);
