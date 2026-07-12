@@ -9,7 +9,7 @@ export async function POST(request: Request) {
     const parsed = projectSchema.safeParse(await request.json());
 
     if (!parsed.success) {
-      return Response.json({ error: "프로젝트 이름을 확인해 주세요." }, { status: 400 });
+      return Response.json({ error: "명단 이름을 확인해 주세요." }, { status: 400 });
     }
 
     const project = await prisma.project.create({

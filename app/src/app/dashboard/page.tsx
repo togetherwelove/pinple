@@ -28,9 +28,9 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         projects={projects}
       />
       <div className="min-w-0 flex-1">
-        <nav aria-label="프로젝트 목록" className="flex gap-2 overflow-x-auto border-b border-[var(--border)] bg-[var(--surface)] p-3 md:hidden">
+        <nav aria-label="명단 목록" className="flex gap-2 overflow-x-auto border-b border-[var(--border)] bg-[var(--surface)] p-3 md:hidden">
           <Link className="shrink-0 border border-dashed border-[var(--border)] px-3 py-2 text-sm" href="/dashboard">
-            + 새 프로젝트
+            + 새로운 명단
           </Link>
           {projects.map((item) => (
             <Link

@@ -1,6 +1,6 @@
 import {
   GENDER,
-  GROUP_NAME_PREFIX,
+  formatGroupName,
   GROUPING_STRATEGIES,
 } from "@/lib/config/app";
 import { shuffle } from "@/lib/grouping/shuffle";
@@ -19,7 +19,7 @@ function createGroups(groupSizes: number[]): Group[] {
   return groupSizes.map((targetSize, index) => ({
     id: `group-${index + 1}`,
     members: [],
-    name: `${GROUP_NAME_PREFIX} ${index + 1}`,
+    name: formatGroupName(index),
     targetSize,
   }));
 }

@@ -29,7 +29,7 @@ export async function POST(
     const parsed = groupingRequestSchema.safeParse(await request.json());
 
     if (!parsed.success) {
-      return Response.json({ error: "그룹 정원을 확인해 주세요." }, { status: 400 });
+      return Response.json({ error: "조 정원을 확인해 주세요." }, { status: 400 });
     }
 
     const people = await prisma.person.findMany({
@@ -39,7 +39,7 @@ export async function POST(
     const capacity = parsed.data.groupSizes.reduce((sum, size) => sum + size, 0);
 
     if (capacity !== people.length) {
-      return Response.json({ error: "그룹 정원의 합계가 전체 인원과 같아야 합니다." }, { status: 400 });
+      return Response.json({ error: "조 정원의 합계가 전체 인원과 같아야 합니다." }, { status: 400 });
     }
 
     const groups = distributePeople(

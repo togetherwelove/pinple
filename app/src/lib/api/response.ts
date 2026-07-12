@@ -7,7 +7,7 @@ export function errorResponse(error: unknown) {
   }
 
   if (error instanceof ProjectAccessError) {
-    return Response.json({ error: "프로젝트를 찾을 수 없습니다." }, { status: 404 });
+    return Response.json({ error: "명단을 찾을 수 없습니다." }, { status: 404 });
   }
 
   return Response.json({ error: "요청을 처리하지 못했습니다." }, { status: 400 });

@@ -16,14 +16,14 @@ export async function PATCH(
     });
 
     if (!groupResult) {
-      return Response.json({ error: "그룹 결과를 찾을 수 없습니다." }, { status: 404 });
+      return Response.json({ error: "조 편성 결과를 찾을 수 없습니다." }, { status: 404 });
     }
 
     await requireOwnedProject(groupResult.projectId, user.id);
     const parsed = groupResultMembersSchema.safeParse(await request.json());
 
     if (!parsed.success) {
-      return Response.json({ error: "그룹 데이터를 확인해 주세요." }, { status: 400 });
+      return Response.json({ error: "조 데이터를 확인해 주세요." }, { status: 400 });
     }
 
     const result = await prisma.groupResult.update({

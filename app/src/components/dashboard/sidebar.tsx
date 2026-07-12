@@ -27,12 +27,12 @@ export function Sidebar({ account, activeProjectId, projects }: SidebarProps) {
   return (
     <aside className="hidden min-h-screen w-64 shrink-0 flex-col border-r border-[var(--border)] bg-[var(--surface)] p-3 md:flex">
       <div>
-        <p className="px-3 py-2 text-sm font-semibold">프로젝트</p>
+        <p className="px-3 py-2 text-sm font-semibold">명단</p>
         <Link
           className="mb-3 block border border-dashed border-[var(--border)] px-3 py-2 text-sm"
           href="/dashboard"
         >
-          + 새 프로젝트
+          + 새로운 명단
         </Link>
       </div>
       <nav className="flex-1 space-y-1 overflow-y-auto">

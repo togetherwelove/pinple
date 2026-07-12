@@ -18,7 +18,10 @@ import {
   GROUPING_STRATEGY_LABELS,
   GROUPING_TOGGLE_LABELS,
   GROUP_RESULT_DND_CONTEXT_ID,
+  EXCEL_EXPORT,
   UI_MESSAGES,
+  displayGroupName,
+  formatGroupName,
 } from "@/lib/config/app";
 import { reorderGroupMembers } from "@/lib/grouping/reorder-group-members";
 import { parseRosterText } from "@/lib/roster/parse-roster";
@@ -83,7 +86,7 @@ function MemberCard({ member }: { member: Person }) {
 function GroupColumn({ group }: { group: Group }) {
   /* eslint-disable react-hooks/refs */
   const droppable = useDroppable({ id: group.id });
-  return <section ref={droppable.setNodeRef} className="min-h-40 border border-[var(--border)] bg-[var(--surface)]"><header className="flex items-center justify-between border-b border-[var(--border)] px-3 py-2"><strong className="text-sm">{group.name}</strong><span className="text-xs text-[var(--muted)]">{group.members.length} / {group.targetSize}</span></header><SortableContext items={group.members.map((member) => member.id)} strategy={verticalListSortingStrategy}><ul>{group.members.map((member) => <MemberCard key={member.id} member={member} />)}</ul></SortableContext></section>;
+  return <section ref={droppable.setNodeRef} className="min-h-40 border border-[var(--border)] bg-[var(--surface)]"><header className="flex items-center justify-between border-b border-[var(--border)] px-3 py-2"><strong className="text-sm">{displayGroupName(group.name)}</strong><span className="text-xs text-[var(--muted)]">{group.members.length} / {group.targetSize}</span></header><SortableContext items={group.members.map((member) => member.id)} strategy={verticalListSortingStrategy}><ul>{group.members.map((member) => <MemberCard key={member.id} member={member} />)}</ul></SortableContext></section>;
 }
 
 export function Workspace({ initialGroups, initialResultId, project }: Props) {
@@ -143,7 +146,7 @@ export function Workspace({ initialGroups, initialResultId, project }: Props) {
     try {
       const created = await jsonRequest<{ id: string }>("/api/projects", "POST", { title: projectTitle });
       router.push(`/dashboard?project=${created.id}`);
-    } catch (error) { showError(error instanceof Error ? error.message : "프로젝트를 만들지 못했습니다."); }
+    } catch (error) { showError(error instanceof Error ? error.message : "명단을 만들지 못했습니다."); }
   }
   async function saveRoster() {
     if (!project) return;
@@ -163,7 +166,7 @@ export function Workspace({ initialGroups, initialResultId, project }: Props) {
     try {
       const result = await jsonRequest<{ id: string; members: GroupResultMembers }>(`/api/projects/${project.id}/group-results`, "POST", { groupSizes, strategy: selectedStrategy });
       setGroups(result.members.groups); setResultId(result.id); setResultStrategy(result.members.strategy ?? selectedStrategy); router.refresh();
-    } catch (error) { showError(error instanceof Error ? error.message : "그룹화에 실패했습니다."); }
+    } catch (error) { showError(error instanceof Error ? error.message : "조 편성에 실패했습니다."); }
   }
   async function onDragEnd(event: DragEndEvent) {
     const memberId = String(event.active.id); const targetId = event.over ? String(event.over.id) : "";
@@ -174,19 +177,19 @@ export function Workspace({ initialGroups, initialResultId, project }: Props) {
     try { await jsonRequest(`/api/group-results/${resultId}`, "PATCH", { groups: next, strategy: resultStrategy }); } catch (error) { setGroups(previous); showError(error instanceof Error ? error.message : "변경 사항을 저장하지 못했습니다."); }
   }
   function exportExcel() {
-    const rows = groups.flatMap((group) => group.members.map((member) => ({ "그룹명": group.name, "나이": member.age, "성별": member.gender === "M" ? "male" : "female", "이름": member.name })));
-    const workbook = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(workbook, XLSX.utils.json_to_sheet(rows), "그룹 결과"); XLSX.writeFile(workbook, `${project?.title ?? "프로젝트"}_그룹결과.xlsx`);
+    const rows = groups.flatMap((group) => group.members.map((member) => ({ "조명": displayGroupName(group.name), "나이": member.age, "성별": member.gender === "M" ? "male" : "female", "이름": member.name })));
+    const workbook = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(workbook, XLSX.utils.json_to_sheet(rows), EXCEL_EXPORT.sheetName); XLSX.writeFile(workbook, `${project?.title ?? "명단"}_${EXCEL_EXPORT.fileNameSuffix}.xlsx`);
   }
   if (!project) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-[var(--canvas)] p-6">
         <section className="w-full max-w-md text-center">
           <p className="text-sm text-[var(--muted)]">새 작업을 시작하세요</p>
-          <h1 className="mt-3 text-2xl font-semibold">첫 프로젝트를 만들어 보세요.</h1>
-          <p className="mt-2 text-sm text-[var(--muted)]">명단을 붙여넣고 균형 잡힌 그룹을 바로 구성할 수 있습니다.</p>
+          <h1 className="mt-3 text-2xl font-semibold">첫 명단을 만들어 보세요.</h1>
+          <p className="mt-2 text-sm text-[var(--muted)]">명단을 붙여넣고 균형 잡힌 조를 바로 구성할 수 있습니다.</p>
           <div className="mt-6 border border-[var(--border)] bg-[var(--surface)] p-5 text-left">
-            <input className="w-full border border-[var(--border)] p-3" onChange={(event) => setProjectTitle(event.target.value)} placeholder="프로젝트 이름" value={projectTitle} />
-            <button className="mt-3 flex items-center gap-2 bg-[var(--accent)] px-4 py-3 text-white disabled:cursor-not-allowed disabled:bg-[var(--canvas)] disabled:text-[var(--muted)]" disabled={!canCreateProject} onClick={createProject} type="button"><Plus size={16} />새 프로젝트 시작</button>
+            <input className="w-full border border-[var(--border)] p-3" onChange={(event) => setProjectTitle(event.target.value)} placeholder="명단 이름" value={projectTitle} />
+            <button className="mt-3 flex items-center gap-2 bg-[var(--accent)] px-4 py-3 text-white disabled:cursor-not-allowed disabled:bg-[var(--canvas)] disabled:text-[var(--muted)]" disabled={!canCreateProject} onClick={createProject} type="button"><Plus size={16} />새로운 명단 시작</button>
             {!canCreateProject ? <p className="mt-2 text-xs text-[var(--muted)]">{UI_MESSAGES.projectTitleRequired}</p> : null}
           </div>
         </section>
@@ -212,9 +215,9 @@ export function Workspace({ initialGroups, initialResultId, project }: Props) {
               {!canSaveRoster ? <p className="mt-2 text-xs text-[var(--muted)]">{UI_MESSAGES.saveRosterRequired}</p> : null}
             </section>
             <section className="border border-[var(--border)] bg-[var(--surface)] p-4">
-              <h2 className="font-semibold">그룹 설정</h2>
+              <h2 className="font-semibold">조 설정</h2>
               <input className="mt-3 w-full border border-[var(--border)] p-2 disabled:bg-[var(--canvas)] disabled:text-[var(--muted)]" disabled={!canCreateGroupSizes} max={personCount || groupCount} min="1" onChange={(event) => updateGroupCount(Number(event.target.value))} type="number" value={groupCount} />
-              {displayedGroupSizes.map((size, index) => <label className="mt-2 flex justify-between text-sm" key={index}>그룹 {index + 1}<input className="w-16 border border-[var(--border)] p-1 disabled:bg-[var(--canvas)] disabled:text-[var(--muted)]" disabled={!hasGroupSizes || !canCreateGroupSizes} min="1" onChange={(event) => setGroupSizes(groupSizes.map((item, itemIndex) => itemIndex === index ? Number(event.target.value) : item))} placeholder="정원" type="number" value={size} /></label>)}
+              {displayedGroupSizes.map((size, index) => <label className="mt-2 flex justify-between text-sm" key={index}>{formatGroupName(index)}<input className="w-16 border border-[var(--border)] p-1 disabled:bg-[var(--canvas)] disabled:text-[var(--muted)]" disabled={!hasGroupSizes || !canCreateGroupSizes} min="1" onChange={(event) => setGroupSizes(groupSizes.map((item, itemIndex) => itemIndex === index ? Number(event.target.value) : item))} placeholder="정원" type="number" value={size} /></label>)}
               <fieldset className="mt-4" disabled={!canCreateGroupSizes}>
                 <legend className="text-sm font-medium">편성 방식</legend>
                 <div className="mt-2 space-y-2">
@@ -223,16 +226,16 @@ export function Workspace({ initialGroups, initialResultId, project }: Props) {
                 </div>
               </fieldset>
               <p className="mt-3 text-xs text-[var(--muted)]">{groupSetupMessage}</p>
-              <button className="mt-3 w-full border border-[var(--border)] bg-[var(--ink)] py-2 text-sm text-black disabled:cursor-not-allowed disabled:bg-[var(--canvas)] disabled:text-[var(--muted)]" disabled={!canRunGrouping} onClick={runGrouping} type="button">자동 그룹화</button>
+              <button className="mt-3 w-full border border-[var(--border)] bg-[var(--ink)] py-2 text-sm text-black disabled:cursor-not-allowed disabled:bg-[var(--canvas)] disabled:text-[var(--muted)]" disabled={!canRunGrouping} onClick={runGrouping} type="button">자동 조 편성</button>
             </section>
           </aside>
           <section className="min-w-0 border border-[var(--border)] bg-[var(--surface)] p-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <div><h2 className="font-semibold">그룹 결과</h2>{groups.length > 0 ? <p className="mt-1 text-xs text-[var(--muted)]">{GROUPING_STRATEGY_LABELS[resultStrategy]}</p> : null}</div>
+              <div><h2 className="font-semibold">조 편성 결과</h2>{groups.length > 0 ? <p className="mt-1 text-xs text-[var(--muted)]">{GROUPING_STRATEGY_LABELS[resultStrategy]}</p> : null}</div>
               <button className="flex items-center gap-2 border border-[var(--border)] px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-[var(--canvas)] disabled:text-[var(--muted)]" disabled={!canExport} onClick={exportExcel} type="button"><Download size={16} />내보내기</button>
             </div>
             {!canExport ? <p className="mt-2 text-xs text-[var(--muted)]">{UI_MESSAGES.groupResultsRequired}</p> : null}
-            {groups.length === 0 ? <p className="py-16 text-center text-sm text-[var(--muted)]">그룹 설정 후 자동 그룹화를 실행하세요.</p> : <DndContext collisionDetection={closestCenter} id={GROUP_RESULT_DND_CONTEXT_ID} onDragEnd={onDragEnd} onDragStart={(event) => { const member = groups.flatMap((group) => group.members).find((item) => item.id === event.active.id); setActiveName(member?.name ?? ""); }}><div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">{groups.map((group) => <GroupColumn group={group} key={group.id} />)}</div><DragOverlay>{activeName ? <div className="border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm shadow">{activeName}</div> : null}</DragOverlay></DndContext>}
+            {groups.length === 0 ? <p className="py-16 text-center text-sm text-[var(--muted)]">조 설정 후 자동 조 편성을 실행하세요.</p> : <DndContext collisionDetection={closestCenter} id={GROUP_RESULT_DND_CONTEXT_ID} onDragEnd={onDragEnd} onDragStart={(event) => { const member = groups.flatMap((group) => group.members).find((item) => item.id === event.active.id); setActiveName(member?.name ?? ""); }}><div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">{groups.map((group) => <GroupColumn group={group} key={group.id} />)}</div><DragOverlay>{activeName ? <div className="border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm shadow">{activeName}</div> : null}</DragOverlay></DndContext>}
           </section>
         </div>
       </div>
