@@ -7,7 +7,7 @@ import { Download, GripVertical, Plus, Upload } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import * as XLSX from "xlsx";
-import { UI_MESSAGES } from "@/lib/config/app";
+import { GROUPING_LIMITS, UI_MESSAGES } from "@/lib/config/app";
 import { parseRosterText } from "@/lib/roster/parse-roster";
 import { readRosterFile } from "@/lib/roster/read-roster-file";
 import type { Group, GroupResultMembers } from "@/lib/types/domain";
@@ -19,6 +19,13 @@ type Props = { initialGroups: GroupResultMembers | null; initialResultId: string
 function defaultGroupSizes(total: number, count: number) {
   const base = Math.floor(total / count);
   return Array.from({ length: count }, (_, index) => base + (index < total % count ? 1 : 0));
+}
+
+function normalizeGroupCount(total: number, count: number) {
+  return Math.min(
+    Math.max(count, GROUPING_LIMITS.minimumGroupCount),
+    Math.min(total, GROUPING_LIMITS.maximumGroupCount),
+  );
 }
 
 function formatRosterText(people: Person[]) {
@@ -41,12 +48,16 @@ function GroupColumn({ group }: { group: Group }) {
 
 export function Workspace({ initialGroups, initialResultId, project }: Props) {
   const router = useRouter();
+  const initialPersonCount = project?.people.length ?? 0;
+  const initialGroupCount = initialPersonCount > 0
+    ? normalizeGroupCount(initialPersonCount, GROUPING_LIMITS.defaultGroupCount)
+    : GROUPING_LIMITS.defaultGroupCount;
   const [groups, setGroups] = useState<Group[]>(initialGroups?.groups ?? []);
   const [resultId, setResultId] = useState(initialResultId);
   const [projectTitle, setProjectTitle] = useState("");
   const [rosterText, setRosterText] = useState(() => formatRosterText(project?.people ?? []));
-  const [groupCount, setGroupCount] = useState(2);
-  const [groupSizes, setGroupSizes] = useState<number[]>([]);
+  const [groupCount, setGroupCount] = useState(initialGroupCount);
+  const [groupSizes, setGroupSizes] = useState<number[]>(() => initialPersonCount > 0 ? defaultGroupSizes(initialPersonCount, initialGroupCount) : []);
   const [notice, setNotice] = useState<string | null>(null);
   const [activeName, setActiveName] = useState("");
   const capacity = useMemo(() => groupSizes.reduce((sum, size) => sum + size, 0), [groupSizes]);
@@ -56,17 +67,20 @@ export function Workspace({ initialGroups, initialResultId, project }: Props) {
   const canCreateGroupSizes = personCount > 0;
   const hasGroupSizes = groupSizes.length > 0;
   const displayedGroupSizes = hasGroupSizes ? groupSizes : Array.from({ length: groupCount }, () => "");
-  const canRunGrouping = hasGroupSizes && capacity === personCount;
+  const canRunGrouping = canCreateGroupSizes && hasGroupSizes && capacity === personCount;
   const canExport = groups.length > 0;
   const groupSetupMessage = !canCreateGroupSizes
     ? UI_MESSAGES.savedRosterRequired
-    : !hasGroupSizes
-      ? UI_MESSAGES.groupSizesRequired
-      : !canRunGrouping
+    : !canRunGrouping
         ? UI_MESSAGES.groupCapacityMismatch
         : `정원 합계: ${capacity} / ${personCount}`;
 
   function showError(message: string) { setNotice(message); }
+  function updateGroupCount(value: number) {
+    const normalizedCount = normalizeGroupCount(personCount, value);
+    setGroupCount(normalizedCount);
+    setGroupSizes(defaultGroupSizes(personCount, normalizedCount));
+  }
   async function jsonRequest<T>(url: string, method: "POST" | "PATCH" | "PUT", body: unknown): Promise<T> {
     const response = await fetch(url, { body: JSON.stringify(body), headers: { "Content-Type": "application/json" }, method });
     if (!response.ok) throw new Error((await response.json() as { error?: string }).error ?? "요청을 처리하지 못했습니다.");
@@ -148,8 +162,7 @@ export function Workspace({ initialGroups, initialResultId, project }: Props) {
             </section>
             <section className="border border-[var(--border)] bg-[var(--surface)] p-4">
               <h2 className="font-semibold">그룹 설정</h2>
-              <input className="mt-3 w-full border border-[var(--border)] p-2 disabled:bg-[var(--canvas)] disabled:text-[var(--muted)]" disabled={!canCreateGroupSizes} max={personCount || groupCount} min="1" onChange={(event) => setGroupCount(Number(event.target.value))} type="number" value={groupCount} />
-              <button className="mt-2 border border-[var(--border)] px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-[var(--canvas)] disabled:text-[var(--muted)]" disabled={!canCreateGroupSizes} onClick={() => setGroupSizes(defaultGroupSizes(personCount, groupCount))} type="button">기본 정원 만들기</button>
+              <input className="mt-3 w-full border border-[var(--border)] p-2 disabled:bg-[var(--canvas)] disabled:text-[var(--muted)]" disabled={!canCreateGroupSizes} max={personCount || groupCount} min="1" onChange={(event) => updateGroupCount(Number(event.target.value))} type="number" value={groupCount} />
               {displayedGroupSizes.map((size, index) => <label className="mt-2 flex justify-between text-sm" key={index}>그룹 {index + 1}<input className="w-16 border border-[var(--border)] p-1 disabled:bg-[var(--canvas)] disabled:text-[var(--muted)]" disabled={!hasGroupSizes || !canCreateGroupSizes} min="1" onChange={(event) => setGroupSizes(groupSizes.map((item, itemIndex) => itemIndex === index ? Number(event.target.value) : item))} placeholder="정원" type="number" value={size} /></label>)}
               <p className="mt-3 text-xs text-[var(--muted)]">{groupSetupMessage}</p>
               <button className="mt-3 w-full border border-[var(--border)] bg-[var(--ink)] py-2 text-sm text-black disabled:cursor-not-allowed disabled:bg-[var(--canvas)] disabled:text-[var(--muted)]" disabled={!canRunGrouping} onClick={runGrouping} type="button">자동 그룹화</button>
