@@ -279,7 +279,7 @@ export function Workspace({ initialGroups, initialResultId, project }: Props) {
               <h2 className="font-semibold">명단 입력</h2>
               <textarea className="mt-3 min-h-48 w-full border border-[var(--border)] p-3 text-sm" onChange={(event) => setRosterText(event.target.value)} placeholder="이름, 성별, 나이" value={rosterText} />
               <label className="mt-3 flex cursor-pointer items-center gap-2 text-sm"><Upload size={16} />Excel 또는 CSV 불러오기<input accept=".csv,.xls,.xlsx" className="hidden" onChange={(event) => event.target.files?.[0] && uploadFile(event.target.files[0])} type="file" /></label>
-              <button className="mt-3 w-full bg-[var(--accent)] py-2 text-sm text-white disabled:cursor-not-allowed disabled:bg-[var(--canvas)] disabled:text-[var(--muted)]" disabled={!canSaveRoster} onClick={saveRoster} type="button">명단 저장</button>
+              <button className="mt-3 w-full bg-[var(--accent)] py-2 text-sm text-black disabled:cursor-not-allowed disabled:bg-[var(--canvas)] disabled:text-[var(--muted)] border" disabled={!canSaveRoster} onClick={saveRoster} type="button">명단 저장</button>
               {!canSaveRoster ? <p className="mt-2 text-xs text-[var(--muted)]">{UI_MESSAGES.saveRosterRequired}</p> : null}
             </section>
             <section className="border border-[var(--border)] bg-[var(--surface)] p-4">
