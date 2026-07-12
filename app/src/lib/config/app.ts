@@ -31,6 +31,22 @@ export const GROUP_NAME_PREFIX = "그룹";
 
 export const GROUP_RESULT_NAME_PREFIX = "자동 그룹화";
 
+export const GROUPING_STRATEGIES = {
+  ageSimilar: "age_similar",
+  even: "even",
+  genderSeparated: "gender_separated",
+} as const;
+
+export const GROUPING_STRATEGY_OPTIONS = [
+  { label: "골고루 섞기", value: GROUPING_STRATEGIES.even },
+  { label: "나이 비슷한 사람끼리", value: GROUPING_STRATEGIES.ageSimilar },
+  { label: "같은 성별끼리", value: GROUPING_STRATEGIES.genderSeparated },
+] as const;
+
+export const GROUPING_STRATEGY_LABELS = Object.fromEntries(
+  GROUPING_STRATEGY_OPTIONS.map(({ label, value }) => [value, label]),
+) as Record<(typeof GROUPING_STRATEGIES)[keyof typeof GROUPING_STRATEGIES], string>;
+
 export const EXCEL_EXPORT = {
   fileNameSuffix: "그룹결과",
   sheetName: "그룹 결과",

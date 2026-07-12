@@ -1,6 +1,9 @@
-import type { GENDER } from "@/lib/config/app";
+import type { GENDER, GROUPING_STRATEGIES } from "@/lib/config/app";
 
 export type StoredGender = (typeof GENDER)[keyof typeof GENDER];
+
+export type GroupingStrategy =
+  (typeof GROUPING_STRATEGIES)[keyof typeof GROUPING_STRATEGIES];
 
 export type PersonInput = {
   age: number;
@@ -21,4 +24,5 @@ export type Group = {
 
 export type GroupResultMembers = {
   groups: Group[];
+  strategy?: GroupingStrategy;
 };

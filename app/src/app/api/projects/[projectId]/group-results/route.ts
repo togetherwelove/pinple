@@ -48,10 +48,11 @@ export async function POST(
         gender: person.gender as "M" | "F",
       })),
       parsed.data.groupSizes,
+      parsed.data.strategy,
     );
     const result = await prisma.groupResult.create({
       data: {
-        members: { groups },
+        members: { groups, strategy: parsed.data.strategy },
         name: createResultName(),
         projectId,
       },

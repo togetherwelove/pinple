@@ -7,10 +7,20 @@ import { Download, GripVertical, Plus, Upload } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import * as XLSX from "xlsx";
-import { GROUPING_LIMITS, UI_MESSAGES } from "@/lib/config/app";
+import {
+  GROUPING_LIMITS,
+  GROUPING_STRATEGIES,
+  GROUPING_STRATEGY_LABELS,
+  GROUPING_STRATEGY_OPTIONS,
+  UI_MESSAGES,
+} from "@/lib/config/app";
 import { parseRosterText } from "@/lib/roster/parse-roster";
 import { readRosterFile } from "@/lib/roster/read-roster-file";
-import type { Group, GroupResultMembers } from "@/lib/types/domain";
+import type {
+  Group,
+  GroupResultMembers,
+  GroupingStrategy,
+} from "@/lib/types/domain";
 
 type Person = { age: number; gender: "M" | "F"; id: string; name: string };
 type Project = { id: string; people: Person[]; title: string };
@@ -58,6 +68,12 @@ export function Workspace({ initialGroups, initialResultId, project }: Props) {
   const [rosterText, setRosterText] = useState(() => formatRosterText(project?.people ?? []));
   const [groupCount, setGroupCount] = useState(initialGroupCount);
   const [groupSizes, setGroupSizes] = useState<number[]>(() => initialPersonCount > 0 ? defaultGroupSizes(initialPersonCount, initialGroupCount) : []);
+  const [selectedStrategy, setSelectedStrategy] = useState<GroupingStrategy>(
+    initialGroups?.strategy ?? GROUPING_STRATEGIES.even,
+  );
+  const [resultStrategy, setResultStrategy] = useState<GroupingStrategy>(
+    initialGroups?.strategy ?? GROUPING_STRATEGIES.even,
+  );
   const [notice, setNotice] = useState<string | null>(null);
   const [activeName, setActiveName] = useState("");
   const capacity = useMemo(() => groupSizes.reduce((sum, size) => sum + size, 0), [groupSizes]);
@@ -108,8 +124,8 @@ export function Workspace({ initialGroups, initialResultId, project }: Props) {
   async function runGrouping() {
     if (!project) return;
     try {
-      const result = await jsonRequest<{ id: string; members: GroupResultMembers }>(`/api/projects/${project.id}/group-results`, "POST", { groupSizes });
-      setGroups(result.members.groups); setResultId(result.id); router.refresh();
+      const result = await jsonRequest<{ id: string; members: GroupResultMembers }>(`/api/projects/${project.id}/group-results`, "POST", { groupSizes, strategy: selectedStrategy });
+      setGroups(result.members.groups); setResultId(result.id); setResultStrategy(result.members.strategy ?? selectedStrategy); router.refresh();
     } catch (error) { showError(error instanceof Error ? error.message : "그룹화에 실패했습니다."); }
   }
   async function onDragEnd(event: DragEndEvent) {
@@ -120,7 +136,7 @@ export function Workspace({ initialGroups, initialResultId, project }: Props) {
     const previous = groups; const next = groups.map((group) => ({ ...group, members: [...group.members] }));
     const member = next[fromIndex].members.find((item) => item.id === memberId); if (!member) return;
     next[fromIndex].members = next[fromIndex].members.filter((item) => item.id !== memberId); next[toIndex].members.push(member); setGroups(next);
-    try { await jsonRequest(`/api/group-results/${resultId}`, "PATCH", { groups: next }); } catch (error) { setGroups(previous); showError(error instanceof Error ? error.message : "변경 사항을 저장하지 못했습니다."); }
+    try { await jsonRequest(`/api/group-results/${resultId}`, "PATCH", { groups: next, strategy: resultStrategy }); } catch (error) { setGroups(previous); showError(error instanceof Error ? error.message : "변경 사항을 저장하지 못했습니다."); }
   }
   function exportExcel() {
     const rows = groups.flatMap((group) => group.members.map((member) => ({ "그룹명": group.name, "나이": member.age, "성별": member.gender === "M" ? "male" : "female", "이름": member.name })));
@@ -164,13 +180,19 @@ export function Workspace({ initialGroups, initialResultId, project }: Props) {
               <h2 className="font-semibold">그룹 설정</h2>
               <input className="mt-3 w-full border border-[var(--border)] p-2 disabled:bg-[var(--canvas)] disabled:text-[var(--muted)]" disabled={!canCreateGroupSizes} max={personCount || groupCount} min="1" onChange={(event) => updateGroupCount(Number(event.target.value))} type="number" value={groupCount} />
               {displayedGroupSizes.map((size, index) => <label className="mt-2 flex justify-between text-sm" key={index}>그룹 {index + 1}<input className="w-16 border border-[var(--border)] p-1 disabled:bg-[var(--canvas)] disabled:text-[var(--muted)]" disabled={!hasGroupSizes || !canCreateGroupSizes} min="1" onChange={(event) => setGroupSizes(groupSizes.map((item, itemIndex) => itemIndex === index ? Number(event.target.value) : item))} placeholder="정원" type="number" value={size} /></label>)}
+              <fieldset className="mt-4" disabled={!canCreateGroupSizes}>
+                <legend className="text-sm font-medium">편성 방식</legend>
+                <div className="mt-2 space-y-2">
+                  {GROUPING_STRATEGY_OPTIONS.map((option) => <label className="flex cursor-pointer items-center gap-2 text-sm disabled:cursor-not-allowed" key={option.value}><input checked={selectedStrategy === option.value} disabled={!canCreateGroupSizes} name="grouping-strategy" onChange={() => setSelectedStrategy(option.value)} type="radio" value={option.value} />{option.label}</label>)}
+                </div>
+              </fieldset>
               <p className="mt-3 text-xs text-[var(--muted)]">{groupSetupMessage}</p>
               <button className="mt-3 w-full border border-[var(--border)] bg-[var(--ink)] py-2 text-sm text-black disabled:cursor-not-allowed disabled:bg-[var(--canvas)] disabled:text-[var(--muted)]" disabled={!canRunGrouping} onClick={runGrouping} type="button">자동 그룹화</button>
             </section>
           </aside>
           <section className="min-w-0 border border-[var(--border)] bg-[var(--surface)] p-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <h2 className="font-semibold">그룹 결과</h2>
+              <div><h2 className="font-semibold">그룹 결과</h2>{groups.length > 0 ? <p className="mt-1 text-xs text-[var(--muted)]">{GROUPING_STRATEGY_LABELS[resultStrategy]}</p> : null}</div>
               <button className="flex items-center gap-2 border border-[var(--border)] px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-[var(--canvas)] disabled:text-[var(--muted)]" disabled={!canExport} onClick={exportExcel} type="button"><Download size={16} />내보내기</button>
             </div>
             {!canExport ? <p className="mt-2 text-xs text-[var(--muted)]">{UI_MESSAGES.groupResultsRequired}</p> : null}

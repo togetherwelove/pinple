@@ -1,5 +1,9 @@
 import { z } from "zod";
-import { GROUPING_LIMITS, INPUT_GENDER } from "@/lib/config/app";
+import {
+  GROUPING_LIMITS,
+  GROUPING_STRATEGIES,
+  INPUT_GENDER,
+} from "@/lib/config/app";
 
 export const projectSchema = z.object({
   title: z.string().trim().min(1).max(GROUPING_LIMITS.projectTitleMaximumLength),
@@ -22,6 +26,11 @@ export const groupSizeSchema = z
 
 export const groupingRequestSchema = z.object({
   groupSizes: groupSizeSchema,
+  strategy: z.enum([
+    GROUPING_STRATEGIES.even,
+    GROUPING_STRATEGIES.ageSimilar,
+    GROUPING_STRATEGIES.genderSeparated,
+  ]),
 });
 
 export const groupMemberSchema = z.object({
@@ -40,4 +49,11 @@ export const groupResultMembersSchema = z.object({
       targetSize: z.number().int().min(GROUPING_LIMITS.minimumPeoplePerGroup),
     }),
   ),
+  strategy: z
+    .enum([
+      GROUPING_STRATEGIES.even,
+      GROUPING_STRATEGIES.ageSimilar,
+      GROUPING_STRATEGIES.genderSeparated,
+    ])
+    .optional(),
 });
