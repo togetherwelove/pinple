@@ -31,6 +31,8 @@ export const GROUP_NAME_PREFIX = "그룹";
 
 export const GROUP_RESULT_NAME_PREFIX = "자동 그룹화";
 
+export const GROUP_RESULT_DND_CONTEXT_ID = "group-results";
+
 export const GROUPING_STRATEGIES = {
   ageSimilar: "age_similar",
   even: "even",

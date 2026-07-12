@@ -1,6 +1,11 @@
 "use client";
 
-import { DndContext, DragOverlay, type DragEndEvent } from "@dnd-kit/core";
+import {
+  closestCenter,
+  DndContext,
+  DragOverlay,
+  type DragEndEvent,
+} from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { useDroppable } from "@dnd-kit/core";
 import { Download, GripVertical, Plus, Upload } from "lucide-react";
@@ -12,8 +17,10 @@ import {
   GROUPING_STRATEGIES,
   GROUPING_STRATEGY_LABELS,
   GROUPING_TOGGLE_LABELS,
+  GROUP_RESULT_DND_CONTEXT_ID,
   UI_MESSAGES,
 } from "@/lib/config/app";
+import { reorderGroupMembers } from "@/lib/grouping/reorder-group-members";
 import { parseRosterText } from "@/lib/roster/parse-roster";
 import { readRosterFile } from "@/lib/roster/read-roster-file";
 import type {
@@ -66,7 +73,11 @@ function resolveGroupingStrategy(
 function MemberCard({ member }: { member: Person }) {
   /* eslint-disable react-hooks/refs */
   const sortable = useSortable({ id: member.id });
-  return <li ref={sortable.setNodeRef} {...sortable.attributes} {...sortable.listeners} className="flex cursor-grab items-center gap-2 border-b border-[var(--border)] px-3 py-2 text-sm active:cursor-grabbing"><GripVertical size={14} className="text-[var(--muted)]" /><span>{member.name}</span><span className="ml-auto text-xs text-[var(--muted)]">{member.gender === "M" ? "male" : "female"} · {member.age}</span></li>;
+  const transform = sortable.transform
+    ? `translate3d(${sortable.transform.x}px, ${sortable.transform.y}px, 0)`
+    : undefined;
+
+  return <li ref={sortable.setNodeRef} {...sortable.attributes} {...sortable.listeners} className="flex touch-none cursor-grab items-center gap-2 border-b border-[var(--border)] px-3 py-2 text-sm active:cursor-grabbing" style={{ opacity: sortable.isDragging ? 0.35 : undefined, transform, transition: sortable.transition }}><GripVertical size={14} className="text-[var(--muted)]" /><span>{member.name}</span><span className="ml-auto text-xs text-[var(--muted)]">{member.gender === "M" ? "male" : "female"} · {member.age}</span></li>;
 }
 
 function GroupColumn({ group }: { group: Group }) {
@@ -156,12 +167,10 @@ export function Workspace({ initialGroups, initialResultId, project }: Props) {
   }
   async function onDragEnd(event: DragEndEvent) {
     const memberId = String(event.active.id); const targetId = event.over ? String(event.over.id) : "";
-    const fromIndex = groups.findIndex((group) => group.members.some((member) => member.id === memberId));
-    const toIndex = groups.findIndex((group) => group.id === targetId);
-    setActiveName(""); if (fromIndex < 0 || toIndex < 0 || fromIndex === toIndex || !resultId) return;
-    const previous = groups; const next = groups.map((group) => ({ ...group, members: [...group.members] }));
-    const member = next[fromIndex].members.find((item) => item.id === memberId); if (!member) return;
-    next[fromIndex].members = next[fromIndex].members.filter((item) => item.id !== memberId); next[toIndex].members.push(member); setGroups(next);
+    setActiveName(""); if (!resultId) return;
+    const previous = groups; const next = reorderGroupMembers(groups, memberId, targetId);
+    if (!next) return;
+    setGroups(next);
     try { await jsonRequest(`/api/group-results/${resultId}`, "PATCH", { groups: next, strategy: resultStrategy }); } catch (error) { setGroups(previous); showError(error instanceof Error ? error.message : "변경 사항을 저장하지 못했습니다."); }
   }
   function exportExcel() {
@@ -223,7 +232,7 @@ export function Workspace({ initialGroups, initialResultId, project }: Props) {
               <button className="flex items-center gap-2 border border-[var(--border)] px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-[var(--canvas)] disabled:text-[var(--muted)]" disabled={!canExport} onClick={exportExcel} type="button"><Download size={16} />내보내기</button>
             </div>
             {!canExport ? <p className="mt-2 text-xs text-[var(--muted)]">{UI_MESSAGES.groupResultsRequired}</p> : null}
-            {groups.length === 0 ? <p className="py-16 text-center text-sm text-[var(--muted)]">그룹 설정 후 자동 그룹화를 실행하세요.</p> : <DndContext onDragEnd={onDragEnd} onDragStart={(event) => { const member = groups.flatMap((group) => group.members).find((item) => item.id === event.active.id); setActiveName(member?.name ?? ""); }}><div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">{groups.map((group) => <GroupColumn group={group} key={group.id} />)}</div><DragOverlay>{activeName ? <div className="border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm shadow">{activeName}</div> : null}</DragOverlay></DndContext>}
+            {groups.length === 0 ? <p className="py-16 text-center text-sm text-[var(--muted)]">그룹 설정 후 자동 그룹화를 실행하세요.</p> : <DndContext collisionDetection={closestCenter} id={GROUP_RESULT_DND_CONTEXT_ID} onDragEnd={onDragEnd} onDragStart={(event) => { const member = groups.flatMap((group) => group.members).find((item) => item.id === event.active.id); setActiveName(member?.name ?? ""); }}><div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">{groups.map((group) => <GroupColumn group={group} key={group.id} />)}</div><DragOverlay>{activeName ? <div className="border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm shadow">{activeName}</div> : null}</DragOverlay></DndContext>}
           </section>
         </div>
       </div>
