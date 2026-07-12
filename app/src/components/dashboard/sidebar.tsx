@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { SignOutButton } from "@/components/auth/sign-out-button";
+import { RosterDeleteButton } from "@/components/dashboard/roster-delete-button";
 
 type SidebarAccount = {
   email: string;
@@ -37,13 +38,15 @@ export function Sidebar({ account, activeProjectId, projects }: SidebarProps) {
       </div>
       <nav className="flex-1 space-y-1 overflow-y-auto">
         {projects.map((project) => (
-          <Link
-            className={`block truncate px-3 py-2 text-sm ${project.id === activeProjectId ? "bg-[var(--canvas)] font-medium" : "text-[var(--muted)]"}`}
-            href={`/dashboard?project=${project.id}`}
-            key={project.id}
-          >
-            {project.title}
-          </Link>
+          <div className="flex items-center" key={project.id}>
+            <Link
+              className={`min-w-0 flex-1 truncate px-3 py-2 text-sm ${project.id === activeProjectId ? "bg-[var(--canvas)] font-medium" : "text-[var(--muted)]"}`}
+              href={`/dashboard?project=${project.id}`}
+            >
+              {project.title}
+            </Link>
+            <RosterDeleteButton isActive={project.id === activeProjectId} projectId={project.id} />
+          </div>
         ))}
       </nav>
       <section className="mt-auto border-t border-[var(--border)] pt-3">

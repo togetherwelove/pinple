@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { SignOutButton } from "@/components/auth/sign-out-button";
+import { RosterDeleteButton } from "@/components/dashboard/roster-delete-button";
 import { Sidebar } from "@/components/dashboard/sidebar";
 import { Workspace } from "@/components/dashboard/workspace";
 import { requireCurrentUser } from "@/lib/auth/current-user";
@@ -33,13 +34,19 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
             + 새로운 명단
           </Link>
           {projects.map((item) => (
-            <Link
-              className={`shrink-0 px-3 py-2 text-sm ${item.id === project?.id ? "bg-[var(--canvas)] font-medium" : "text-[var(--muted)]"}`}
-              href={`/dashboard?project=${item.id}`}
-              key={item.id}
-            >
-              {item.title}
-            </Link>
+            <div className="flex shrink-0 items-center" key={item.id}>
+              <Link
+                className={`px-3 py-2 text-sm ${item.id === project?.id ? "bg-[var(--canvas)] font-medium" : "text-[var(--muted)]"}`}
+                href={`/dashboard?project=${item.id}`}
+              >
+                {item.title}
+              </Link>
+              <RosterDeleteButton
+                className="flex size-8 items-center justify-center text-[var(--muted)] hover:bg-red-50 hover:text-red-700"
+                isActive={item.id === project?.id}
+                projectId={item.id}
+              />
+            </div>
           ))}
           <SignOutButton className="shrink-0" />
         </nav>
