@@ -3,6 +3,7 @@
 import { Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { Spinner } from "@/components/spinner";
 import { ROUTES, UI_LABELS, UI_MESSAGES } from "@/lib/config/app";
 
 type RosterDeleteButtonProps = {
@@ -51,6 +52,7 @@ export function RosterDeleteButton({
       <button
         aria-label={UI_LABELS.deleteRoster}
         className={className ?? "flex size-8 shrink-0 items-center justify-center text-[var(--muted)] hover:bg-red-50 hover:text-red-700"}
+        disabled={isDeleting}
         onClick={() => setIsOpen(true)}
         title={UI_LABELS.deleteRoster}
         type="button"
@@ -65,7 +67,7 @@ export function RosterDeleteButton({
             {errorMessage ? <p className="mt-3 text-sm text-red-700" role="alert">{errorMessage}</p> : null}
             <div className="mt-5 flex justify-end gap-2">
               <button className="border border-[var(--border)] px-3 py-2 text-sm hover:bg-[var(--canvas)]" disabled={isDeleting} onClick={() => setIsOpen(false)} type="button">{UI_LABELS.cancel}</button>
-              <button className="bg-red-700 px-3 py-2 text-sm text-white hover:bg-red-800 disabled:cursor-not-allowed disabled:opacity-50" disabled={isDeleting} onClick={() => void deleteRoster()} type="button">{isDeleting ? UI_LABELS.deleting : UI_LABELS.delete}</button>
+              <button className="flex items-center gap-2 bg-red-700 px-3 py-2 text-sm text-white hover:bg-red-800 disabled:cursor-not-allowed disabled:opacity-50" disabled={isDeleting} onClick={() => void deleteRoster()} type="button">{isDeleting ? <Spinner size="sm" /> : null}{isDeleting ? UI_LABELS.deleting : UI_LABELS.delete}</button>
             </div>
           </section>
         </div>

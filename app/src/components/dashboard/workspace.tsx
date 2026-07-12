@@ -30,6 +30,7 @@ import {
   formatGroupName,
 } from "@/lib/config/app";
 import { LeaderConflictDialog } from "@/components/dashboard/leader-conflict-dialog";
+import { Spinner } from "@/components/spinner";
 import { setGroupLeader } from "@/lib/grouping/leader-assignment";
 import { reorderGroupMembers } from "@/lib/grouping/reorder-group-members";
 import { parseRosterText } from "@/lib/roster/parse-roster";
@@ -150,6 +151,10 @@ export function Workspace({ initialGroups, initialResultId, project }: Props) {
     LEADER_SELECTION_MODES.none,
   );
   const [leaderConflict, setLeaderConflict] = useState<LeaderConflict | null>(null);
+  const [isCreatingProject, setIsCreatingProject] = useState(false);
+  const [isGrouping, setIsGrouping] = useState(false);
+  const [isSavingRoster, setIsSavingRoster] = useState(false);
+  const [isUploadingFile, setIsUploadingFile] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [activeName, setActiveName] = useState("");
   const capacity = useMemo(() => groupSizes.reduce((sum, size) => sum + size, 0), [groupSizes]);
@@ -180,23 +185,32 @@ export function Workspace({ initialGroups, initialResultId, project }: Props) {
     return response.json() as Promise<T>;
   }
   async function createProject() {
+    setIsCreatingProject(true);
+
     try {
       const created = await jsonRequest<{ id: string }>("/api/projects", "POST", { title: projectTitle });
       router.push(`/dashboard?project=${created.id}`);
     } catch (error) { showError(error instanceof Error ? error.message : "명단을 만들지 못했습니다."); }
+    finally { setIsCreatingProject(false); }
   }
   async function saveRoster() {
     if (!project) return;
+    setIsSavingRoster(true);
+
     try {
       const result = await jsonRequest<{ people: Person[] }>(`/api/projects/${project.id}/people`, "PUT", { people: parseRosterText(rosterText) });
       setRosterText(formatRosterText(result.people));
       router.refresh();
     } catch (error) { showError(error instanceof Error ? error.message : "명단을 저장하지 못했습니다."); }
+    finally { setIsSavingRoster(false); }
   }
   async function uploadFile(file: File) {
+    setIsUploadingFile(true);
+
     try {
       setRosterText(await readRosterFile(file));
     } catch { showError("파일을 읽지 못했습니다. CSV 또는 Excel 파일인지 확인해 주세요."); }
+    finally { setIsUploadingFile(false); }
   }
   async function persistGroupChanges(previousGroups: Group[], nextGroups: Group[]) {
     if (!resultId) return;
@@ -213,10 +227,13 @@ export function Workspace({ initialGroups, initialResultId, project }: Props) {
   }
   async function runGrouping() {
     if (!project) return;
+    setIsGrouping(true);
+
     try {
       const result = await jsonRequest<{ id: string; members: GroupResultMembers }>(`/api/projects/${project.id}/group-results`, "POST", { groupSizes, leaderSelectionMode, strategy: selectedStrategy });
       setGroups(result.members.groups); setResultId(result.id); setResultStrategy(result.members.strategy ?? selectedStrategy); router.refresh();
     } catch (error) { showError(error instanceof Error ? error.message : "조 편성에 실패했습니다."); }
+    finally { setIsGrouping(false); }
   }
   function handleLeaderAction(groupId: string, member: GroupMember) {
     const nextGroups = setGroupLeader(groups, groupId, member.isLeader ? null : member.id);
@@ -268,7 +285,7 @@ export function Workspace({ initialGroups, initialResultId, project }: Props) {
           <p className="mt-2 text-sm text-[var(--muted)]">명단을 붙여넣고 균형 잡힌 조를 바로 구성할 수 있습니다.</p>
           <div className="mt-6 border border-[var(--border)] bg-[var(--surface)] p-5 text-left">
             <input className="w-full border border-[var(--border)] p-3" onChange={(event) => setProjectTitle(event.target.value)} placeholder="명단 이름" value={projectTitle} />
-            <button className="mt-3 flex items-center gap-2 bg-[var(--accent)] px-4 py-3 text-white disabled:cursor-not-allowed disabled:bg-[var(--canvas)] disabled:text-[var(--muted)]" disabled={!canCreateProject} onClick={createProject} type="button"><Plus size={16} />새로운 명단 시작</button>
+            <button className="mt-3 flex items-center gap-2 bg-[var(--accent)] px-4 py-3 text-white disabled:cursor-not-allowed disabled:bg-[var(--canvas)] disabled:text-[var(--muted)]" disabled={!canCreateProject || isCreatingProject} onClick={() => void createProject()} type="button">{isCreatingProject ? <Spinner size="sm" /> : <Plus size={16} />}{isCreatingProject ? UI_LABELS.creatingRoster : "새로운 명단 시작"}</button>
             {!canCreateProject ? <p className="mt-2 text-xs text-[var(--muted)]">{UI_MESSAGES.projectTitleRequired}</p> : null}
           </div>
         </section>
@@ -290,8 +307,8 @@ export function Workspace({ initialGroups, initialResultId, project }: Props) {
             <section className="border border-[var(--border)] bg-[var(--surface)] p-4">
               <h2 className="font-semibold">명단 입력</h2>
               <textarea className="mt-3 min-h-48 w-full border border-[var(--border)] p-3 text-sm" onChange={(event) => setRosterText(event.target.value)} placeholder="이름, 성별, 나이" value={rosterText} />
-              <label className="mt-3 flex cursor-pointer items-center gap-2 text-sm"><Upload size={16} />Excel 또는 CSV 불러오기<input accept=".csv,.xls,.xlsx" className="hidden" onChange={(event) => event.target.files?.[0] && uploadFile(event.target.files[0])} type="file" /></label>
-              <button className="mt-3 w-full bg-[var(--accent)] py-2 text-sm text-black disabled:cursor-not-allowed disabled:bg-[var(--canvas)] disabled:text-[var(--muted)] border" disabled={!canSaveRoster} onClick={saveRoster} type="button">명단 저장</button>
+              <label aria-busy={isUploadingFile} className={`mt-3 flex items-center gap-2 text-sm ${isUploadingFile ? "cursor-not-allowed text-[var(--muted)]" : "cursor-pointer"}`}><Upload size={16} />{isUploadingFile ? <><Spinner size="sm" />{UI_LABELS.loadingRosterFile}</> : "Excel 또는 CSV 불러오기"}<input accept=".csv,.xls,.xlsx" className="hidden" disabled={isUploadingFile} onChange={(event) => { const file = event.target.files?.[0]; if (file) void uploadFile(file); }} type="file" /></label>
+              <button className="mt-3 flex w-full items-center justify-center gap-2 border bg-[var(--accent)] py-2 text-sm text-black disabled:cursor-not-allowed disabled:bg-[var(--canvas)] disabled:text-[var(--muted)]" disabled={!canSaveRoster || isSavingRoster} onClick={() => void saveRoster()} type="button">{isSavingRoster ? <Spinner size="sm" /> : null}{isSavingRoster ? UI_LABELS.savingRoster : "명단 저장"}</button>
               {!canSaveRoster ? <p className="mt-2 text-xs text-[var(--muted)]">{UI_MESSAGES.saveRosterRequired}</p> : null}
             </section>
             <section className="border border-[var(--border)] bg-[var(--surface)] p-4">
@@ -307,7 +324,7 @@ export function Workspace({ initialGroups, initialResultId, project }: Props) {
               </fieldset>
               <label className="mt-4 block text-sm font-medium">{UI_LABELS.leaderAssignmentMode}<select className="mt-2 w-full border border-[var(--border)] bg-[var(--surface)] p-2 text-sm disabled:bg-[var(--canvas)] disabled:text-[var(--muted)]" disabled={!canCreateGroupSizes} onChange={(event) => setLeaderSelectionMode(event.target.value as LeaderSelectionMode)} value={leaderSelectionMode}>{LEADER_SELECTION_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>
               <p className="mt-3 text-xs text-[var(--muted)]">{groupSetupMessage}</p>
-              <button className="mt-3 w-full border border-[var(--border)] bg-[var(--ink)] py-2 text-sm text-black disabled:cursor-not-allowed disabled:bg-[var(--canvas)] disabled:text-[var(--muted)]" disabled={!canRunGrouping} onClick={runGrouping} type="button">자동 조 편성</button>
+              <button className="mt-3 flex w-full items-center justify-center gap-2 border border-[var(--border)] bg-[var(--ink)] py-2 text-sm text-black disabled:cursor-not-allowed disabled:bg-[var(--canvas)] disabled:text-[var(--muted)]" disabled={!canRunGrouping || isGrouping} onClick={() => void runGrouping()} type="button">{isGrouping ? <Spinner size="sm" /> : null}{isGrouping ? UI_LABELS.grouping : "자동 조 편성"}</button>
             </section>
           </aside>
           <section className="min-w-0 border border-[var(--border)] bg-[var(--surface)] p-4">
