@@ -22,13 +22,13 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
     user.user_metadata.full_name ?? user.user_metadata.name ?? null;
 
   return (
-    <div className="flex min-h-screen bg-[var(--canvas)]">
+    <div className="flex h-screen overflow-hidden bg-[var(--canvas)]">
       <Sidebar
         account={{ email: user.email ?? user.id, name: accountName }}
         activeProjectId={project?.id}
         projects={projects}
       />
-      <div className="min-w-0 flex-1">
+      <div className="min-w-0 flex-1 overflow-y-auto">
         <nav aria-label="명단 목록" className="flex gap-2 overflow-x-auto border-b border-[var(--border)] bg-[var(--surface)] p-3 md:hidden">
           <Link className="shrink-0 border border-dashed border-[var(--border)] px-3 py-2 text-sm" href="/dashboard">
             + 새로운 명단

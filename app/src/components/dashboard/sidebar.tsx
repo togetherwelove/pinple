@@ -26,7 +26,7 @@ export function Sidebar({ account, activeProjectId, projects }: SidebarProps) {
   const displayName = account.name?.trim() || account.email;
 
   return (
-    <aside className="hidden min-h-screen w-64 shrink-0 flex-col border-r border-[var(--border)] bg-[var(--surface)] p-3 md:flex">
+    <aside className="hidden h-full w-64 shrink-0 flex-col overflow-hidden border-r border-[var(--border)] bg-[var(--surface)] p-3 md:flex">
       <div>
         <p className="px-3 py-2 text-sm font-semibold">명단</p>
         <Link
