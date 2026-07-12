@@ -93,11 +93,14 @@ function assignByGenderOrder(
   people: GroupingPerson[],
   groupSizes: number[],
   genderOrder: GenderOrder,
+  prioritizeAge: boolean,
 ) {
   const peopleByGender = new Map<StoredGender, GroupingPerson[]>(
     genderOrder.map((gender) => [
       gender,
-      sortByAgeWithShuffledPeers(people.filter((person) => person.gender === gender)),
+      prioritizeAge
+        ? sortByAgeWithShuffledPeers(people.filter((person) => person.gender === gender))
+        : shuffle(people.filter((person) => person.gender === gender)),
     ]),
   );
 
@@ -132,9 +135,23 @@ function scoreGenderSeparation(groups: Group[]) {
   );
 }
 
-function assignBySeparatedGender(people: GroupingPerson[], groupSizes: number[]) {
-  const maleFirstGroups = assignByGenderOrder(people, groupSizes, [GENDER.male, GENDER.female]);
-  const femaleFirstGroups = assignByGenderOrder(people, groupSizes, [GENDER.female, GENDER.male]);
+function assignBySeparatedGender(
+  people: GroupingPerson[],
+  groupSizes: number[],
+  prioritizeAge: boolean,
+) {
+  const maleFirstGroups = assignByGenderOrder(
+    people,
+    groupSizes,
+    [GENDER.male, GENDER.female],
+    prioritizeAge,
+  );
+  const femaleFirstGroups = assignByGenderOrder(
+    people,
+    groupSizes,
+    [GENDER.female, GENDER.male],
+    prioritizeAge,
+  );
   const maleFirstScore = scoreGenderSeparation(maleFirstGroups);
   const femaleFirstScore = scoreGenderSeparation(femaleFirstGroups);
 
@@ -168,7 +185,11 @@ export function distributePeople(
   }
 
   if (strategy === GROUPING_STRATEGIES.genderSeparated) {
-    return assignBySeparatedGender(people, groupSizes);
+    return assignBySeparatedGender(people, groupSizes, false);
+  }
+
+  if (strategy === GROUPING_STRATEGIES.genderAgeSimilar) {
+    return assignBySeparatedGender(people, groupSizes, true);
   }
 
   return assignEvenly(people, groupSizes);

@@ -29,6 +29,7 @@ export const groupingRequestSchema = z.object({
   strategy: z.enum([
     GROUPING_STRATEGIES.even,
     GROUPING_STRATEGIES.ageSimilar,
+    GROUPING_STRATEGIES.genderAgeSimilar,
     GROUPING_STRATEGIES.genderSeparated,
   ]),
 });
@@ -53,6 +54,7 @@ export const groupResultMembersSchema = z.object({
     .enum([
       GROUPING_STRATEGIES.even,
       GROUPING_STRATEGIES.ageSimilar,
+      GROUPING_STRATEGIES.genderAgeSimilar,
       GROUPING_STRATEGIES.genderSeparated,
     ])
     .optional(),

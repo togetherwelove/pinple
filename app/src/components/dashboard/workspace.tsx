@@ -11,7 +11,7 @@ import {
   GROUPING_LIMITS,
   GROUPING_STRATEGIES,
   GROUPING_STRATEGY_LABELS,
-  GROUPING_STRATEGY_OPTIONS,
+  GROUPING_TOGGLE_LABELS,
   UI_MESSAGES,
 } from "@/lib/config/app";
 import { parseRosterText } from "@/lib/roster/parse-roster";
@@ -44,6 +44,25 @@ function formatRosterText(people: Person[]) {
     .join("\n");
 }
 
+function resolveGroupingStrategy(
+  useSimilarAge: boolean,
+  separateGender: boolean,
+): GroupingStrategy {
+  if (useSimilarAge && separateGender) {
+    return GROUPING_STRATEGIES.genderAgeSimilar;
+  }
+
+  if (useSimilarAge) {
+    return GROUPING_STRATEGIES.ageSimilar;
+  }
+
+  if (separateGender) {
+    return GROUPING_STRATEGIES.genderSeparated;
+  }
+
+  return GROUPING_STRATEGIES.even;
+}
+
 function MemberCard({ member }: { member: Person }) {
   /* eslint-disable react-hooks/refs */
   const sortable = useSortable({ id: member.id });
@@ -68,8 +87,14 @@ export function Workspace({ initialGroups, initialResultId, project }: Props) {
   const [rosterText, setRosterText] = useState(() => formatRosterText(project?.people ?? []));
   const [groupCount, setGroupCount] = useState(initialGroupCount);
   const [groupSizes, setGroupSizes] = useState<number[]>(() => initialPersonCount > 0 ? defaultGroupSizes(initialPersonCount, initialGroupCount) : []);
-  const [selectedStrategy, setSelectedStrategy] = useState<GroupingStrategy>(
-    initialGroups?.strategy ?? GROUPING_STRATEGIES.even,
+  const initialStrategy = initialGroups?.strategy ?? GROUPING_STRATEGIES.even;
+  const [useSimilarAge, setUseSimilarAge] = useState(
+    initialStrategy === GROUPING_STRATEGIES.ageSimilar ||
+      initialStrategy === GROUPING_STRATEGIES.genderAgeSimilar,
+  );
+  const [separateGender, setSeparateGender] = useState(
+    initialStrategy === GROUPING_STRATEGIES.genderSeparated ||
+      initialStrategy === GROUPING_STRATEGIES.genderAgeSimilar,
   );
   const [resultStrategy, setResultStrategy] = useState<GroupingStrategy>(
     initialGroups?.strategy ?? GROUPING_STRATEGIES.even,
@@ -85,6 +110,7 @@ export function Workspace({ initialGroups, initialResultId, project }: Props) {
   const displayedGroupSizes = hasGroupSizes ? groupSizes : Array.from({ length: groupCount }, () => "");
   const canRunGrouping = canCreateGroupSizes && hasGroupSizes && capacity === personCount;
   const canExport = groups.length > 0;
+  const selectedStrategy = resolveGroupingStrategy(useSimilarAge, separateGender);
   const groupSetupMessage = !canCreateGroupSizes
     ? UI_MESSAGES.savedRosterRequired
     : !canRunGrouping
@@ -183,7 +209,8 @@ export function Workspace({ initialGroups, initialResultId, project }: Props) {
               <fieldset className="mt-4" disabled={!canCreateGroupSizes}>
                 <legend className="text-sm font-medium">편성 방식</legend>
                 <div className="mt-2 space-y-2">
-                  {GROUPING_STRATEGY_OPTIONS.map((option) => <label className="flex cursor-pointer items-center gap-2 text-sm disabled:cursor-not-allowed" key={option.value}><input checked={selectedStrategy === option.value} disabled={!canCreateGroupSizes} name="grouping-strategy" onChange={() => setSelectedStrategy(option.value)} type="radio" value={option.value} />{option.label}</label>)}
+                  <label className="flex cursor-pointer items-center gap-2 text-sm disabled:cursor-not-allowed"><input checked={useSimilarAge} disabled={!canCreateGroupSizes} onChange={(event) => setUseSimilarAge(event.target.checked)} type="checkbox" />{GROUPING_TOGGLE_LABELS.ageSimilar}</label>
+                  <label className="flex cursor-pointer items-center gap-2 text-sm disabled:cursor-not-allowed"><input checked={separateGender} disabled={!canCreateGroupSizes} onChange={(event) => setSeparateGender(event.target.checked)} type="checkbox" />{GROUPING_TOGGLE_LABELS.genderSeparated}</label>
                 </div>
               </fieldset>
               <p className="mt-3 text-xs text-[var(--muted)]">{groupSetupMessage}</p>
