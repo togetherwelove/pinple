@@ -190,7 +190,7 @@ export type PersonGroupByOutputType = {
   projectId: string
   name: string
   gender: string
-  age: number
+  age: number | null
   createdAt: Date
   _count: PersonCountAggregateOutputType | null
   _avg: PersonAvgAggregateOutputType | null
@@ -222,7 +222,7 @@ export type PersonWhereInput = {
   projectId?: Prisma.UuidFilter<"Person"> | string
   name?: Prisma.StringFilter<"Person"> | string
   gender?: Prisma.StringFilter<"Person"> | string
-  age?: Prisma.IntFilter<"Person"> | number
+  age?: Prisma.IntNullableFilter<"Person"> | number | null
   createdAt?: Prisma.DateTimeFilter<"Person"> | Date | string
   project?: Prisma.XOR<Prisma.ProjectScalarRelationFilter, Prisma.ProjectWhereInput>
 }
@@ -232,30 +232,31 @@ export type PersonOrderByWithRelationInput = {
   projectId?: Prisma.SortOrder
   name?: Prisma.SortOrder
   gender?: Prisma.SortOrder
-  age?: Prisma.SortOrder
+  age?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   project?: Prisma.ProjectOrderByWithRelationInput
 }
 
 export type PersonWhereUniqueInput = Prisma.AtLeast<{
   id?: string
+  projectId_name_gender_age?: Prisma.PersonProjectIdNameGenderAgeCompoundUniqueInput
   AND?: Prisma.PersonWhereInput | Prisma.PersonWhereInput[]
   OR?: Prisma.PersonWhereInput[]
   NOT?: Prisma.PersonWhereInput | Prisma.PersonWhereInput[]
   projectId?: Prisma.UuidFilter<"Person"> | string
   name?: Prisma.StringFilter<"Person"> | string
   gender?: Prisma.StringFilter<"Person"> | string
-  age?: Prisma.IntFilter<"Person"> | number
+  age?: Prisma.IntNullableFilter<"Person"> | number | null
   createdAt?: Prisma.DateTimeFilter<"Person"> | Date | string
   project?: Prisma.XOR<Prisma.ProjectScalarRelationFilter, Prisma.ProjectWhereInput>
-}, "id">
+}, "id" | "projectId_name_gender_age">
 
 export type PersonOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   projectId?: Prisma.SortOrder
   name?: Prisma.SortOrder
   gender?: Prisma.SortOrder
-  age?: Prisma.SortOrder
+  age?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   _count?: Prisma.PersonCountOrderByAggregateInput
   _avg?: Prisma.PersonAvgOrderByAggregateInput
@@ -272,7 +273,7 @@ export type PersonScalarWhereWithAggregatesInput = {
   projectId?: Prisma.UuidWithAggregatesFilter<"Person"> | string
   name?: Prisma.StringWithAggregatesFilter<"Person"> | string
   gender?: Prisma.StringWithAggregatesFilter<"Person"> | string
-  age?: Prisma.IntWithAggregatesFilter<"Person"> | number
+  age?: Prisma.IntNullableWithAggregatesFilter<"Person"> | number | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Person"> | Date | string
 }
 
@@ -280,7 +281,7 @@ export type PersonCreateInput = {
   id?: string
   name: string
   gender: string
-  age: number
+  age?: number | null
   createdAt?: Date | string
   project: Prisma.ProjectCreateNestedOneWithoutPeopleInput
 }
@@ -290,7 +291,7 @@ export type PersonUncheckedCreateInput = {
   projectId: string
   name: string
   gender: string
-  age: number
+  age?: number | null
   createdAt?: Date | string
 }
 
@@ -298,7 +299,7 @@ export type PersonUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   gender?: Prisma.StringFieldUpdateOperationsInput | string
-  age?: Prisma.IntFieldUpdateOperationsInput | number
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   project?: Prisma.ProjectUpdateOneRequiredWithoutPeopleNestedInput
 }
@@ -308,7 +309,7 @@ export type PersonUncheckedUpdateInput = {
   projectId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   gender?: Prisma.StringFieldUpdateOperationsInput | string
-  age?: Prisma.IntFieldUpdateOperationsInput | number
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -317,7 +318,7 @@ export type PersonCreateManyInput = {
   projectId: string
   name: string
   gender: string
-  age: number
+  age?: number | null
   createdAt?: Date | string
 }
 
@@ -325,7 +326,7 @@ export type PersonUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   gender?: Prisma.StringFieldUpdateOperationsInput | string
-  age?: Prisma.IntFieldUpdateOperationsInput | number
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -334,7 +335,7 @@ export type PersonUncheckedUpdateManyInput = {
   projectId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   gender?: Prisma.StringFieldUpdateOperationsInput | string
-  age?: Prisma.IntFieldUpdateOperationsInput | number
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -346,6 +347,13 @@ export type PersonListRelationFilter = {
 
 export type PersonOrderByRelationAggregateInput = {
   _count?: Prisma.SortOrder
+}
+
+export type PersonProjectIdNameGenderAgeCompoundUniqueInput = {
+  projectId: string
+  name: string
+  gender: string
+  age: number
 }
 
 export type PersonCountOrderByAggregateInput = {
@@ -425,8 +433,8 @@ export type PersonUncheckedUpdateManyWithoutProjectNestedInput = {
   deleteMany?: Prisma.PersonScalarWhereInput | Prisma.PersonScalarWhereInput[]
 }
 
-export type IntFieldUpdateOperationsInput = {
-  set?: number
+export type NullableIntFieldUpdateOperationsInput = {
+  set?: number | null
   increment?: number
   decrement?: number
   multiply?: number
@@ -437,7 +445,7 @@ export type PersonCreateWithoutProjectInput = {
   id?: string
   name: string
   gender: string
-  age: number
+  age?: number | null
   createdAt?: Date | string
 }
 
@@ -445,7 +453,7 @@ export type PersonUncheckedCreateWithoutProjectInput = {
   id?: string
   name: string
   gender: string
-  age: number
+  age?: number | null
   createdAt?: Date | string
 }
 
@@ -483,7 +491,7 @@ export type PersonScalarWhereInput = {
   projectId?: Prisma.UuidFilter<"Person"> | string
   name?: Prisma.StringFilter<"Person"> | string
   gender?: Prisma.StringFilter<"Person"> | string
-  age?: Prisma.IntFilter<"Person"> | number
+  age?: Prisma.IntNullableFilter<"Person"> | number | null
   createdAt?: Prisma.DateTimeFilter<"Person"> | Date | string
 }
 
@@ -491,7 +499,7 @@ export type PersonCreateManyProjectInput = {
   id?: string
   name: string
   gender: string
-  age: number
+  age?: number | null
   createdAt?: Date | string
 }
 
@@ -499,7 +507,7 @@ export type PersonUpdateWithoutProjectInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   gender?: Prisma.StringFieldUpdateOperationsInput | string
-  age?: Prisma.IntFieldUpdateOperationsInput | number
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -507,7 +515,7 @@ export type PersonUncheckedUpdateWithoutProjectInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   gender?: Prisma.StringFieldUpdateOperationsInput | string
-  age?: Prisma.IntFieldUpdateOperationsInput | number
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -515,7 +523,7 @@ export type PersonUncheckedUpdateManyWithoutProjectInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   gender?: Prisma.StringFieldUpdateOperationsInput | string
-  age?: Prisma.IntFieldUpdateOperationsInput | number
+  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -581,7 +589,7 @@ export type $PersonPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs
     projectId: string
     name: string
     gender: string
-    age: number
+    age: number | null
     createdAt: Date
   }, ExtArgs["result"]["person"]>
   composites: {}

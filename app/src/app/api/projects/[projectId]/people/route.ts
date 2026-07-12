@@ -4,21 +4,50 @@ import { requireCurrentUser } from "@/lib/auth/current-user";
 import { requireOwnedProject } from "@/lib/auth/project-access";
 import { prisma } from "@/lib/prisma";
 import { peopleRequestSchema } from "@/lib/validation/schemas";
+import type { StoredGender } from "@/lib/types/domain";
 
-function normalizePeople(projectId: string, people: { age: number; gender: string; name: string }[]) {
-  const uniquePeople = new Map<string, { age: number; gender: string; name: string; projectId: string }>();
+type IncomingPerson = { age: number | null; gender: string; name: string };
+const UNKNOWN_AGE_IDENTITY = "unknown-age";
+
+function normalizeGender(gender: string): StoredGender {
+  if (
+    gender === GENDER.male ||
+    gender === INPUT_GENDER.male[0] ||
+    gender === INPUT_GENDER.male[1]
+  ) {
+    return GENDER.male;
+  }
+
+  if (
+    gender === GENDER.female ||
+    gender === INPUT_GENDER.female[0] ||
+    gender === INPUT_GENDER.female[1]
+  ) {
+    return GENDER.female;
+  }
+
+  return GENDER.unknown;
+}
+
+function normalizePeople(projectId: string, people: IncomingPerson[]) {
+  const uniquePeople = new Map<
+    string,
+    { age: number | null; gender: StoredGender; name: string; projectId: string }
+  >();
 
   people.forEach((person) => {
-    const gender =
-      person.gender === INPUT_GENDER.male[0] || person.gender === INPUT_GENDER.male[1]
-        ? GENDER.male
-        : GENDER.female;
-    const identity = `${person.name}\u0000${gender}\u0000${person.age}`;
+    const gender = normalizeGender(person.gender);
+    const ageIdentity = person.age ?? UNKNOWN_AGE_IDENTITY;
+    const identity = `${person.name}\u0000${gender}\u0000${ageIdentity}`;
 
     uniquePeople.set(identity, { age: person.age, gender, name: person.name, projectId });
   });
 
   return [...uniquePeople.values()];
+}
+
+function personIdentity(person: IncomingPerson) {
+  return `${person.name}\u0000${person.gender}\u0000${person.age ?? UNKNOWN_AGE_IDENTITY}`;
 }
 
 export async function POST(
@@ -35,10 +64,14 @@ export async function POST(
       return Response.json({ error: "인원 입력 형식을 확인해 주세요." }, { status: 400 });
     }
 
-    const result = await prisma.person.createMany({
-      data: normalizePeople(projectId, parsed.data.people),
-      skipDuplicates: true,
+    const people = normalizePeople(projectId, parsed.data.people);
+    const existingPeople = await prisma.person.findMany({
+      select: { age: true, gender: true, name: true },
+      where: { projectId },
     });
+    const existingIdentities = new Set(existingPeople.map(personIdentity));
+    const peopleToCreate = people.filter((person) => !existingIdentities.has(personIdentity(person)));
+    const result = await prisma.person.createMany({ data: peopleToCreate, skipDuplicates: true });
 
     return Response.json({ createdCount: result.count });
   } catch (error) {

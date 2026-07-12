@@ -6,7 +6,7 @@ import { Sidebar } from "@/components/dashboard/sidebar";
 import { Workspace } from "@/components/dashboard/workspace";
 import { requireCurrentUser } from "@/lib/auth/current-user";
 import { prisma } from "@/lib/prisma";
-import type { GroupResultMembers } from "@/lib/types/domain";
+import type { GroupResultMembers, StoredGender } from "@/lib/types/domain";
 
 type DashboardPageProps = { searchParams: Promise<{ project?: string }> };
 
@@ -54,7 +54,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
           initialGroups={(result?.members as unknown as GroupResultMembers) ?? null}
           initialResultId={result?.id ?? null}
           key={`${project?.id ?? "new-project"}:${project?.people.length ?? 0}`}
-          project={project ? { id: project.id, people: project.people.map((person) => ({ ...person, gender: person.gender as "M" | "F" })), title: project.title } : null}
+          project={project ? { id: project.id, people: project.people.map((person) => ({ ...person, gender: person.gender as StoredGender })), title: project.title } : null}
         />
       </div>
     </div>

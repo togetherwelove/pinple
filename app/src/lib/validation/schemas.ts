@@ -2,6 +2,7 @@ import { z } from "zod";
 import {
   GROUPING_LIMITS,
   GROUPING_STRATEGIES,
+  GENDER,
   INPUT_GENDER,
   LEADER_SELECTION_MODES,
 } from "@/lib/config/app";
@@ -11,8 +12,14 @@ export const projectSchema = z.object({
 });
 
 export const personInputSchema = z.object({
-  age: z.coerce.number().int().min(GROUPING_LIMITS.minimumAge),
-  gender: z.enum([...INPUT_GENDER.male, ...INPUT_GENDER.female]),
+  age: z.coerce.number().int().min(GROUPING_LIMITS.minimumAge).nullable(),
+  gender: z.enum([
+    GENDER.male,
+    GENDER.female,
+    GENDER.unknown,
+    ...INPUT_GENDER.male,
+    ...INPUT_GENDER.female,
+  ]),
   name: z.string().trim().min(1),
 });
 
@@ -31,7 +38,6 @@ export const groupingRequestSchema = z.object({
     .enum([
       LEADER_SELECTION_MODES.none,
       LEADER_SELECTION_MODES.random,
-      LEADER_SELECTION_MODES.oldest,
     ])
     .default(LEADER_SELECTION_MODES.none),
   strategy: z.enum([
@@ -43,8 +49,8 @@ export const groupingRequestSchema = z.object({
 });
 
 export const groupMemberSchema = z.object({
-  age: z.number().int().min(GROUPING_LIMITS.minimumAge),
-  gender: z.enum(["M", "F"]),
+  age: z.number().int().min(GROUPING_LIMITS.minimumAge).nullable(),
+  gender: z.enum([GENDER.male, GENDER.female, GENDER.unknown]),
   id: z.string().uuid(),
   isLeader: z.boolean().optional(),
   name: z.string().min(1),

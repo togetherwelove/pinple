@@ -5,6 +5,7 @@ import { requireOwnedProject } from "@/lib/auth/project-access";
 import { distributePeople } from "@/lib/grouping/distribute-people";
 import { appointLeaders } from "@/lib/grouping/leader-assignment";
 import { prisma } from "@/lib/prisma";
+import type { StoredGender } from "@/lib/types/domain";
 import { groupingRequestSchema } from "@/lib/validation/schemas";
 
 function createResultName() {
@@ -47,7 +48,7 @@ export async function POST(
       distributePeople(
         people.map((person) => ({
           ...person,
-          gender: person.gender as "M" | "F",
+          gender: person.gender as StoredGender,
         })),
         parsed.data.groupSizes,
         parsed.data.strategy,

@@ -19,8 +19,11 @@ import {
   GROUPING_TOGGLE_LABELS,
   GROUP_RESULT_DND_CONTEXT_ID,
   EXCEL_EXPORT,
+  GENDER,
+  GENDER_LABELS,
   LEADER_SELECTION_MODES,
   LEADER_SELECTION_OPTIONS,
+  UNKNOWN_AGE_LABEL,
   UI_MESSAGES,
   UI_LABELS,
   displayGroupName,
@@ -37,9 +40,10 @@ import type {
   GroupResultMembers,
   GroupingStrategy,
   LeaderSelectionMode,
+  PersonInput,
 } from "@/lib/types/domain";
 
-type Person = { age: number; gender: "M" | "F"; id: string; name: string };
+type Person = PersonInput & { id: string };
 type Project = { id: string; people: Person[]; title: string };
 type Props = { initialGroups: GroupResultMembers | null; initialResultId: string | null; project: Project | null };
 type LeaderConflict = {
@@ -63,7 +67,15 @@ function normalizeGroupCount(total: number, count: number) {
 
 function formatRosterText(people: Person[]) {
   return people
-    .map((person) => `${person.name}, ${person.gender === "M" ? "남" : "여"}, ${person.age}`)
+    .map((person) =>
+      [
+        person.name,
+        person.gender === GENDER.unknown ? null : GENDER_LABELS[person.gender],
+        person.age === null ? null : String(person.age),
+      ]
+        .filter((value): value is string => value !== null)
+        .join(", "),
+    )
     .join("\n");
 }
 
@@ -101,7 +113,7 @@ function MemberCard({ groupId, member, onLeaderAction }: MemberCardProps) {
 
   const leaderActionLabel = member.isLeader ? UI_LABELS.revokeLeader : UI_LABELS.appointLeader;
 
-  return <li ref={sortable.setNodeRef} {...sortable.attributes} {...sortable.listeners} className={`flex touch-none cursor-grab items-center gap-2 border-b border-[var(--border)] px-3 py-2 text-sm active:cursor-grabbing ${member.isLeader ? "bg-amber-50" : ""}`} style={{ opacity: sortable.isDragging ? 0.35 : undefined, transform, transition: sortable.transition }}><GripVertical size={14} className="text-[var(--muted)]" />{member.isLeader ? <Crown aria-label={UI_LABELS.leader} className="shrink-0 text-amber-600" fill="currentColor" size={14} /> : null}<span>{member.name}</span><span className="ml-auto text-xs text-[var(--muted)]">{member.gender === "M" ? "male" : "female"} · {member.age}</span><button aria-label={leaderActionLabel} className="flex size-7 shrink-0 items-center justify-center text-[var(--muted)] hover:bg-[var(--canvas)] hover:text-amber-700" onClick={() => onLeaderAction(groupId, member)} onKeyDown={(event) => event.stopPropagation()} onPointerDown={(event) => event.stopPropagation()} title={leaderActionLabel} type="button"><Crown fill={member.isLeader ? "currentColor" : "none"} size={14} /><span className="sr-only">{leaderActionLabel}</span></button></li>;
+  return <li ref={sortable.setNodeRef} {...sortable.attributes} {...sortable.listeners} className={`flex touch-none cursor-grab items-center gap-2 border-b border-[var(--border)] px-3 py-2 text-sm active:cursor-grabbing ${member.isLeader ? "bg-amber-50" : ""}`} style={{ opacity: sortable.isDragging ? 0.35 : undefined, transform, transition: sortable.transition }}><GripVertical size={14} className="text-[var(--muted)]" />{member.isLeader ? <Crown aria-label={UI_LABELS.leader} className="shrink-0 text-amber-600" fill="currentColor" size={14} /> : null}<span>{member.name}</span><span className="ml-auto text-xs text-[var(--muted)]">{GENDER_LABELS[member.gender]} · {member.age ?? UNKNOWN_AGE_LABEL}</span><button aria-label={leaderActionLabel} className="flex size-7 shrink-0 items-center justify-center text-[var(--muted)] hover:bg-[var(--canvas)] hover:text-amber-700" onClick={() => onLeaderAction(groupId, member)} onKeyDown={(event) => event.stopPropagation()} onPointerDown={(event) => event.stopPropagation()} title={leaderActionLabel} type="button"><Crown fill={member.isLeader ? "currentColor" : "none"} size={14} /><span className="sr-only">{leaderActionLabel}</span></button></li>;
 }
 
 function GroupColumn({ group, onLeaderAction }: { group: Group; onLeaderAction: MemberCardProps["onLeaderAction"] }) {
@@ -244,7 +256,7 @@ export function Workspace({ initialGroups, initialResultId, project }: Props) {
     await persistGroupChanges(previous, next);
   }
   function exportExcel() {
-    const rows = groups.flatMap((group) => group.members.map((member) => ({ "조명": displayGroupName(group.name), "나이": member.age, "성별": member.gender === "M" ? "male" : "female", "이름": member.name })));
+    const rows = groups.flatMap((group) => group.members.map((member) => ({ "조명": displayGroupName(group.name), "나이": member.age ?? UNKNOWN_AGE_LABEL, "성별": GENDER_LABELS[member.gender], "이름": member.name })));
     const workbook = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(workbook, XLSX.utils.json_to_sheet(rows), EXCEL_EXPORT.sheetName); XLSX.writeFile(workbook, `${project?.title ?? "명단"}_${EXCEL_EXPORT.fileNameSuffix}.xlsx`);
   }
   if (!project) {

@@ -24,8 +24,20 @@ function createGroups(groupSizes: number[]): Group[] {
   }));
 }
 
+function compareOptionalAges(leftAge: number | null, rightAge: number | null) {
+  if (leftAge === null) {
+    return rightAge === null ? 0 : 1;
+  }
+
+  if (rightAge === null) {
+    return -1;
+  }
+
+  return leftAge - rightAge;
+}
+
 function sortByAgeWithShuffledPeers(people: GroupingPerson[]) {
-  const peopleByAge = new Map<number, GroupingPerson[]>();
+  const peopleByAge = new Map<number | null, GroupingPerson[]>();
 
   people.forEach((person) => {
     const sameAgePeople = peopleByAge.get(person.age) ?? [];
@@ -34,7 +46,7 @@ function sortByAgeWithShuffledPeers(people: GroupingPerson[]) {
   });
 
   return [...peopleByAge.entries()]
-    .sort(([leftAge], [rightAge]) => leftAge - rightAge)
+    .sort(([leftAge], [rightAge]) => compareOptionalAges(leftAge, rightAge))
     .flatMap(([, sameAgePeople]) => shuffle(sameAgePeople));
 }
 
@@ -55,10 +67,39 @@ function createRandomSnakeSlots(groupSizes: number[]) {
   return slots;
 }
 
+function copyGroups(groups: Group[]) {
+  return groups.map((group) => ({
+    ...group,
+    members: [...group.members],
+  }));
+}
+
+function assignToAvailableSlots(
+  groups: Group[],
+  people: GroupingPerson[],
+  prioritizeAge: boolean,
+) {
+  const remainingGroupSizes = groups.map((group) => group.targetSize - group.members.length);
+  const slots = createRandomSnakeSlots(remainingGroupSizes);
+  const orderedPeople = prioritizeAge ? sortByAgeWithShuffledPeers(people) : shuffle(people);
+
+  orderedPeople.forEach((person) => {
+    const groupIndex = slots.shift();
+
+    if (groupIndex === undefined) {
+      throw new Error("No remaining group capacity.");
+    }
+
+    groups[groupIndex].members.push(person);
+  });
+
+  return groups;
+}
+
 function assignEvenly(people: GroupingPerson[], groupSizes: number[]) {
   const groups = createGroups(groupSizes);
   const slots = createRandomSnakeSlots(groupSizes);
-  const peopleByGender = [GENDER.male, GENDER.female] as const;
+  const peopleByGender = [GENDER.male, GENDER.female, GENDER.unknown] as const;
 
   peopleByGender.forEach((gender) => {
     sortByAgeWithShuffledPeers(people.filter((person) => person.gender === gender)).forEach(
@@ -91,7 +132,7 @@ function assignBySimilarAge(people: GroupingPerson[], groupSizes: number[]) {
 
 function assignByGenderOrder(
   people: GroupingPerson[],
-  groupSizes: number[],
+  groups: Group[],
   genderOrder: GenderOrder,
   prioritizeAge: boolean,
 ) {
@@ -104,8 +145,8 @@ function assignByGenderOrder(
     ]),
   );
 
-  return createGroups(groupSizes).map((group) => {
-    const members: GroupingPerson[] = [];
+  return groups.map((group) => {
+    const members = [...group.members];
 
     genderOrder.forEach((gender) => {
       const remainingCapacity = group.targetSize - members.length;
@@ -122,13 +163,13 @@ function assignByGenderOrder(
 function scoreGenderSeparation(groups: Group[]) {
   return groups.reduce(
     (score, group) => {
-      const genderCount = new Set(group.members.map((member) => member.gender)).size;
       const maleCount = group.members.filter((member) => member.gender === GENDER.male).length;
-      const femaleCount = group.members.length - maleCount;
+      const femaleCount = group.members.filter((member) => member.gender === GENDER.female).length;
+      const hasMixedKnownGenders = maleCount > 0 && femaleCount > 0;
 
       return {
-        mixedGroupCount: score.mixedGroupCount + (genderCount > 1 ? 1 : 0),
-        minorityCount: score.minorityCount + (genderCount > 1 ? Math.min(maleCount, femaleCount) : 0),
+        mixedGroupCount: score.mixedGroupCount + (hasMixedKnownGenders ? 1 : 0),
+        minorityCount: score.minorityCount + (hasMixedKnownGenders ? Math.min(maleCount, femaleCount) : 0),
       };
     },
     { mixedGroupCount: 0, minorityCount: 0 },
@@ -140,15 +181,20 @@ function assignBySeparatedGender(
   groupSizes: number[],
   prioritizeAge: boolean,
 ) {
+  const groupsWithUnknownPeople = assignToAvailableSlots(
+    createGroups(groupSizes),
+    people.filter((person) => person.gender === GENDER.unknown),
+    prioritizeAge,
+  );
   const maleFirstGroups = assignByGenderOrder(
     people,
-    groupSizes,
+    copyGroups(groupsWithUnknownPeople),
     [GENDER.male, GENDER.female],
     prioritizeAge,
   );
   const femaleFirstGroups = assignByGenderOrder(
     people,
-    groupSizes,
+    copyGroups(groupsWithUnknownPeople),
     [GENDER.female, GENDER.male],
     prioritizeAge,
   );

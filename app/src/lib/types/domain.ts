@@ -13,7 +13,7 @@ export type LeaderSelectionMode =
   (typeof LEADER_SELECTION_MODES)[keyof typeof LEADER_SELECTION_MODES];
 
 export type PersonInput = {
-  age: number;
+  age: number | null;
   gender: StoredGender;
   name: string;
 };

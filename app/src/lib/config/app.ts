@@ -11,11 +11,25 @@ export const ROUTES = {
 export const GENDER = {
   female: "F",
   male: "M",
+  unknown: "UNKNOWN",
 } as const;
 
 export const INPUT_GENDER = {
   female: ["여", "여자"],
   male: ["남", "남자"],
+} as const;
+
+export const GENDER_LABELS = {
+  [GENDER.female]: "여",
+  [GENDER.male]: "남",
+  [GENDER.unknown]: "미상",
+} as const;
+
+export const UNKNOWN_AGE_LABEL = "미상";
+
+export const ROSTER_PARSING = {
+  autoName: (lineNumber: number) => `이름 미입력 ${lineNumber}`,
+  empty: "명단을 입력해 주세요.",
 } as const;
 
 export const GROUPING_LIMITS = {
@@ -66,14 +80,12 @@ export const GROUPING_STRATEGY_LABELS = {
 
 export const LEADER_SELECTION_MODES = {
   none: "none",
-  oldest: "oldest",
   random: "random",
 } as const;
 
 export const LEADER_SELECTION_OPTIONS = [
   { label: "선출 안 함", value: LEADER_SELECTION_MODES.none },
   { label: "무작위 선출", value: LEADER_SELECTION_MODES.random },
-  { label: "연장자 우선 선출", value: LEADER_SELECTION_MODES.oldest },
 ] as const;
 
 export const EXCEL_EXPORT = {

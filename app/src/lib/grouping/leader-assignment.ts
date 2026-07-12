@@ -18,10 +18,7 @@ function selectLeaderId(group: Group, selectionMode: LeaderSelectionMode) {
     return shuffle(group.members)[0].id;
   }
 
-  const oldestAge = Math.max(...group.members.map((member) => member.age));
-  const oldestMembers = group.members.filter((member) => member.age === oldestAge);
-
-  return shuffle(oldestMembers)[0].id;
+  return null;
 }
 
 export function appointLeaders(groups: Group[], selectionMode: LeaderSelectionMode) {

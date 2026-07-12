@@ -31,7 +31,8 @@ export async function readRosterFile(file: File) {
   const rows = XLSX.utils.sheet_to_json<(string | number)[]>(firstSheet, { header: 1 });
 
   return rows
-    .filter((row) => row.length >= 3)
-    .map((row) => row.slice(0, 3).join(", "))
+    .map((row) => row.map((value) => String(value).trim()).filter(Boolean))
+    .filter((row) => row.length > 0)
+    .map((row) => row.join(", "))
     .join("\n");
 }
