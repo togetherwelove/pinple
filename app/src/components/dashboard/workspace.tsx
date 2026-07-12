@@ -324,7 +324,7 @@ export function Workspace({ initialGroups, initialResultId, project }: Props) {
               </fieldset>
               <label className="mt-4 block text-sm font-medium">{UI_LABELS.leaderAssignmentMode}<select className="mt-2 w-full border border-[var(--border)] bg-[var(--surface)] p-2 text-sm disabled:bg-[var(--canvas)] disabled:text-[var(--muted)]" disabled={!canCreateGroupSizes} onChange={(event) => setLeaderSelectionMode(event.target.value as LeaderSelectionMode)} value={leaderSelectionMode}>{LEADER_SELECTION_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>
               <p className="mt-3 text-xs text-[var(--muted)]">{groupSetupMessage}</p>
-              <button className="mt-3 flex w-full items-center justify-center gap-2 border border-[var(--border)] bg-[var(--ink)] py-2 text-sm text-black disabled:cursor-not-allowed disabled:bg-[var(--canvas)] disabled:text-[var(--muted)]" disabled={!canRunGrouping || isGrouping} onClick={() => void runGrouping()} type="button">{isGrouping ? <Spinner size="sm" /> : null}{isGrouping ? UI_LABELS.grouping : "자동 조 편성"}</button>
+              <button className="mt-3 flex w-full items-center justify-center gap-2 border border-[var(--border)] bg-[var(--accent)] py-2 text-sm text-black disabled:cursor-not-allowed disabled:bg-[var(--canvas)] disabled:text-[var(--muted)]" disabled={!canRunGrouping || isGrouping} onClick={() => void runGrouping()} type="button">{isGrouping ? <Spinner size="sm" /> : null}{isGrouping ? UI_LABELS.grouping : "자동 조 편성"}</button>
             </section>
           </aside>
           <section className="min-w-0 border border-[var(--border)] bg-[var(--surface)] p-4">
