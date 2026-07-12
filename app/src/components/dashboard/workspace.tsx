@@ -298,7 +298,7 @@ export function Workspace({ initialGroups, initialResultId, project }: Props) {
     <main className="min-h-screen bg-[var(--canvas)] p-4 md:p-8">
       <div className="mx-auto max-w-7xl">
         <header className="mb-6 flex justify-between">
-          <div><p className="text-sm text-[var(--muted)]">GroupFlow</p><h1 className="text-2xl font-semibold">{project.title}</h1></div>
+          <div><p className="text-sm text-[var(--muted)]">Pinple</p><h1 className="text-2xl font-semibold">{project.title}</h1></div>
           <span className="text-sm text-[var(--muted)]">{personCount}명</span>
         </header>
         {notice ? <div className="mb-4 border border-red-300 bg-red-50 p-3 text-sm text-red-800" role="alert">{notice}</div> : null}

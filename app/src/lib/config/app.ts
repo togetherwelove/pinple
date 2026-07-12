@@ -1,4 +1,4 @@
-export const APP_NAME = "GroupFlow";
+export const APP_NAME = "Pinple";
 
 export const APP_DESCRIPTION = "인원 정보를 균형 있게 조로 나누는 작업 공간";
 
