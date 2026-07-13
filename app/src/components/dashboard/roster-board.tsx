@@ -143,7 +143,7 @@ function BoardColumn({
       className={
         compact
           ? "min-h-28 w-full border border-[var(--border)] bg-[var(--surface)]"
-          : "min-h-48 min-w-64 border border-[var(--border)] bg-[var(--surface)]"
+          : "min-h-48 min-w-0 border border-[var(--border)] bg-[var(--surface)]"
       }
       ref={droppable.setNodeRef}
     >
@@ -394,7 +394,7 @@ export function RosterBoard({
                 </button>
               </div>
             </div>
-            <div className="mt-4 flex gap-4 overflow-x-auto pb-2">
+            <div className="mt-4 grid grid-cols-[repeat(auto-fit,minmax(16rem,1fr))] gap-4">
               {draft.groups.map((group) => (
                 <BoardColumn
                   group={group}
