@@ -35,6 +35,7 @@ type RosterBoardProps = {
   onUpdateUnassignedPerson: (personId: string, updates: PersonInput) => void;
   rightPanelHeader: ReactNode;
   rosterTitle: string;
+  totalPeople: number;
 };
 
 type MemberCardProps = {
@@ -243,6 +244,7 @@ export function RosterBoard({
   onUpdateUnassignedPerson,
   rightPanelHeader,
   rosterTitle,
+  totalPeople,
 }: RosterBoardProps) {
   const [activeName, setActiveName] = useState("");
   const [editingMember, setEditingMember] = useState<GroupMember | null>(null);
@@ -368,15 +370,18 @@ export function RosterBoard({
                 <h2 className="font-semibold">{ROSTER_BOARD.boardTitle}</h2>
                 <p className="mt-1 text-xs text-[var(--muted)]">{GROUPING_STRATEGY_LABELS[draft.strategy]}</p>
               </div>
-              <button
-                className={`flex items-center gap-2 px-3 py-2 text-sm ${hasGroupMembers ? "bg-[var(--ink)] text-[var(--surface)] hover:opacity-90" : "cursor-not-allowed bg-[var(--canvas)] text-[var(--muted)]"}`}
-                disabled={!hasGroupMembers}
-                onClick={exportExcel}
-                type="button"
-              >
-                <Download size={16} />
-                {ROSTER_BOARD.export}
-              </button>
+              <div className="flex items-center gap-3">
+                <span className="text-sm text-[var(--muted)]">{totalPeople}명</span>
+                <button
+                  className={`flex items-center gap-2 px-3 py-2 text-sm ${hasGroupMembers ? "bg-[var(--ink)] text-[var(--surface)] hover:opacity-90" : "cursor-not-allowed bg-[var(--canvas)] text-[var(--muted)]"}`}
+                  disabled={!hasGroupMembers}
+                  onClick={exportExcel}
+                  type="button"
+                >
+                  <Download size={16} />
+                  {ROSTER_BOARD.export}
+                </button>
+              </div>
             </div>
             <div className="mt-4 flex gap-4 overflow-x-auto pb-2">
               {draft.groups.map((group) => (
