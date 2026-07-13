@@ -6,8 +6,12 @@
   --accent: #e4e4e7;
   --border: #e4e4e7;
   --canvas: #f4f4f5;
+  --danger: #b91c1c;
+  --danger-foreground: #ffffff;
+  --danger-surface: #fef2f2;
   --ink: #18181b;
   --muted: #71717a;
+  --overlay: rgb(0 0 0 / 0.3);
   --surface: #ffffff;
 }
 
@@ -25,8 +29,12 @@
     --accent: #d4d4d8;
     --border: #3f3f46;
     --canvas: #27272a;
+    --danger: #fca5a5;
+    --danger-foreground: #18181b;
+    --danger-surface: #450a0a;
     --ink: #f4f4f5;
     --muted: #a1a1aa;
+    --overlay: rgb(0 0 0 / 0.55);
     --surface: #18181b;
   }
 }

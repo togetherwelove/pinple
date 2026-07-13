@@ -17,6 +17,7 @@ type RosterBoardStore = {
   drafts: Record<string, RosterBoardDraft>;
   hasHydrated: boolean;
   initializeDraft: (draftKey: string, draft: RosterBoardDraft) => void;
+  removeDraft: (draftKey: string) => void;
   replaceDraft: (draftKey: string, draft: RosterBoardDraft) => void;
   setHasHydrated: (hasHydrated: boolean) => void;
   addPeople: (draftKey: string, people: GroupMember[]) => void;
@@ -92,6 +93,13 @@ export const useRosterBoardStore = create<RosterBoardStore>()(
             removePersonFromDraft(draft, personId, groupId),
           ),
         })),
+      removeDraft: (draftKey) =>
+        set((state) => {
+          const drafts = { ...state.drafts };
+          delete drafts[draftKey];
+
+          return { drafts };
+        }),
       replaceDraft: (draftKey, draft) =>
         set((state) => ({ drafts: { ...state.drafts, [draftKey]: draft } })),
       setHasHydrated: (hasHydrated) => set({ hasHydrated }),

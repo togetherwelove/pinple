@@ -115,7 +115,7 @@ function ProjectWorkspace({
         jsonRequest(
           `/api/group-results/${selectedResult.id}`,
           "PATCH",
-          createGroupResultMembers(nextDraft),
+          { members: createGroupResultMembers(nextDraft) },
         ),
       )
       .then(() => setNotice(null))
@@ -181,7 +181,7 @@ function ProjectWorkspace({
         await jsonRequest(
           `/api/group-results/${selectedResult.id}`,
           "PATCH",
-          createGroupResultMembers(nextDraft),
+          { members: createGroupResultMembers(nextDraft) },
         );
       } else {
         const result = await jsonRequest<{ id: string }>(

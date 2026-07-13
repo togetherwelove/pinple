@@ -95,6 +95,20 @@ export const groupResultMembersSchema = z.object({
   unassigned: z.array(groupMemberSchema).optional(),
 });
 
+export const groupResultUpdateSchema = z
+  .object({
+    members: groupResultMembersSchema.optional(),
+    name: z
+      .string()
+      .trim()
+      .min(1)
+      .max(GROUPING_LIMITS.groupResultNameMaximumLength)
+      .optional(),
+  })
+  .refine((update) => update.members !== undefined || update.name !== undefined, {
+    message: VALIDATION_MESSAGES.groupResultUpdateRequired,
+  });
+
 export const boardPersonSchema = z.object({
   age: z.coerce.number().int().min(GROUPING_LIMITS.minimumAge).nullable(),
   gender: z.enum([GENDER.male, GENDER.female, GENDER.unknown]),
