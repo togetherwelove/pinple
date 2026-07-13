@@ -110,7 +110,8 @@ export const ROSTER_BOARD = {
   personAge: "나이",
   editPerson: "인원 수정",
   emptyUnassigned: "대기 중인 인원이 없습니다.",
-  export: "내보내기",
+  export: "조 결과 내보내기",
+  exportRoster: "명단 내보내기",
   fileImport: "Excel 또는 CSV 불러오기",
   inputPlaceholder: "이름, 성별, 나이",
   personEditorDescription: "수정 내용은 이 브라우저의 임시 보드에만 반영됩니다.",
@@ -162,6 +163,8 @@ export const LEADER_SELECTION_OPTIONS = [
 
 export const EXCEL_EXPORT = {
   fileNameSuffix: "조결과",
+  rosterFileNameSuffix: "명단",
+  rosterSheetName: "명단",
   sheetName: "조 결과",
 } as const;
 

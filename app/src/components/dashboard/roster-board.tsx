@@ -18,7 +18,9 @@ import {
 } from "@/lib/config/app";
 import { LeaderConflictDialog } from "@/components/dashboard/leader-conflict-dialog";
 import { setGroupLeader } from "@/lib/grouping/leader-assignment";
+import { allBoardPeople } from "@/lib/roster-board/draft";
 import { reorderBoardMembers, UNASSIGNED_COLUMN_ID } from "@/lib/roster-board/reorder-board-members";
+import { exportRosterToExcel } from "@/lib/roster/export-roster";
 import type { Group, GroupMember, PersonInput, RosterBoardDraft } from "@/lib/types/domain";
 
 type LeaderConflict = {
@@ -258,6 +260,7 @@ export function RosterBoard({
   const [editingMember, setEditingMember] = useState<GroupMember | null>(null);
   const [leaderConflict, setLeaderConflict] = useState<LeaderConflict | null>(null);
   const hasGroupMembers = draft.groups.some((group) => group.members.length > 0);
+  const hasRosterPeople = totalPeople > 0;
 
   function handleLeaderAction(groupId: string, member: GroupMember) {
     onDraftChange({
@@ -325,6 +328,10 @@ export function RosterBoard({
     XLSX.writeFile(workbook, `${rosterTitle}_${EXCEL_EXPORT.fileNameSuffix}.xlsx`);
   }
 
+  function exportRoster() {
+    exportRosterToExcel(allBoardPeople(draft), rosterTitle);
+  }
+
   return (
     <DndContext
       collisionDetection={closestCenter}
@@ -381,8 +388,17 @@ export function RosterBoard({
               <div>
                 <h2 className="font-semibold">{ROSTER_BOARD.boardTitle}</h2>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center justify-end gap-2">
                 <span className="text-sm text-[var(--muted)]">{totalPeople}명</span>
+                <button
+                  className={`flex items-center gap-2 border border-[var(--border)] px-3 py-2 text-sm ${hasRosterPeople ? "bg-[var(--surface)] hover:bg-[var(--canvas)]" : "cursor-not-allowed bg-[var(--canvas)] text-[var(--muted)]"}`}
+                  disabled={!hasRosterPeople}
+                  onClick={exportRoster}
+                  type="button"
+                >
+                  <Download size={16} />
+                  {ROSTER_BOARD.exportRoster}
+                </button>
                 <button
                   className={`flex items-center gap-2 px-3 py-2 text-sm ${hasGroupMembers ? "bg-[var(--ink)] text-[var(--surface)] hover:opacity-90" : "cursor-not-allowed bg-[var(--canvas)] text-[var(--muted)]"}`}
                   disabled={!hasGroupMembers}
