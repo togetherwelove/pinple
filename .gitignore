@@ -1,3 +1,4 @@
 .secret/
 .test-data/
+.doc/
 app/.env.local
