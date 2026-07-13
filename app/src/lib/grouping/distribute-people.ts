@@ -240,3 +240,25 @@ export function distributePeople(
 
   return assignEvenly(people, groupSizes);
 }
+
+export function distributeUnassignedPeople(
+  people: GroupMember[],
+  groups: Group[],
+  strategy: GroupingStrategy = GROUPING_STRATEGIES.even,
+) {
+  const remainingGroupSizes = groups.map((group) =>
+    Math.max(group.targetSize - group.members.length, 0),
+  );
+  const remainingCapacity = remainingGroupSizes.reduce((sum, size) => sum + size, 0);
+
+  if (remainingCapacity !== people.length) {
+    throw new Error("Remaining group capacity must match unassigned people count.");
+  }
+
+  const distributedGroups = distributePeople(people, remainingGroupSizes, strategy);
+
+  return groups.map((group, index) => ({
+    ...group,
+    members: [...group.members, ...distributedGroups[index].members],
+  }));
+}

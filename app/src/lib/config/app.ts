@@ -83,6 +83,44 @@ export function displayGroupName(name: string) {
 
 export const GROUP_RESULT_DND_CONTEXT_ID = "group-results";
 
+export const ROSTER_BOARD_DND_CONTEXT_ID = "roster-board";
+
+export const ROSTER_BOARD_STORAGE_KEY = "pinple-roster-board-draft-v1";
+
+export const ROSTER_BOARD = {
+  addPerson: "추가",
+  addedPeople: "대기 명단에 인원을 추가했습니다.",
+  autoGrouping: "자동 조 편성",
+  boardTitle: "명단 관리 보드",
+  capacity: "남은 정원",
+  groupCount: "조 개수",
+  groupTargets: "조별 정원",
+  groupingStrategy: "편성 방식",
+  movePerson: "인원 이동",
+  personAge: "나이",
+  editPerson: "인원 수정",
+  emptyUnassigned: "대기 중인 인원이 없습니다.",
+  export: "내보내기",
+  fileImport: "Excel 또는 CSV 불러오기",
+  inputPlaceholder: "이름, 성별, 나이",
+  personEditorDescription: "수정 내용은 이 브라우저의 임시 보드에만 반영됩니다.",
+  personEditorTitle: "대기 명단 인원 수정",
+  personGender: "성별",
+  personName: "이름",
+  remainingCapacity: (capacity: number) => `남은 정원: ${capacity}명`,
+  removePerson: "인원 삭제",
+  savePerson: "수정 완료",
+  unassigned: "대기 명단",
+} as const;
+
+export const ROSTER_CREATION = {
+  description: "명단을 모으고 조건에 맞는 조를 구성할 수 있습니다.",
+  heading: "첫 명단을 만들어 보세요.",
+  inputPlaceholder: "명단 이름",
+  start: "새로운 명단 시작",
+  subtitle: "새 작업을 시작하세요",
+} as const;
+
 export const GROUPING_STRATEGIES = {
   ageSimilar: "age_similar",
   even: "even",
@@ -121,6 +159,10 @@ export const UI_MESSAGES = {
   authenticationRequired: "로그인이 필요합니다.",
   emptyWorkbook: "파일에 읽을 수 있는 시트가 없습니다.",
   groupCapacityMismatch: "조 정원 합계를 전체 인원 수와 맞춰 주세요.",
+  boardCapacityMismatch: "대기 명단 인원 수와 조별 남은 정원을 맞춰 주세요.",
+  boardGroupingRequired: "대기 명단에 인원을 추가한 뒤 조 편성을 실행할 수 있습니다.",
+  boardSaveFailed: "조 편성 결과를 저장하지 못했습니다. 보드 초안은 이 브라우저에 유지됩니다.",
+  boardSnapshotInvalid: "보드 데이터를 확인해 주세요.",
   groupResultsRequired: "조 편성 결과를 만든 뒤 내보낼 수 있습니다.",
   invalidFile: "지원하지 않는 파일입니다.",
   invalidInput: "입력 형식을 확인해 주세요.",
@@ -151,6 +193,7 @@ export const UI_LABELS = {
   grouping: "조 편성 중...",
   leader: "조장",
   leaderAssignmentMode: "조장 선출 방식",
+  loadingBoard: "명단 보드를 준비하는 중...",
   loadingRosterFile: "불러오는 중...",
   retainExistingLeader: "A. 기존 조장 유지",
   revokeLeader: "조장 해제",

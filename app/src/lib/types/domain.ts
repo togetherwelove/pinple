@@ -34,3 +34,11 @@ export type GroupResultMembers = {
   groups: Group[];
   strategy?: GroupingStrategy;
 };
+
+export type RosterBoardDraft = {
+  groups: Group[];
+  isGroupSizingManual: boolean;
+  leaderSelectionMode: LeaderSelectionMode;
+  strategy: GroupingStrategy;
+  unassigned: GroupMember[];
+};

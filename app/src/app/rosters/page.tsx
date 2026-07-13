@@ -73,7 +73,6 @@ export default async function RosterPage({ searchParams }: RosterPageProps) {
         </nav>
         <Workspace
           initialGroups={(result?.members as unknown as GroupResultMembers) ?? null}
-          initialResultId={result?.id ?? null}
           key={`${project?.id ?? "new-project"}:${project?.people.length ?? 0}`}
           project={
             project

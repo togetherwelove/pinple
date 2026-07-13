@@ -83,3 +83,36 @@ export const groupResultMembersSchema = z.object({
     ])
     .optional(),
 });
+
+export const boardPersonSchema = z.object({
+  age: z.coerce.number().int().min(GROUPING_LIMITS.minimumAge).nullable(),
+  gender: z.enum([GENDER.male, GENDER.female, GENDER.unknown]),
+  id: z.string().uuid(),
+  name: z.string().trim().min(1),
+});
+
+export const boardSnapshotSchema = z
+  .object({
+    members: groupResultMembersSchema,
+    people: z.array(boardPersonSchema),
+  })
+  .superRefine((snapshot, context) => {
+    const peopleIds = new Set(snapshot.people.map((person) => person.id));
+    const referencedIds = snapshot.members.groups.flatMap((group) =>
+      group.members.map((member) => member.id),
+    );
+
+    if (peopleIds.size !== snapshot.people.length) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Duplicate person ids are not allowed.",
+      });
+    }
+
+    if (referencedIds.some((id) => !peopleIds.has(id))) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Group members must exist in the roster.",
+      });
+    }
+  });
