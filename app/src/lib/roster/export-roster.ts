@@ -1,5 +1,10 @@
 import * as XLSX from "xlsx";
-import { EXCEL_EXPORT, GENDER, GENDER_LABELS } from "@/lib/config/app";
+import {
+  EXCEL_EXPORT,
+  GENDER,
+  GENDER_LABELS,
+  MISSING_FIELD_VALUE,
+} from "@/lib/config/app";
 import type { PersonInput } from "@/lib/types/domain";
 
 type RosterExportPerson = PersonInput & { id: string };
@@ -7,8 +12,10 @@ type RosterExportPerson = PersonInput & { id: string };
 export function createRosterImportRows(people: RosterExportPerson[]) {
   return people.map((person) => [
     person.name,
-    person.gender === GENDER.unknown ? "" : GENDER_LABELS[person.gender],
-    person.age ?? "",
+    person.gender === GENDER.unknown
+      ? MISSING_FIELD_VALUE
+      : GENDER_LABELS[person.gender],
+    person.age ?? MISSING_FIELD_VALUE,
   ]);
 }
 

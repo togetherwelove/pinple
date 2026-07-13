@@ -11,9 +11,10 @@ import {
   EXCEL_EXPORT,
   GENDER,
   GENDER_LABELS,
+  MISSING_FIELD_VALUE,
+  OPTIONAL_FIELD_LABELS,
   ROSTER_BOARD,
   ROSTER_BOARD_DND_CONTEXT_ID,
-  UNKNOWN_AGE_LABEL,
   UI_LABELS,
   displayGroupName,
 } from "@/lib/config/app";
@@ -22,6 +23,7 @@ import { setGroupLeader } from "@/lib/grouping/leader-assignment";
 import { allBoardPeople } from "@/lib/roster-board/draft";
 import { reorderBoardMembers, UNASSIGNED_COLUMN_ID } from "@/lib/roster-board/reorder-board-members";
 import { exportRosterToExcel } from "@/lib/roster/export-roster";
+import { formatPersonDetails } from "@/lib/roster/format-person-details";
 import type { Group, GroupMember, PersonInput, RosterBoardDraft } from "@/lib/types/domain";
 
 type LeaderConflict = {
@@ -62,6 +64,7 @@ function SortableMemberCard({
     ? `translate3d(${sortable.transform.x}px, ${sortable.transform.y}px, 0)`
     : undefined;
   const leaderActionLabel = member.isLeader ? UI_LABELS.revokeLeader : UI_LABELS.appointLeader;
+  const personDetails = formatPersonDetails(member);
 
   return (
     <li
@@ -82,9 +85,9 @@ function SortableMemberCard({
         <Crown aria-label={UI_LABELS.leader} className="shrink-0 text-amber-600" fill="currentColor" size={14} />
       ) : null}
       <span className="min-w-0 flex-1 truncate">{member.name}</span>
-      <span className="shrink-0 text-xs text-[var(--muted)]">
-        {GENDER_LABELS[member.gender]} · {member.age ?? UNKNOWN_AGE_LABEL}
-      </span>
+      {personDetails ? (
+        <span className="shrink-0 text-xs text-[var(--muted)]">{personDetails}</span>
+      ) : null}
       {groupId === null && onEdit ? (
         <button
           aria-label={ROSTER_BOARD.editPerson}
@@ -221,7 +224,7 @@ function PersonEditorDialog({
             <select className="mt-1 w-full border border-[var(--border)] bg-[var(--surface)] p-2" onChange={(event) => setGender(event.target.value as GroupMember["gender"])} value={gender}>
               <option value={GENDER.male}>{GENDER_LABELS[GENDER.male]}</option>
               <option value={GENDER.female}>{GENDER_LABELS[GENDER.female]}</option>
-              <option value={GENDER.unknown}>{GENDER_LABELS[GENDER.unknown]}</option>
+              <option value={GENDER.unknown}>{OPTIONAL_FIELD_LABELS.notSet}</option>
             </select>
           </label>
         </div>
@@ -316,7 +319,7 @@ export function RosterBoard({
   function exportExcel() {
     const rows = draft.groups.flatMap((group) =>
       group.members.map((member) => ({
-        "나이": member.age ?? UNKNOWN_AGE_LABEL,
+        "나이": member.age ?? MISSING_FIELD_VALUE,
         "성별": GENDER_LABELS[member.gender],
         "이름": member.name,
         "조명": displayGroupName(group.name),

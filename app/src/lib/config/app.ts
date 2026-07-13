@@ -60,10 +60,14 @@ export const INPUT_GENDER = {
 export const GENDER_LABELS = {
   [GENDER.female]: "여",
   [GENDER.male]: "남",
-  [GENDER.unknown]: "미상",
+  [GENDER.unknown]: "",
 } as const;
 
-export const UNKNOWN_AGE_LABEL = "미상";
+export const MISSING_FIELD_VALUE = "";
+
+export const OPTIONAL_FIELD_LABELS = {
+  notSet: "선택 안 함",
+} as const;
 
 export const ROSTER_PARSING = {
   autoName: (lineNumber: number) => `이름 미입력 ${lineNumber}`,
