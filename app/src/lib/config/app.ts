@@ -8,6 +8,11 @@ export const ROUTES = {
   root: "/",
 } as const;
 
+export const INPUT_DEPENDENT_BUTTON_CLASSES = {
+  disabled: "cursor-not-allowed bg-[var(--canvas)] text-[var(--muted)]",
+  enabled: "bg-[var(--ink)] text-[var(--surface)] transition-opacity hover:opacity-90",
+} as const;
+
 export const LOGIN_CONTENT = {
   description: "명단을 정리하고, 조건에 맞는 조를 빠르게 구성하세요.",
   googleContinue: "Google로 계속하기",

@@ -18,6 +18,7 @@ import {
   GROUPING_STRATEGY_LABELS,
   GROUPING_TOGGLE_LABELS,
   GROUP_RESULT_DND_CONTEXT_ID,
+  INPUT_DEPENDENT_BUTTON_CLASSES,
   EXCEL_EXPORT,
   GENDER,
   GENDER_LABELS,
@@ -161,12 +162,15 @@ export function Workspace({ initialGroups, initialResultId, project }: Props) {
   const capacity = useMemo(() => groupSizes.reduce((sum, size) => sum + size, 0), [groupSizes]);
   const personCount = project?.people.length ?? 0;
   const canCreateProject = projectTitle.trim().length > 0;
-  const canSaveRoster = rosterText.trim().length > 0;
+  const hasRosterInput = rosterText.trim().length > 0;
+  const isValidRosterInput = hasRosterInput && !isSavingRoster;
   const canCreateGroupSizes = personCount > 0;
   const hasGroupSizes = groupSizes.length > 0;
   const displayedGroupSizes = hasGroupSizes ? groupSizes : Array.from({ length: groupCount }, () => "");
   const canRunGrouping = canCreateGroupSizes && hasGroupSizes && capacity === personCount;
   const canExport = groups.length > 0;
+  const isGroupingAvailable = canRunGrouping && !isGrouping;
+  const isProjectCreationAvailable = canCreateProject && !isCreatingProject;
   const selectedStrategy = resolveGroupingStrategy(useSimilarAge, separateGender);
   const groupSetupMessage = !canCreateGroupSizes
     ? UI_MESSAGES.savedRosterRequired
@@ -286,7 +290,7 @@ export function Workspace({ initialGroups, initialResultId, project }: Props) {
           <p className="mt-2 text-sm text-[var(--muted)]">명단을 붙여넣고 균형 잡힌 조를 바로 구성할 수 있습니다.</p>
           <div className="mt-6 border border-[var(--border)] bg-[var(--surface)] p-5 text-left">
             <input className="w-full border border-[var(--border)] p-3" onChange={(event) => setProjectTitle(event.target.value)} placeholder="명단 이름" value={projectTitle} />
-            <button className="mt-3 flex items-center gap-2 bg-[var(--accent)] px-4 py-3 text-white disabled:cursor-not-allowed disabled:bg-[var(--canvas)] disabled:text-[var(--muted)]" disabled={!canCreateProject || isCreatingProject} onClick={() => void createProject()} type="button">{isCreatingProject ? <Spinner size="sm" /> : <Plus size={16} />}{isCreatingProject ? UI_LABELS.creatingRoster : "새로운 명단 시작"}</button>
+            <button className={`mt-3 flex items-center gap-2 px-4 py-3 ${isProjectCreationAvailable ? INPUT_DEPENDENT_BUTTON_CLASSES.enabled : INPUT_DEPENDENT_BUTTON_CLASSES.disabled}`} disabled={!isProjectCreationAvailable} onClick={() => void createProject()} type="button">{isCreatingProject ? <Spinner size="sm" /> : <Plus size={16} />}{isCreatingProject ? UI_LABELS.creatingRoster : "새로운 명단 시작"}</button>
             {!canCreateProject ? <p className="mt-2 text-xs text-[var(--muted)]">{UI_MESSAGES.projectTitleRequired}</p> : null}
           </div>
         </section>
@@ -309,8 +313,8 @@ export function Workspace({ initialGroups, initialResultId, project }: Props) {
               <h2 className="font-semibold">명단 입력</h2>
               <textarea className="mt-3 min-h-48 w-full border border-[var(--border)] p-3 text-sm" onChange={(event) => setRosterText(event.target.value)} placeholder="이름, 성별, 나이" value={rosterText} />
               <label aria-busy={isUploadingFile} className={`mt-3 flex items-center gap-2 text-sm ${isUploadingFile ? "cursor-not-allowed text-[var(--muted)]" : "cursor-pointer"}`}><Upload size={16} />{isUploadingFile ? <><Spinner size="sm" />{UI_LABELS.loadingRosterFile}</> : "Excel 또는 CSV 불러오기"}<input accept=".csv,.xls,.xlsx" className="hidden" disabled={isUploadingFile} onChange={(event) => { const file = event.target.files?.[0]; if (file) void uploadFile(file); }} type="file" /></label>
-              <button className="mt-3 flex w-full items-center justify-center gap-2 bg-[var(--accent)] py-2 text-sm text-black disabled:cursor-not-allowed disabled:bg-[var(--canvas)] disabled:text-[var(--muted)]" disabled={!canSaveRoster || isSavingRoster} onClick={() => void saveRoster()} type="button">{isSavingRoster ? <Spinner size="sm" /> : null}{isSavingRoster ? UI_LABELS.savingRoster : "명단 저장"}</button>
-              {!canSaveRoster ? <p className="mt-2 text-xs text-[var(--muted)]">{UI_MESSAGES.saveRosterRequired}</p> : null}
+              <button className={`mt-3 flex w-full items-center justify-center gap-2 py-2 text-sm ${isValidRosterInput ? INPUT_DEPENDENT_BUTTON_CLASSES.enabled : INPUT_DEPENDENT_BUTTON_CLASSES.disabled}`} disabled={!isValidRosterInput} onClick={() => void saveRoster()} type="button">{isSavingRoster ? <Spinner size="sm" /> : null}{isSavingRoster ? UI_LABELS.savingRoster : "명단 저장"}</button>
+              {!hasRosterInput ? <p className="mt-2 text-xs text-[var(--muted)]">{UI_MESSAGES.saveRosterRequired}</p> : null}
             </section>
             <section className="border border-[var(--border)] bg-[var(--surface)] p-4">
               <h2 className="font-semibold">조 설정</h2>
@@ -325,13 +329,13 @@ export function Workspace({ initialGroups, initialResultId, project }: Props) {
               </fieldset>
               <label className="mt-4 block text-sm font-medium">{UI_LABELS.leaderAssignmentMode}<select className="mt-2 w-full border border-[var(--border)] bg-[var(--surface)] p-2 text-sm disabled:bg-[var(--canvas)] disabled:text-[var(--muted)]" disabled={!canCreateGroupSizes} onChange={(event) => setLeaderSelectionMode(event.target.value as LeaderSelectionMode)} value={leaderSelectionMode}>{LEADER_SELECTION_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>
               <p className="mt-3 text-xs text-[var(--muted)]">{groupSetupMessage}</p>
-              <button className="mt-3 flex w-full items-center justify-center gap-2 border border-[var(--border)] bg-[var(--accent)] py-2 text-sm text-black disabled:cursor-not-allowed disabled:bg-[var(--canvas)] disabled:text-[var(--muted)]" disabled={!canRunGrouping || isGrouping} onClick={() => void runGrouping()} type="button">{isGrouping ? <Spinner size="sm" /> : null}{isGrouping ? UI_LABELS.grouping : "자동 조 편성"}</button>
+              <button className={`mt-3 flex w-full items-center justify-center gap-2 py-2 text-sm ${isGroupingAvailable ? INPUT_DEPENDENT_BUTTON_CLASSES.enabled : INPUT_DEPENDENT_BUTTON_CLASSES.disabled}`} disabled={!isGroupingAvailable} onClick={() => void runGrouping()} type="button">{isGrouping ? <Spinner size="sm" /> : null}{isGrouping ? UI_LABELS.grouping : "자동 조 편성"}</button>
             </section>
           </aside>
           <section className="min-w-0 border border-[var(--border)] bg-[var(--surface)] p-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div><h2 className="font-semibold">조 편성 결과</h2>{groups.length > 0 ? <p className="mt-1 text-xs text-[var(--muted)]">{GROUPING_STRATEGY_LABELS[resultStrategy]}</p> : null}</div>
-              <button className="flex items-center gap-2 border border-[var(--border)] px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-[var(--canvas)] disabled:text-[var(--muted)]" disabled={!canExport} onClick={exportExcel} type="button"><Download size={16} />내보내기</button>
+              <button className={`flex items-center gap-2 px-3 py-2 text-sm ${canExport ? INPUT_DEPENDENT_BUTTON_CLASSES.enabled : INPUT_DEPENDENT_BUTTON_CLASSES.disabled}`} disabled={!canExport} onClick={exportExcel} type="button"><Download size={16} />내보내기</button>
             </div>
             {!canExport ? <p className="mt-2 text-xs text-[var(--muted)]">{UI_MESSAGES.groupResultsRequired}</p> : null}
             {groups.length === 0 ? <p className="py-16 text-center text-sm text-[var(--muted)]">조 설정 후 자동 조 편성을 실행하세요.</p> : <DndContext collisionDetection={closestCenter} id={GROUP_RESULT_DND_CONTEXT_ID} onDragEnd={onDragEnd} onDragStart={(event) => { const member = groups.flatMap((group) => group.members).find((item) => item.id === event.active.id); setActiveName(member?.name ?? ""); }}><div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">{groups.map((group) => <GroupColumn group={group} key={group.id} onLeaderAction={handleLeaderAction} />)}</div><DragOverlay>{activeName ? <div className="border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm shadow">{activeName}</div> : null}</DragOverlay></DndContext>}
