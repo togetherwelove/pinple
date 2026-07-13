@@ -17,11 +17,11 @@ import { RosterBoardInput } from "@/components/dashboard/roster-board-input";
 import { RosterBoardSettings } from "@/components/dashboard/roster-board-settings";
 import { Spinner } from "@/components/spinner";
 import { appointLeaders } from "@/lib/grouping/leader-assignment";
-import { distributeUnassignedPeople } from "@/lib/grouping/distribute-people";
+import { distributePeople } from "@/lib/grouping/distribute-people";
 import {
   allBoardPeople,
+  createDefaultGroupSizes,
   createRosterBoardDraft,
-  remainingGroupCapacity,
   type BoardPerson,
 } from "@/lib/roster-board/draft";
 import { useRosterBoardStore } from "@/lib/roster-board/store";
@@ -119,7 +119,6 @@ function RosterWorkspace({
   const replaceDraft = useRosterBoardStore((state) => state.replaceDraft);
   const setHasHydrated = useRosterBoardStore((state) => state.setHasHydrated);
   const updateGroupCount = useRosterBoardStore((state) => state.updateGroupCount);
-  const updateGroupTargetSize = useRosterBoardStore((state) => state.updateGroupTargetSize);
   const updateUnassignedPerson = useRosterBoardStore((state) => state.updateUnassignedPerson);
   const [isGrouping, setIsGrouping] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
@@ -150,14 +149,18 @@ function RosterWorkspace({
   }
 
   const totalPeople = allBoardPeople(draft).length;
-  const capacity = remainingGroupCapacity(draft.groups);
-  const canRunGrouping = draft.unassigned.length > 0 && capacity === draft.unassigned.length && !isGrouping;
+  const hasValidGroupCount = draft.groupCount <= totalPeople;
+  const calculatedGroupSizes =
+    totalPeople > 0 && hasValidGroupCount
+      ? createDefaultGroupSizes(totalPeople, draft.groupCount)
+      : [];
+  const canRunGrouping = totalPeople > 0 && hasValidGroupCount && !isGrouping;
   const groupingMessage =
-    draft.unassigned.length === 0
+    totalPeople === 0
       ? UI_MESSAGES.boardGroupingRequired
-      : capacity === draft.unassigned.length
-        ? ROSTER_BOARD.remainingCapacity(capacity)
-        : UI_MESSAGES.boardCapacityMismatch;
+      : !hasValidGroupCount
+        ? UI_MESSAGES.groupCountExceedsPeople
+        : ROSTER_BOARD.distributionPreview(calculatedGroupSizes);
 
   function handleAddPeople(people: PersonInput[]) {
     addPeople(project.id, createClientMembers(people));
@@ -172,7 +175,7 @@ function RosterWorkspace({
     const nextDraft: RosterBoardDraft = {
       ...draft,
       groups: appointLeaders(
-        distributeUnassignedPeople(draft.unassigned, draft.groups, draft.strategy),
+        distributePeople(allBoardPeople(draft), calculatedGroupSizes, draft.strategy),
         draft.leaderSelectionMode,
       ),
       unassigned: [],
@@ -206,9 +209,6 @@ function RosterWorkspace({
               draft={draft}
               onChange={(nextDraft) => replaceDraft(project.id, nextDraft)}
               onGroupCountChange={(groupCount) => updateGroupCount(project.id, groupCount)}
-              onTargetSizeChange={(groupId, targetSize) =>
-                updateGroupTargetSize(project.id, groupId, targetSize)
-              }
             />
             <div className="flex flex-col items-stretch gap-3 border border-[var(--border)] bg-[var(--surface)] p-3">
               <p className="text-sm text-[var(--muted)]">{groupingMessage}</p>

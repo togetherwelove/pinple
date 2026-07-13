@@ -79,8 +79,8 @@ export function createRosterBoardDraft(
     const groupCount = defaultGroupCount(people.length);
 
     return {
+      groupCount,
       groups: createGroupTemplates(createDefaultGroupSizes(people.length, groupCount)),
-      isGroupSizingManual: false,
       leaderSelectionMode: LEADER_SELECTION_MODES.none,
       strategy: GROUPING_STRATEGIES.even,
       unassigned: uniqueMembers(people.map((person) => ({ ...person }))),
@@ -96,8 +96,8 @@ export function createRosterBoardDraft(
     .map((person) => ({ ...person }));
 
   return {
+    groupCount: savedGroups.length,
     groups,
-    isGroupSizingManual: true,
     leaderSelectionMode: LEADER_SELECTION_MODES.none,
     strategy: initialResult?.strategy ?? GROUPING_STRATEGIES.even,
     unassigned: uniqueMembers(unassigned),
@@ -119,31 +119,13 @@ export function allBoardPeople(draft: RosterBoardDraft): BoardPerson[] {
   return [...peopleById.values()];
 }
 
-export function remainingGroupCapacity(groups: Group[]) {
-  return groups.reduce(
-    (sum, group) => sum + Math.max(group.targetSize - group.members.length, 0),
-    0,
-  );
-}
-
 export function addPeopleToDraft(
   draft: RosterBoardDraft,
   people: GroupMember[],
 ): RosterBoardDraft {
-  const allPeople = [...allBoardPeople(draft), ...people];
-  const nextUnassigned = uniqueMembers([...draft.unassigned, ...people]);
-  const hasAssignedMembers = draft.groups.some((group) => group.members.length > 0);
-
-  if (draft.isGroupSizingManual || hasAssignedMembers) {
-    return { ...draft, unassigned: nextUnassigned };
-  }
-
-  const groupCount = defaultGroupCount(allPeople.length);
-
   return {
     ...draft,
-    groups: createGroupTemplates(createDefaultGroupSizes(allPeople.length, groupCount)),
-    unassigned: nextUnassigned,
+    unassigned: uniqueMembers([...draft.unassigned, ...people]),
   };
 }
 
@@ -193,61 +175,11 @@ export function removePersonFromDraft(
 }
 
 export function updateGroupCount(draft: RosterBoardDraft, nextGroupCount: number): RosterBoardDraft {
-  const currentGroups = draft.groups;
-  const totalPeople = allBoardPeople(draft).length;
-  const hasAssignedMembers = currentGroups.some((group) => group.members.length > 0);
-
-  if (!hasAssignedMembers) {
-    return {
-      ...draft,
-      groups: createGroupTemplates(createDefaultGroupSizes(totalPeople, nextGroupCount)),
-      isGroupSizingManual: true,
-    };
-  }
-
-  if (nextGroupCount >= currentGroups.length) {
-    const appendedGroups = Array.from(
-      { length: nextGroupCount - currentGroups.length },
-      (_, index) => ({
-        id: `group-${currentGroups.length + index + 1}`,
-        members: [],
-        name: formatGroupName(currentGroups.length + index),
-        targetSize: GROUPING_LIMITS.minimumPeoplePerGroup,
-      }),
-    );
-
-    return {
-      ...draft,
-      groups: [...currentGroups, ...appendedGroups],
-      isGroupSizingManual: true,
-    };
-  }
-
-  const removedGroups = currentGroups.slice(nextGroupCount);
-
-  if (removedGroups.some((group) => group.members.length > 0)) {
-    return draft;
-  }
-
   return {
     ...draft,
-    groups: currentGroups.slice(0, nextGroupCount),
-    isGroupSizingManual: true,
-  };
-}
-
-export function updateGroupTargetSize(
-  draft: RosterBoardDraft,
-  groupId: string,
-  targetSize: number,
-): RosterBoardDraft {
-  return {
-    ...draft,
-    groups: draft.groups.map((group) =>
-      group.id === groupId
-        ? { ...group, targetSize: Math.max(targetSize, group.members.length) }
-        : group,
+    groupCount: Math.min(
+      Math.max(nextGroupCount, GROUPING_LIMITS.minimumGroupCount),
+      GROUPING_LIMITS.maximumGroupCount,
     ),
-    isGroupSizingManual: true,
   };
 }

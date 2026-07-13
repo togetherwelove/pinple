@@ -1,11 +1,10 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
-import { ROSTER_BOARD_STORAGE_KEY } from "@/lib/config/app";
+import { GROUPING_LIMITS, ROSTER_BOARD_STORAGE_KEY } from "@/lib/config/app";
 import {
   addPeopleToDraft,
   removePersonFromDraft,
   updateGroupCount,
-  updateGroupTargetSize,
   updateUnassignedPerson,
 } from "@/lib/roster-board/draft";
 import type { GroupMember, PersonInput, RosterBoardDraft } from "@/lib/types/domain";
@@ -19,9 +18,35 @@ type RosterBoardStore = {
   addPeople: (rosterId: string, people: GroupMember[]) => void;
   removePerson: (rosterId: string, personId: string, groupId: string | null) => void;
   updateGroupCount: (rosterId: string, groupCount: number) => void;
-  updateGroupTargetSize: (rosterId: string, groupId: string, targetSize: number) => void;
   updateUnassignedPerson: (rosterId: string, personId: string, updates: PersonInput) => void;
 };
+
+type PersistedRosterBoardState = Pick<RosterBoardStore, "drafts">;
+
+type LegacyRosterBoardDraft = Omit<RosterBoardDraft, "groupCount"> & {
+  groupCount?: number;
+};
+
+function migratePersistedState(persistedState: unknown): PersistedRosterBoardState {
+  const state = persistedState as { drafts?: Record<string, LegacyRosterBoardDraft> };
+  const drafts = Object.fromEntries(
+    Object.entries(state.drafts ?? {}).map(([rosterId, draft]) => [
+      rosterId,
+      {
+        ...draft,
+        groupCount: Math.min(
+          Math.max(
+            draft.groupCount ?? draft.groups.length,
+            GROUPING_LIMITS.minimumGroupCount,
+          ),
+          GROUPING_LIMITS.maximumGroupCount,
+        ),
+      },
+    ]),
+  );
+
+  return { drafts };
+}
 
 function updateDraft(
   drafts: Record<string, RosterBoardDraft>,
@@ -34,7 +59,7 @@ function updateDraft(
 }
 
 export const useRosterBoardStore = create<RosterBoardStore>()(
-  persist(
+  persist<RosterBoardStore, [], [], PersistedRosterBoardState>(
     (set) => ({
       addPeople: (rosterId, people) =>
         set((state) => ({
@@ -63,12 +88,6 @@ export const useRosterBoardStore = create<RosterBoardStore>()(
             updateGroupCount(draft, groupCount),
           ),
         })),
-      updateGroupTargetSize: (rosterId, groupId, targetSize) =>
-        set((state) => ({
-          drafts: updateDraft(state.drafts, rosterId, (draft) =>
-            updateGroupTargetSize(draft, groupId, targetSize),
-          ),
-        })),
       updateUnassignedPerson: (rosterId, personId, updates) =>
         set((state) => ({
           drafts: updateDraft(state.drafts, rosterId, (draft) =>
@@ -78,9 +97,11 @@ export const useRosterBoardStore = create<RosterBoardStore>()(
     }),
     {
       name: ROSTER_BOARD_STORAGE_KEY,
+      migrate: migratePersistedState,
       skipHydration: true,
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({ drafts: state.drafts }),
+      version: 2,
     },
   ),
 );

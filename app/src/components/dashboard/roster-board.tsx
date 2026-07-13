@@ -136,9 +136,7 @@ function BoardColumn({
 }) {
   const columnId = group?.id ?? UNASSIGNED_COLUMN_ID;
   const droppable = useDroppable({ id: columnId });
-  const capacityText = group
-    ? `${group.members.length} / ${group.targetSize}`
-    : `${members.length}`;
+  const memberCountText = `${members.length}`;
 
   return (
     <section
@@ -151,7 +149,7 @@ function BoardColumn({
     >
       <header className="flex items-center justify-between border-b border-[var(--border)] px-3 py-2">
         <strong className="text-sm">{title}</strong>
-        <span className="text-xs text-[var(--muted)]">{capacityText}</span>
+        <span className="text-xs text-[var(--muted)]">{memberCountText}</span>
       </header>
       <SortableContext items={members.map((member) => member.id)} strategy={verticalListSortingStrategy}>
         <ul>

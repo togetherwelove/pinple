@@ -36,8 +36,8 @@ export type GroupResultMembers = {
 };
 
 export type RosterBoardDraft = {
+  groupCount: number;
   groups: Group[];
-  isGroupSizingManual: boolean;
   leaderSelectionMode: LeaderSelectionMode;
   strategy: GroupingStrategy;
   unassigned: GroupMember[];
