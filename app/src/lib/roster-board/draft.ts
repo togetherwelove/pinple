@@ -160,7 +160,32 @@ export function updateUnassignedPerson(
   };
 }
 
-export function removeUnassignedPerson(draft: RosterBoardDraft, personId: string): RosterBoardDraft {
+export function removePersonFromDraft(
+  draft: RosterBoardDraft,
+  personId: string,
+  groupId: string | null,
+): RosterBoardDraft {
+  if (groupId !== null) {
+    return {
+      ...draft,
+      groups: draft.groups.map((group) => {
+        if (group.id !== groupId) {
+          return group;
+        }
+
+        const removedMember = group.members.find((member) => member.id === personId);
+        const remainingMembers = group.members.filter((member) => member.id !== personId);
+
+        return {
+          ...group,
+          members: removedMember?.isLeader
+            ? remainingMembers.map((member) => ({ ...member, isLeader: false }))
+            : remainingMembers,
+        };
+      }),
+    };
+  }
+
   return {
     ...draft,
     unassigned: draft.unassigned.filter((person) => person.id !== personId),

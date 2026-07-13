@@ -115,7 +115,7 @@ function RosterWorkspace({
   const hasHydrated = useRosterBoardStore((state) => state.hasHydrated);
   const addPeople = useRosterBoardStore((state) => state.addPeople);
   const initializeDraft = useRosterBoardStore((state) => state.initializeDraft);
-  const removeUnassignedPerson = useRosterBoardStore((state) => state.removeUnassignedPerson);
+  const removePerson = useRosterBoardStore((state) => state.removePerson);
   const replaceDraft = useRosterBoardStore((state) => state.replaceDraft);
   const setHasHydrated = useRosterBoardStore((state) => state.setHasHydrated);
   const updateGroupCount = useRosterBoardStore((state) => state.updateGroupCount);
@@ -232,7 +232,7 @@ function RosterWorkspace({
             <RosterBoard
               draft={draft}
               onDraftChange={(nextDraft) => replaceDraft(project.id, nextDraft)}
-              onRemoveUnassignedPerson={(personId) => removeUnassignedPerson(project.id, personId)}
+              onRemovePerson={(personId, groupId) => removePerson(project.id, personId, groupId)}
               onUpdateUnassignedPerson={(personId, updates) =>
                 updateUnassignedPerson(project.id, personId, updates)
               }

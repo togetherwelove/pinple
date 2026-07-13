@@ -3,7 +3,7 @@ import { createJSONStorage, persist } from "zustand/middleware";
 import { ROSTER_BOARD_STORAGE_KEY } from "@/lib/config/app";
 import {
   addPeopleToDraft,
-  removeUnassignedPerson,
+  removePersonFromDraft,
   updateGroupCount,
   updateGroupTargetSize,
   updateUnassignedPerson,
@@ -17,7 +17,7 @@ type RosterBoardStore = {
   replaceDraft: (rosterId: string, draft: RosterBoardDraft) => void;
   setHasHydrated: (hasHydrated: boolean) => void;
   addPeople: (rosterId: string, people: GroupMember[]) => void;
-  removeUnassignedPerson: (rosterId: string, personId: string) => void;
+  removePerson: (rosterId: string, personId: string, groupId: string | null) => void;
   updateGroupCount: (rosterId: string, groupCount: number) => void;
   updateGroupTargetSize: (rosterId: string, groupId: string, targetSize: number) => void;
   updateUnassignedPerson: (rosterId: string, personId: string, updates: PersonInput) => void;
@@ -48,10 +48,10 @@ export const useRosterBoardStore = create<RosterBoardStore>()(
             ? state
             : { drafts: { ...state.drafts, [rosterId]: draft } },
         ),
-      removeUnassignedPerson: (rosterId, personId) =>
+      removePerson: (rosterId, personId, groupId) =>
         set((state) => ({
           drafts: updateDraft(state.drafts, rosterId, (draft) =>
-            removeUnassignedPerson(draft, personId),
+            removePersonFromDraft(draft, personId, groupId),
           ),
         })),
       replaceDraft: (rosterId, draft) =>

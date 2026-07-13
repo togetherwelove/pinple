@@ -30,7 +30,7 @@ type LeaderConflict = {
 type RosterBoardProps = {
   draft: RosterBoardDraft;
   onDraftChange: (draft: RosterBoardDraft) => void;
-  onRemoveUnassignedPerson: (personId: string) => void;
+  onRemovePerson: (personId: string, groupId: string | null) => void;
   onUpdateUnassignedPerson: (personId: string, updates: PersonInput) => void;
   rosterTitle: string;
 };
@@ -38,11 +38,18 @@ type RosterBoardProps = {
 type MemberCardProps = {
   groupId: string | null;
   member: GroupMember;
+  onDelete: (personId: string, groupId: string | null) => void;
   onEdit?: (member: GroupMember) => void;
   onLeaderAction?: (groupId: string, member: GroupMember) => void;
 };
 
-function SortableMemberCard({ groupId, member, onEdit, onLeaderAction }: MemberCardProps) {
+function SortableMemberCard({
+  groupId,
+  member,
+  onDelete,
+  onEdit,
+  onLeaderAction,
+}: MemberCardProps) {
   const sortable = useSortable({ id: member.id });
   const transform = sortable.transform
     ? `translate3d(${sortable.transform.x}px, ${sortable.transform.y}px, 0)`
@@ -91,6 +98,15 @@ function SortableMemberCard({ groupId, member, onEdit, onLeaderAction }: MemberC
           <Crown fill={member.isLeader ? "currentColor" : "none"} size={14} />
         </button>
       ) : null}
+      <button
+        aria-label={ROSTER_BOARD.removePerson}
+        className="flex size-7 shrink-0 items-center justify-center text-[var(--muted)] hover:bg-red-50 hover:text-red-700"
+        onClick={() => onDelete(member.id, groupId)}
+        title={ROSTER_BOARD.removePerson}
+        type="button"
+      >
+        <Trash2 size={14} />
+      </button>
     </li>
   );
 }
@@ -98,12 +114,14 @@ function SortableMemberCard({ groupId, member, onEdit, onLeaderAction }: MemberC
 function BoardColumn({
   group,
   members,
+  onDelete,
   onEdit,
   onLeaderAction,
   title,
 }: {
   group: Group | null;
   members: GroupMember[];
+  onDelete: (personId: string, groupId: string | null) => void;
   onEdit?: (member: GroupMember) => void;
   onLeaderAction?: (groupId: string, member: GroupMember) => void;
   title: string;
@@ -130,6 +148,7 @@ function BoardColumn({
               groupId={group?.id ?? null}
               key={member.id}
               member={member}
+              onDelete={onDelete}
               onEdit={onEdit}
               onLeaderAction={onLeaderAction}
             />
@@ -217,7 +236,7 @@ function PersonEditorDialog({
 export function RosterBoard({
   draft,
   onDraftChange,
-  onRemoveUnassignedPerson,
+  onRemovePerson,
   onUpdateUnassignedPerson,
   rosterTitle,
 }: RosterBoardProps) {
@@ -305,7 +324,7 @@ export function RosterBoard({
           member={editingMember}
           onClose={() => setEditingMember(null)}
           onDelete={() => {
-            onRemoveUnassignedPerson(editingMember.id);
+            onRemovePerson(editingMember.id, null);
             setEditingMember(null);
           }}
           onSave={(updates) => {
@@ -341,12 +360,19 @@ export function RosterBoard({
         }}
       >
         <div className="mt-4 flex gap-4 overflow-x-auto pb-2">
-          <BoardColumn members={draft.unassigned} onEdit={setEditingMember} title={ROSTER_BOARD.unassigned} group={null} />
+          <BoardColumn
+            group={null}
+            members={draft.unassigned}
+            onDelete={onRemovePerson}
+            onEdit={setEditingMember}
+            title={ROSTER_BOARD.unassigned}
+          />
           {draft.groups.map((group) => (
             <BoardColumn
               group={group}
               key={group.id}
               members={group.members}
+              onDelete={onRemovePerson}
               onLeaderAction={handleLeaderAction}
               title={displayGroupName(group.name)}
             />
