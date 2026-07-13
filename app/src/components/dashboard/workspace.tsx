@@ -196,21 +196,29 @@ function RosterWorkspace({
   }
 
   return (
-    <main className="min-h-full bg-[var(--canvas)] p-4 md:p-8">
-      <div className="mx-auto max-w-7xl">
-        <header className="mb-6 flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <p className="text-sm text-[var(--muted)]">{APP_NAME}</p>
-            <h1 className="text-2xl font-semibold">{project.title}</h1>
-          </div>
-          <span className="text-sm text-[var(--muted)]">{totalPeople}명</span>
-        </header>
-        {notice ? <div className="mb-4 border border-red-300 bg-red-50 p-3 text-sm text-red-800" role="alert">{notice}</div> : null}
-        <div className="grid gap-5 lg:grid-cols-[300px_minmax(0,1fr)]">
-          <aside>
-            <RosterBoardInput onAddPeople={handleAddPeople} onError={setNotice} />
-          </aside>
-          <div className="min-w-0 space-y-5">
+    <main className="h-full min-h-0 overflow-hidden bg-[var(--canvas)]">
+      <RosterBoard
+        draft={draft}
+        leftPanelHeader={<RosterBoardInput onAddPeople={handleAddPeople} onError={setNotice} />}
+        onDraftChange={(nextDraft) => replaceDraft(project.id, nextDraft)}
+        onRemovePerson={(personId, groupId) => removePerson(project.id, personId, groupId)}
+        onUpdateUnassignedPerson={(personId, updates) =>
+          updateUnassignedPerson(project.id, personId, updates)
+        }
+        rightPanelHeader={
+          <div className="space-y-5">
+            <header className="flex flex-wrap items-end justify-between gap-3">
+              <div>
+                <p className="text-sm text-[var(--muted)]">{APP_NAME}</p>
+                <h1 className="text-2xl font-semibold">{project.title}</h1>
+              </div>
+              <span className="text-sm text-[var(--muted)]">{totalPeople}명</span>
+            </header>
+            {notice ? (
+              <div className="border border-red-300 bg-red-50 p-3 text-sm text-red-800" role="alert">
+                {notice}
+              </div>
+            ) : null}
             <RosterBoardSettings
               draft={draft}
               onChange={(nextDraft) => replaceDraft(project.id, nextDraft)}
@@ -229,18 +237,10 @@ function RosterWorkspace({
                 {isGrouping ? UI_LABELS.grouping : ROSTER_BOARD.autoGrouping}
               </button>
             </div>
-            <RosterBoard
-              draft={draft}
-              onDraftChange={(nextDraft) => replaceDraft(project.id, nextDraft)}
-              onRemovePerson={(personId, groupId) => removePerson(project.id, personId, groupId)}
-              onUpdateUnassignedPerson={(personId, updates) =>
-                updateUnassignedPerson(project.id, personId, updates)
-              }
-              rosterTitle={project.title}
-            />
           </div>
-        </div>
-      </div>
+        }
+        rosterTitle={project.title}
+      />
     </main>
   );
 }

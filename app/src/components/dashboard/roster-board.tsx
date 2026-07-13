@@ -3,7 +3,7 @@
 import { closestCenter, DndContext, DragOverlay, type DragEndEvent, useDroppable } from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { Crown, Download, GripVertical, Pencil, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import * as XLSX from "xlsx";
 import {
   EXCEL_EXPORT,
@@ -29,9 +29,11 @@ type LeaderConflict = {
 
 type RosterBoardProps = {
   draft: RosterBoardDraft;
+  leftPanelHeader: ReactNode;
   onDraftChange: (draft: RosterBoardDraft) => void;
   onRemovePerson: (personId: string, groupId: string | null) => void;
   onUpdateUnassignedPerson: (personId: string, updates: PersonInput) => void;
+  rightPanelHeader: ReactNode;
   rosterTitle: string;
 };
 
@@ -235,9 +237,11 @@ function PersonEditorDialog({
 
 export function RosterBoard({
   draft,
+  leftPanelHeader,
   onDraftChange,
   onRemovePerson,
   onUpdateUnassignedPerson,
+  rightPanelHeader,
   rosterTitle,
 }: RosterBoardProps) {
   const [activeName, setActiveName] = useState("");
@@ -312,7 +316,17 @@ export function RosterBoard({
   }
 
   return (
-    <section className="min-w-0 border border-[var(--border)] bg-[var(--surface)] p-4">
+    <DndContext
+      collisionDetection={closestCenter}
+      id={ROSTER_BOARD_DND_CONTEXT_ID}
+      onDragEnd={handleDragEnd}
+      onDragStart={(event) => {
+        const member = [...draft.unassigned, ...draft.groups.flatMap((group) => group.members)].find(
+          (item) => item.id === event.active.id,
+        );
+        setActiveName(member?.name ?? "");
+      }}
+    >
       {leaderConflict ? (
         <LeaderConflictDialog
           onReplaceTargetLeader={() => resolveLeaderConflict(true)}
@@ -333,55 +347,59 @@ export function RosterBoard({
           }}
         />
       ) : null}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h2 className="font-semibold">{ROSTER_BOARD.boardTitle}</h2>
-          <p className="mt-1 text-xs text-[var(--muted)]">{GROUPING_STRATEGY_LABELS[draft.strategy]}</p>
-        </div>
-        <button
-          className={`flex items-center gap-2 px-3 py-2 text-sm ${hasGroupMembers ? "bg-[var(--ink)] text-[var(--surface)] hover:opacity-90" : "cursor-not-allowed bg-[var(--canvas)] text-[var(--muted)]"}`}
-          disabled={!hasGroupMembers}
-          onClick={exportExcel}
-          type="button"
-        >
-          <Download size={16} />
-          {ROSTER_BOARD.export}
-        </button>
-      </div>
-      <DndContext
-        collisionDetection={closestCenter}
-        id={ROSTER_BOARD_DND_CONTEXT_ID}
-        onDragEnd={handleDragEnd}
-        onDragStart={(event) => {
-          const member = [...draft.unassigned, ...draft.groups.flatMap((group) => group.members)].find(
-            (item) => item.id === event.active.id,
-          );
-          setActiveName(member?.name ?? "");
-        }}
-      >
-        <div className="mt-4 flex gap-4 overflow-x-auto pb-2">
-          <BoardColumn
-            group={null}
-            members={draft.unassigned}
-            onDelete={onRemovePerson}
-            onEdit={setEditingMember}
-            title={ROSTER_BOARD.unassigned}
-          />
-          {draft.groups.map((group) => (
+      <div className="flex h-full min-h-0 flex-col bg-[var(--canvas)] lg:flex-row">
+        <aside className="flex max-h-[46vh] w-full shrink-0 flex-col border-b border-[var(--border)] bg-[var(--surface)] lg:h-full lg:max-h-none lg:w-80 lg:border-r lg:border-b-0">
+          <div className="shrink-0 p-4">{leftPanelHeader}</div>
+          <div className="min-h-0 flex-1 overflow-y-auto p-4 pt-0">
             <BoardColumn
-              group={group}
-              key={group.id}
-              members={group.members}
+              group={null}
+              members={draft.unassigned}
               onDelete={onRemovePerson}
-              onLeaderAction={handleLeaderAction}
-              title={displayGroupName(group.name)}
+              onEdit={setEditingMember}
+              title={ROSTER_BOARD.unassigned}
             />
-          ))}
-        </div>
-        <DragOverlay>
-          {activeName ? <div className="border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm shadow">{activeName}</div> : null}
-        </DragOverlay>
-      </DndContext>
-    </section>
+          </div>
+        </aside>
+        <section className="min-h-0 min-w-0 flex-1 overflow-y-auto bg-[var(--canvas)] p-4 md:p-6">
+          {rightPanelHeader}
+          <div className="mt-5 border border-[var(--border)] bg-[var(--surface)] p-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h2 className="font-semibold">{ROSTER_BOARD.boardTitle}</h2>
+                <p className="mt-1 text-xs text-[var(--muted)]">{GROUPING_STRATEGY_LABELS[draft.strategy]}</p>
+              </div>
+              <button
+                className={`flex items-center gap-2 px-3 py-2 text-sm ${hasGroupMembers ? "bg-[var(--ink)] text-[var(--surface)] hover:opacity-90" : "cursor-not-allowed bg-[var(--canvas)] text-[var(--muted)]"}`}
+                disabled={!hasGroupMembers}
+                onClick={exportExcel}
+                type="button"
+              >
+                <Download size={16} />
+                {ROSTER_BOARD.export}
+              </button>
+            </div>
+            <div className="mt-4 flex gap-4 overflow-x-auto pb-2">
+              {draft.groups.map((group) => (
+                <BoardColumn
+                  group={group}
+                  key={group.id}
+                  members={group.members}
+                  onDelete={onRemovePerson}
+                  onLeaderAction={handleLeaderAction}
+                  title={displayGroupName(group.name)}
+                />
+              ))}
+            </div>
+          </div>
+        </section>
+      </div>
+      <DragOverlay>
+        {activeName ? (
+          <div className="border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm shadow">
+            {activeName}
+          </div>
+        ) : null}
+      </DragOverlay>
+    </DndContext>
   );
 }
