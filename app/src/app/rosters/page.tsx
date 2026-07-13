@@ -5,11 +5,16 @@ import { RosterDeleteButton } from "@/components/dashboard/roster-delete-button"
 import { Sidebar } from "@/components/dashboard/sidebar";
 import { Workspace } from "@/components/dashboard/workspace";
 import { requireCurrentUser } from "@/lib/auth/current-user";
-import { ROUTES } from "@/lib/config/app";
+import {
+  NEW_ROSTER_ROUTE,
+  ROSTER_VIEW_MODES,
+  ROUTES,
+  rosterProjectRoute,
+} from "@/lib/config/app";
 import { prisma } from "@/lib/prisma";
 import type { GroupResultMembers, StoredGender } from "@/lib/types/domain";
 
-type RosterPageProps = { searchParams: Promise<{ project?: string }> };
+type RosterPageProps = { searchParams: Promise<{ project?: string; view?: string }> };
 
 export default async function RosterPage({ searchParams }: RosterPageProps) {
   const user = await requireCurrentUser().catch(() => null);
@@ -23,7 +28,8 @@ export default async function RosterPage({ searchParams }: RosterPageProps) {
     orderBy: { updatedAt: "desc" },
     where: { userId: user.id },
   });
-  const projectId = params.project ?? projects[0]?.id;
+  const isCreateView = params.view === ROSTER_VIEW_MODES.create;
+  const projectId = isCreateView ? undefined : params.project ?? projects[0]?.id;
   const project = projectId
     ? await prisma.project.findFirst({
         include: {
@@ -50,7 +56,7 @@ export default async function RosterPage({ searchParams }: RosterPageProps) {
         >
           <Link
             className="shrink-0 border border-dashed border-[var(--border)] px-3 py-2 text-sm"
-            href={ROUTES.rosters}
+            href={NEW_ROSTER_ROUTE}
           >
             + 새로운 명단
           </Link>
@@ -58,7 +64,7 @@ export default async function RosterPage({ searchParams }: RosterPageProps) {
             <div className="flex shrink-0 items-center" key={item.id}>
               <Link
                 className={`px-3 py-2 text-sm ${item.id === project?.id ? "bg-[var(--canvas)] font-medium" : "text-[var(--muted)]"}`}
-                href={`${ROUTES.rosters}?project=${item.id}`}
+                href={rosterProjectRoute(item.id)}
               >
                 {item.title}
               </Link>

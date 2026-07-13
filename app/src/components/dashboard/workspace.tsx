@@ -8,9 +8,9 @@ import {
   INPUT_DEPENDENT_BUTTON_CLASSES,
   ROSTER_BOARD,
   ROSTER_CREATION,
-  ROUTES,
   UI_LABELS,
   UI_MESSAGES,
+  rosterProjectRoute,
 } from "@/lib/config/app";
 import { RosterBoard } from "@/components/dashboard/roster-board";
 import { RosterBoardInput } from "@/components/dashboard/roster-board-input";
@@ -65,7 +65,7 @@ function NewRosterWorkspace() {
 
     try {
       const roster = await jsonRequest<{ id: string }>("/api/projects", "POST", { title });
-      router.push(`${ROUTES.rosters}?project=${roster.id}`);
+      router.push(rosterProjectRoute(roster.id));
     } catch (error) {
       setNotice(error instanceof Error ? error.message : UI_MESSAGES.saveFailed);
     } finally {

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { RosterDeleteButton } from "@/components/dashboard/roster-delete-button";
-import { ROUTES } from "@/lib/config/app";
+import { NEW_ROSTER_ROUTE, rosterProjectRoute } from "@/lib/config/app";
 
 type SidebarAccount = {
   email: string;
@@ -32,7 +32,7 @@ export function Sidebar({ account, activeProjectId, projects }: SidebarProps) {
         <p className="px-3 py-2 text-sm font-semibold">명단</p>
         <Link
           className="mb-3 block border border-dashed border-[var(--border)] px-3 py-2 text-sm"
-          href={ROUTES.rosters}
+          href={NEW_ROSTER_ROUTE}
         >
           + 새로운 명단
         </Link>
@@ -42,7 +42,7 @@ export function Sidebar({ account, activeProjectId, projects }: SidebarProps) {
           <div className="flex items-center" key={project.id}>
             <Link
               className={`min-w-0 flex-1 truncate px-3 py-2 text-sm ${project.id === activeProjectId ? "bg-[var(--canvas)] font-medium" : "text-[var(--muted)]"}`}
-              href={`${ROUTES.rosters}?project=${project.id}`}
+              href={rosterProjectRoute(project.id)}
             >
               {project.title}
             </Link>

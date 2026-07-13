@@ -8,6 +8,16 @@ export const ROUTES = {
   root: "/",
 } as const;
 
+export const ROSTER_VIEW_MODES = {
+  create: "create",
+} as const;
+
+export const NEW_ROSTER_ROUTE = `${ROUTES.rosters}?view=${ROSTER_VIEW_MODES.create}`;
+
+export function rosterProjectRoute(projectId: string) {
+  return `${ROUTES.rosters}?project=${encodeURIComponent(projectId)}`;
+}
+
 export const INPUT_DEPENDENT_BUTTON_CLASSES = {
   disabled: "cursor-not-allowed bg-[var(--canvas)] text-[var(--muted)]",
   enabled: "bg-[var(--ink)] text-[var(--surface)] transition-opacity hover:opacity-90",
