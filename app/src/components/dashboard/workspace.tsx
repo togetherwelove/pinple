@@ -1,40 +1,56 @@
 "use client";
 
-import { Plus } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  APP_NAME,
-  INPUT_DEPENDENT_BUTTON_CLASSES,
-  ROSTER_BOARD,
-  ROSTER_CREATION,
-  UI_LABELS,
-  UI_MESSAGES,
-  rosterProjectRoute,
-} from "@/lib/config/app";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { GroupResultNavigation } from "@/components/dashboard/group-result-navigation";
+import { NewProjectWorkspace } from "@/components/dashboard/new-project-workspace";
 import { RosterBoard } from "@/components/dashboard/roster-board";
 import { RosterBoardInput } from "@/components/dashboard/roster-board-input";
 import { RosterBoardSettings } from "@/components/dashboard/roster-board-settings";
 import { Spinner } from "@/components/spinner";
-import { appointLeaders } from "@/lib/grouping/leader-assignment";
-import { distributePeople } from "@/lib/grouping/distribute-people";
 import {
+  GROUPING_LIMITS,
+  INPUT_DEPENDENT_BUTTON_CLASSES,
+  ROSTER_BOARD,
+  UI_LABELS,
+  UI_MESSAGES,
+  projectGroupResultRoute,
+} from "@/lib/config/app";
+import {
+  addPeopleToDraft,
   allBoardPeople,
-  createDefaultGroupSizes,
+  createBoardDraftKey,
   createRosterBoardDraft,
+  removePersonFromDraft,
   type BoardPerson,
+  updateGroupCount,
+  updateUnassignedPerson,
 } from "@/lib/roster-board/draft";
+import {
+  createGroupedDraft,
+  createGroupingPlan,
+  createGroupResultMembers,
+} from "@/lib/roster-board/group-result";
 import { useRosterBoardStore } from "@/lib/roster-board/store";
-import type { GroupMember, GroupResultMembers, PersonInput, RosterBoardDraft } from "@/lib/types/domain";
+import type {
+  GroupMember,
+  GroupResultDetail,
+  GroupResultSummary,
+  PersonInput,
+  RosterBoardDraft,
+} from "@/lib/types/domain";
 
 type Project = { id: string; people: BoardPerson[]; title: string };
 
 type WorkspaceProps = {
-  initialGroups: GroupResultMembers | null;
+  groupResults: GroupResultSummary[];
   project: Project | null;
+  selectedGroupResult: GroupResultDetail | null;
 };
 
-async function jsonRequest<T>(url: string, method: "POST", body: unknown): Promise<T> {
+type JsonMethod = "PATCH" | "POST";
+
+async function jsonRequest<T>(url: string, method: JsonMethod, body: unknown): Promise<T> {
   const response = await fetch(url, {
     body: JSON.stringify(body),
     headers: { "Content-Type": "application/json" },
@@ -53,78 +69,30 @@ function createClientMembers(people: PersonInput[]): GroupMember[] {
   return people.map((person) => ({ ...person, id: crypto.randomUUID() }));
 }
 
-function NewRosterWorkspace() {
-  const router = useRouter();
-  const [title, setTitle] = useState("");
-  const [isCreating, setIsCreating] = useState(false);
-  const [notice, setNotice] = useState<string | null>(null);
-  const canCreate = title.trim().length > 0 && !isCreating;
-
-  async function createRoster() {
-    setIsCreating(true);
-
-    try {
-      const roster = await jsonRequest<{ id: string }>("/api/projects", "POST", { title });
-      router.push(rosterProjectRoute(roster.id));
-    } catch (error) {
-      setNotice(error instanceof Error ? error.message : UI_MESSAGES.saveFailed);
-    } finally {
-      setIsCreating(false);
-    }
-  }
-
-  return (
-    <main className="flex min-h-full items-center justify-center bg-[var(--canvas)] p-6">
-      <section className="w-full max-w-md text-center">
-        <p className="text-sm text-[var(--muted)]">{ROSTER_CREATION.subtitle}</p>
-        <h1 className="mt-3 text-2xl font-semibold">{ROSTER_CREATION.heading}</h1>
-        <p className="mt-2 text-sm text-[var(--muted)]">{ROSTER_CREATION.description}</p>
-        {notice ? <p className="mt-4 text-sm text-red-700" role="alert">{notice}</p> : null}
-        <div className="mt-6 border border-[var(--border)] bg-[var(--surface)] p-5 text-left">
-          <input
-            className="w-full border border-[var(--border)] p-3"
-            onChange={(event) => setTitle(event.target.value)}
-            placeholder={ROSTER_CREATION.inputPlaceholder}
-            value={title}
-          />
-          <button
-            className={`mt-3 flex items-center gap-2 px-4 py-3 ${canCreate ? INPUT_DEPENDENT_BUTTON_CLASSES.enabled : INPUT_DEPENDENT_BUTTON_CLASSES.disabled}`}
-            disabled={!canCreate}
-            onClick={() => void createRoster()}
-            type="button"
-          >
-            {isCreating ? <Spinner size="sm" /> : <Plus size={16} />}
-            {isCreating ? UI_LABELS.creatingRoster : ROSTER_CREATION.start}
-          </button>
-          {!title.trim() ? <p className="mt-2 text-xs text-[var(--muted)]">{UI_MESSAGES.projectTitleRequired}</p> : null}
-        </div>
-      </section>
-    </main>
-  );
-}
-
-function RosterWorkspace({
-  initialGroups,
+function ProjectWorkspace({
+  groupResults,
   project,
+  selectedGroupResult,
 }: {
-  initialGroups: GroupResultMembers | null;
+  groupResults: GroupResultSummary[];
   project: Project;
+  selectedGroupResult: GroupResultDetail | null;
 }) {
   const router = useRouter();
-  const draft = useRosterBoardStore((state) => state.drafts[project.id]);
+  const selectedResult = selectedGroupResult;
+  const draftKey = createBoardDraftKey(project.id, selectedResult?.id);
+  const draft = useRosterBoardStore((state) => state.drafts[draftKey]);
   const hasHydrated = useRosterBoardStore((state) => state.hasHydrated);
-  const addPeople = useRosterBoardStore((state) => state.addPeople);
   const initializeDraft = useRosterBoardStore((state) => state.initializeDraft);
-  const removePerson = useRosterBoardStore((state) => state.removePerson);
   const replaceDraft = useRosterBoardStore((state) => state.replaceDraft);
   const setHasHydrated = useRosterBoardStore((state) => state.setHasHydrated);
-  const updateGroupCount = useRosterBoardStore((state) => state.updateGroupCount);
-  const updateUnassignedPerson = useRosterBoardStore((state) => state.updateUnassignedPerson);
+  const saveQueue = useRef(Promise.resolve());
   const [isGrouping, setIsGrouping] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  const [resultName, setResultName] = useState("");
   const initialDraft = useMemo(
-    () => createRosterBoardDraft(project.people, initialGroups),
-    [initialGroups, project.people],
+    () => createRosterBoardDraft(project.people, selectedResult?.members ?? null),
+    [project.people, selectedResult?.members],
   );
 
   useEffect(() => {
@@ -133,9 +101,36 @@ function RosterWorkspace({
 
   useEffect(() => {
     if (hasHydrated) {
-      initializeDraft(project.id, initialDraft);
+      initializeDraft(draftKey, initialDraft);
     }
-  }, [hasHydrated, initialDraft, initializeDraft, project.id]);
+  }, [draftKey, hasHydrated, initialDraft, initializeDraft]);
+
+  function saveResultDraft(nextDraft: RosterBoardDraft) {
+    if (!selectedResult) {
+      return;
+    }
+
+    saveQueue.current = saveQueue.current
+      .then(() =>
+        jsonRequest(
+          `/api/group-results/${selectedResult.id}`,
+          "PATCH",
+          createGroupResultMembers(nextDraft),
+        ),
+      )
+      .then(() => setNotice(null))
+      .catch((error: unknown) => {
+        setNotice(error instanceof Error ? error.message : UI_MESSAGES.groupResultSaveFailed);
+      });
+  }
+
+  function commitDraft(nextDraft: RosterBoardDraft, saveResult = true) {
+    replaceDraft(draftKey, nextDraft);
+
+    if (saveResult) {
+      saveResultDraft(nextDraft);
+    }
+  }
 
   if (!hasHydrated || !draft) {
     return (
@@ -150,20 +145,23 @@ function RosterWorkspace({
 
   const totalPeople = allBoardPeople(draft).length;
   const hasValidGroupCount = draft.groupCount <= totalPeople;
-  const calculatedGroupSizes =
-    totalPeople > 0 && hasValidGroupCount
-      ? createDefaultGroupSizes(totalPeople, draft.groupCount)
-      : [];
-  const canRunGrouping = totalPeople > 0 && hasValidGroupCount && !isGrouping;
+  const groupingPlan = hasValidGroupCount ? createGroupingPlan(draft) : null;
+  const hasResultName = Boolean(selectedResult || resultName.trim());
+  const canRunGrouping = totalPeople > 0 && hasValidGroupCount && hasResultName && !isGrouping;
   const groupingMessage =
     totalPeople === 0
       ? UI_MESSAGES.boardGroupingRequired
       : !hasValidGroupCount
         ? UI_MESSAGES.groupCountExceedsPeople
-        : ROSTER_BOARD.distributionPreview(calculatedGroupSizes);
+        : groupingPlan
+          ? ROSTER_BOARD.distributionPreview(
+              groupingPlan.groupSizes,
+              groupingPlan.unassignedCount,
+            )
+          : UI_MESSAGES.invalidInput;
 
   function handleAddPeople(people: PersonInput[]) {
-    addPeople(project.id, createClientMembers(people));
+    commitDraft(addPeopleToDraft(draft, createClientMembers(people)));
     setNotice(ROSTER_BOARD.addedPeople);
   }
 
@@ -172,27 +170,35 @@ function RosterWorkspace({
       return;
     }
 
-    const nextDraft: RosterBoardDraft = {
-      ...draft,
-      groups: appointLeaders(
-        distributePeople(allBoardPeople(draft), calculatedGroupSizes, draft.strategy),
-        draft.leaderSelectionMode,
-      ),
-      unassigned: [],
-    };
-
-    replaceDraft(project.id, nextDraft);
+    const nextDraft = createGroupedDraft(draft);
+    replaceDraft(draftKey, nextDraft);
     setIsGrouping(true);
     setNotice(null);
 
     try {
-      await jsonRequest(`/api/projects/${project.id}/board-snapshots`, "POST", {
-        members: { groups: nextDraft.groups, strategy: nextDraft.strategy },
-        people: allBoardPeople(nextDraft),
-      });
+      if (selectedResult) {
+        await saveQueue.current;
+        await jsonRequest(
+          `/api/group-results/${selectedResult.id}`,
+          "PATCH",
+          createGroupResultMembers(nextDraft),
+        );
+      } else {
+        const result = await jsonRequest<{ id: string }>(
+          `/api/projects/${project.id}/board-snapshots`,
+          "POST",
+          {
+            members: createGroupResultMembers(nextDraft),
+            name: resultName.trim(),
+            people: allBoardPeople(nextDraft),
+          },
+        );
+        router.push(projectGroupResultRoute(project.id, result.id));
+      }
+
       router.refresh();
     } catch (error) {
-      setNotice(error instanceof Error ? error.message : UI_MESSAGES.boardSaveFailed);
+      setNotice(error instanceof Error ? error.message : UI_MESSAGES.groupResultSaveFailed);
     } finally {
       setIsGrouping(false);
     }
@@ -204,14 +210,33 @@ function RosterWorkspace({
         draft={draft}
         leftPanelFooter={
           <div className="space-y-4">
+            {!selectedResult ? (
+              <label className="block border-b border-[var(--border)] pb-4 text-sm font-medium">
+                {ROSTER_BOARD.groupResultName}
+                <input
+                  className="mt-2 w-full border border-[var(--border)] bg-[var(--surface)] px-2 py-1.5"
+                  maxLength={GROUPING_LIMITS.groupResultNameMaximumLength}
+                  onChange={(event) => setResultName(event.target.value)}
+                  placeholder={ROSTER_BOARD.groupResultNamePlaceholder}
+                  value={resultName}
+                />
+              </label>
+            ) : null}
             <RosterBoardSettings
               compact
               draft={draft}
-              onChange={(nextDraft) => replaceDraft(project.id, nextDraft)}
-              onGroupCountChange={(groupCount) => updateGroupCount(project.id, groupCount)}
+              onChange={(nextDraft) => commitDraft(nextDraft, false)}
+              onGroupCountChange={(groupCount) =>
+                commitDraft(updateGroupCount(draft, groupCount), false)
+              }
             />
             <div className="flex flex-col items-stretch gap-3 border border-[var(--border)] bg-[var(--surface)] p-3">
               <p className="text-sm text-[var(--muted)]">{groupingMessage}</p>
+              {!selectedResult && !resultName.trim() ? (
+                <p className="text-xs text-[var(--muted)]">
+                  {UI_MESSAGES.groupResultNameRequired}
+                </p>
+              ) : null}
               <button
                 className={`flex items-center justify-center gap-2 px-4 py-2 text-sm ${canRunGrouping ? INPUT_DEPENDENT_BUTTON_CLASSES.enabled : INPUT_DEPENDENT_BUTTON_CLASSES.disabled}`}
                 disabled={!canRunGrouping}
@@ -225,29 +250,52 @@ function RosterWorkspace({
           </div>
         }
         leftPanelHeader={<RosterBoardInput onAddPeople={handleAddPeople} onError={setNotice} />}
-        onDraftChange={(nextDraft) => replaceDraft(project.id, nextDraft)}
-        onRemovePerson={(personId, groupId) => removePerson(project.id, personId, groupId)}
+        onDraftChange={commitDraft}
+        onRemovePerson={(personId, groupId) =>
+          commitDraft(removePersonFromDraft(draft, personId, groupId))
+        }
         onUpdateUnassignedPerson={(personId, updates) =>
-          updateUnassignedPerson(project.id, personId, updates)
+          commitDraft(updateUnassignedPerson(draft, personId, updates))
         }
         rightPanelHeader={
-          notice ? (
-            <div className="mb-5 border border-red-300 bg-red-50 p-3 text-sm text-red-800" role="alert">
-              {notice}
-            </div>
-          ) : null
+          <>
+            <GroupResultNavigation
+              groupResults={groupResults}
+              projectId={project.id}
+              projectTitle={project.title}
+              selectedGroupResultId={selectedResult?.id}
+            />
+            {notice ? (
+              <div
+                className="mb-5 border border-red-300 bg-red-50 p-3 text-sm text-red-800"
+                role="alert"
+              >
+                {notice}
+              </div>
+            ) : null}
+          </>
         }
-        rosterTitle={project.title}
+        rosterTitle={selectedResult?.name ?? project.title}
         totalPeople={totalPeople}
       />
     </main>
   );
 }
 
-export function Workspace({ initialGroups, project }: WorkspaceProps) {
+export function Workspace({
+  groupResults,
+  project,
+  selectedGroupResult,
+}: WorkspaceProps) {
   if (!project) {
-    return <NewRosterWorkspace />;
+    return <NewProjectWorkspace />;
   }
 
-  return <RosterWorkspace initialGroups={initialGroups} project={project} />;
+  return (
+    <ProjectWorkspace
+      groupResults={groupResults}
+      project={project}
+      selectedGroupResult={selectedGroupResult}
+    />
+  );
 }

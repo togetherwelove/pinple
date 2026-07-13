@@ -7,14 +7,21 @@ import { Workspace } from "@/components/dashboard/workspace";
 import { requireCurrentUser } from "@/lib/auth/current-user";
 import {
   NEW_ROSTER_ROUTE,
+  PROJECT_NAVIGATION,
   ROSTER_VIEW_MODES,
   ROUTES,
   rosterProjectRoute,
 } from "@/lib/config/app";
 import { prisma } from "@/lib/prisma";
-import type { GroupResultMembers, StoredGender } from "@/lib/types/domain";
+import type {
+  GroupResultDetail,
+  GroupResultSummary,
+  StoredGender,
+} from "@/lib/types/domain";
 
-type RosterPageProps = { searchParams: Promise<{ project?: string; view?: string }> };
+type RosterPageProps = {
+  searchParams: Promise<{ project?: string; result?: string; view?: string }>;
+};
 
 export default async function RosterPage({ searchParams }: RosterPageProps) {
   const user = await requireCurrentUser().catch(() => null);
@@ -32,14 +39,38 @@ export default async function RosterPage({ searchParams }: RosterPageProps) {
   const projectId = isCreateView ? undefined : params.project ?? projects[0]?.id;
   const project = projectId
     ? await prisma.project.findFirst({
-        include: {
-          groupResults: { orderBy: { createdAt: "desc" }, take: 1 },
-          people: { orderBy: { createdAt: "asc" } },
-        },
+        include: { people: { orderBy: { createdAt: "asc" } } },
         where: { id: projectId, userId: user.id },
       })
     : null;
-  const result = project?.groupResults[0];
+  const [groupResultRecords, selectedGroupResultRecord] = project
+    ? await Promise.all([
+        prisma.groupResult.findMany({
+          orderBy: { createdAt: "desc" },
+          select: { createdAt: true, id: true, name: true },
+          where: { projectId: project.id },
+        }),
+        params.result
+          ? prisma.groupResult.findFirst({
+              select: { createdAt: true, id: true, members: true, name: true },
+              where: { id: params.result, projectId: project.id },
+            })
+          : null,
+      ])
+    : [[], null];
+  const groupResults: GroupResultSummary[] = groupResultRecords.map((result) => ({
+      createdAt: result.createdAt.toISOString(),
+      id: result.id,
+      name: result.name,
+    }));
+  const selectedGroupResult: GroupResultDetail | null = selectedGroupResultRecord
+    ? {
+        createdAt: selectedGroupResultRecord.createdAt.toISOString(),
+        id: selectedGroupResultRecord.id,
+        members: selectedGroupResultRecord.members as unknown as GroupResultDetail["members"],
+        name: selectedGroupResultRecord.name,
+      }
+    : null;
   const accountName = user.user_metadata.full_name ?? user.user_metadata.name ?? null;
 
   return (
@@ -51,14 +82,14 @@ export default async function RosterPage({ searchParams }: RosterPageProps) {
       />
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <nav
-          aria-label="명단 목록"
+          aria-label={PROJECT_NAVIGATION.label}
           className="flex shrink-0 gap-2 overflow-x-auto border-b border-[var(--border)] bg-[var(--surface)] p-3 md:hidden"
         >
           <Link
             className="shrink-0 border border-dashed border-[var(--border)] px-3 py-2 text-sm"
             href={NEW_ROSTER_ROUTE}
           >
-            + 새로운 명단
+            {PROJECT_NAVIGATION.newProject}
           </Link>
           {projects.map((item) => (
             <div className="flex shrink-0 items-center" key={item.id}>
@@ -79,8 +110,8 @@ export default async function RosterPage({ searchParams }: RosterPageProps) {
         </nav>
         <div className="min-h-0 flex-1">
           <Workspace
-            initialGroups={(result?.members as unknown as GroupResultMembers) ?? null}
-            key={`${project?.id ?? "new-project"}:${project?.people.length ?? 0}`}
+            groupResults={groupResults}
+            key={`${project?.id ?? "new-project"}:${selectedGroupResult?.id ?? "roster"}:${project?.people.length ?? 0}`}
             project={
               project
                 ? {
@@ -93,6 +124,7 @@ export default async function RosterPage({ searchParams }: RosterPageProps) {
                   }
                 : null
             }
+            selectedGroupResult={selectedGroupResult}
           />
         </div>
       </div>

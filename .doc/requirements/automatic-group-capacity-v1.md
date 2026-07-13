@@ -1,5 +1,8 @@
 # 자동 그룹 정원 계산 결정 기록 V1
 
+> 2026-07-13 이후 프로젝트별 복수 조 편성 결과에서는
+> `project-multiple-group-results-v1.md`의 동일 정원 및 나머지 대기 명단 정책을 우선 적용한다.
+
 ## 기준 문서
 
 - `implementation-decisions-v2.md`

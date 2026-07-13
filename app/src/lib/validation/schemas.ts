@@ -5,6 +5,7 @@ import {
   GENDER,
   INPUT_GENDER,
   LEADER_SELECTION_MODES,
+  VALIDATION_MESSAGES,
 } from "@/lib/config/app";
 
 export const projectSchema = z.object({
@@ -40,6 +41,12 @@ export const groupingRequestSchema = z.object({
       LEADER_SELECTION_MODES.random,
     ])
     .default(LEADER_SELECTION_MODES.none),
+  name: z
+    .string()
+    .trim()
+    .min(1)
+    .max(GROUPING_LIMITS.groupResultNameMaximumLength)
+    .optional(),
   strategy: z.enum([
     GROUPING_STRATEGIES.even,
     GROUPING_STRATEGIES.ageSimilar,
@@ -67,13 +74,16 @@ const groupSchema = z
     if (group.members.filter((member) => member.isLeader).length > 1) {
       context.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "A team can have at most one leader.",
+        message: VALIDATION_MESSAGES.groupLeaderLimit,
       });
     }
   });
 
 export const groupResultMembersSchema = z.object({
   groups: z.array(groupSchema),
+  leaderSelectionMode: z
+    .enum([LEADER_SELECTION_MODES.none, LEADER_SELECTION_MODES.random])
+    .optional(),
   strategy: z
     .enum([
       GROUPING_STRATEGIES.even,
@@ -82,6 +92,7 @@ export const groupResultMembersSchema = z.object({
       GROUPING_STRATEGIES.genderSeparated,
     ])
     .optional(),
+  unassigned: z.array(groupMemberSchema).optional(),
 });
 
 export const boardPersonSchema = z.object({
@@ -94,25 +105,41 @@ export const boardPersonSchema = z.object({
 export const boardSnapshotSchema = z
   .object({
     members: groupResultMembersSchema,
+    name: z
+      .string()
+      .trim()
+      .min(1)
+      .max(GROUPING_LIMITS.groupResultNameMaximumLength),
     people: z.array(boardPersonSchema),
   })
   .superRefine((snapshot, context) => {
     const peopleIds = new Set(snapshot.people.map((person) => person.id));
-    const referencedIds = snapshot.members.groups.flatMap((group) =>
-      group.members.map((member) => member.id),
-    );
+    const referencedIds = [
+      ...snapshot.members.groups.flatMap((group) =>
+        group.members.map((member) => member.id),
+      ),
+      ...(snapshot.members.unassigned ?? []).map((member) => member.id),
+    ];
 
     if (peopleIds.size !== snapshot.people.length) {
       context.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "Duplicate person ids are not allowed.",
+        message: VALIDATION_MESSAGES.duplicateBoardPersonIds,
       });
     }
 
     if (referencedIds.some((id) => !peopleIds.has(id))) {
       context.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "Group members must exist in the roster.",
+        message: VALIDATION_MESSAGES.unknownGroupResultMember,
+      });
+    }
+
+
+    if (new Set(referencedIds).size !== referencedIds.length) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: VALIDATION_MESSAGES.duplicateGroupResultMembers,
       });
     }
   });

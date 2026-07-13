@@ -1,7 +1,11 @@
 import Link from "next/link";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { RosterDeleteButton } from "@/components/dashboard/roster-delete-button";
-import { NEW_ROSTER_ROUTE, rosterProjectRoute } from "@/lib/config/app";
+import {
+  NEW_ROSTER_ROUTE,
+  PROJECT_NAVIGATION,
+  rosterProjectRoute,
+} from "@/lib/config/app";
 
 type SidebarAccount = {
   email: string;
@@ -29,12 +33,12 @@ export function Sidebar({ account, activeProjectId, projects }: SidebarProps) {
   return (
     <aside className="hidden h-full w-64 shrink-0 flex-col overflow-hidden border-r border-[var(--border)] bg-[var(--surface)] p-3 md:flex">
       <div>
-        <p className="px-3 py-2 text-sm font-semibold">명단</p>
+        <p className="px-3 py-2 text-sm font-semibold">{PROJECT_NAVIGATION.title}</p>
         <Link
           className="mb-3 block border border-dashed border-[var(--border)] px-3 py-2 text-sm"
           href={NEW_ROSTER_ROUTE}
         >
-          + 새로운 명단
+          {PROJECT_NAVIGATION.newProject}
         </Link>
       </div>
       <nav className="flex-1 space-y-1 overflow-y-auto">

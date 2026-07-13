@@ -1,6 +1,7 @@
 import { requireCurrentUser } from "@/lib/auth/current-user";
 import { errorResponse } from "@/lib/api/response";
 import { prisma } from "@/lib/prisma";
+import { UI_MESSAGES } from "@/lib/config/app";
 import { projectSchema } from "@/lib/validation/schemas";
 
 export async function POST(request: Request) {
@@ -9,7 +10,7 @@ export async function POST(request: Request) {
     const parsed = projectSchema.safeParse(await request.json());
 
     if (!parsed.success) {
-      return Response.json({ error: "명단 이름을 확인해 주세요." }, { status: 400 });
+      return Response.json({ error: UI_MESSAGES.projectTitleInvalid }, { status: 400 });
     }
 
     const project = await prisma.project.create({

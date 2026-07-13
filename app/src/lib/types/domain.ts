@@ -32,7 +32,19 @@ export type Group = {
 
 export type GroupResultMembers = {
   groups: Group[];
+  leaderSelectionMode?: LeaderSelectionMode;
   strategy?: GroupingStrategy;
+  unassigned?: GroupMember[];
+};
+
+export type GroupResultSummary = {
+  createdAt: string;
+  id: string;
+  name: string;
+};
+
+export type GroupResultDetail = GroupResultSummary & {
+  members: GroupResultMembers;
 };
 
 export type RosterBoardDraft = {

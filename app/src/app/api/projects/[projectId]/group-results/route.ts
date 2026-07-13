@@ -1,9 +1,10 @@
-import { GROUP_RESULT_NAME_PREFIX } from "@/lib/config/app";
+import { GROUP_RESULT_NAME_PREFIX, UI_MESSAGES } from "@/lib/config/app";
 import { errorResponse } from "@/lib/api/response";
 import { requireCurrentUser } from "@/lib/auth/current-user";
 import { requireOwnedProject } from "@/lib/auth/project-access";
 import { distributePeople } from "@/lib/grouping/distribute-people";
 import { appointLeaders } from "@/lib/grouping/leader-assignment";
+import { shuffle } from "@/lib/grouping/shuffle";
 import { prisma } from "@/lib/prisma";
 import type { StoredGender } from "@/lib/types/domain";
 import { groupingRequestSchema } from "@/lib/validation/schemas";
@@ -31,7 +32,7 @@ export async function POST(
     const parsed = groupingRequestSchema.safeParse(await request.json());
 
     if (!parsed.success) {
-      return Response.json({ error: "조 정원을 확인해 주세요." }, { status: 400 });
+      return Response.json({ error: UI_MESSAGES.groupResultInvalid }, { status: 400 });
     }
 
     const people = await prisma.person.findMany({
@@ -40,28 +41,47 @@ export async function POST(
     });
     const capacity = parsed.data.groupSizes.reduce((sum, size) => sum + size, 0);
 
-    if (capacity !== people.length) {
-      return Response.json({ error: "조 정원의 합계가 전체 인원과 같아야 합니다." }, { status: 400 });
+    if (capacity > people.length) {
+      return Response.json({ error: UI_MESSAGES.groupCapacityExceedsPeople }, { status: 400 });
     }
 
+    const shuffledPeople = shuffle(
+      people.map((person) => ({
+        ...person,
+        gender: person.gender as StoredGender,
+      })),
+    );
+    const assignedPeople = shuffledPeople.slice(0, capacity);
+    const unassigned = shuffledPeople.slice(capacity).map((person) => ({
+      ...person,
+      isLeader: false,
+    }));
     const groups = appointLeaders(
       distributePeople(
-        people.map((person) => ({
-          ...person,
-          gender: person.gender as StoredGender,
-        })),
+        assignedPeople,
         parsed.data.groupSizes,
         parsed.data.strategy,
       ),
       parsed.data.leaderSelectionMode,
     );
-    const result = await prisma.groupResult.create({
-      data: {
-        members: { groups, strategy: parsed.data.strategy },
-        name: createResultName(),
-        projectId,
-      },
-    });
+    const [result] = await prisma.$transaction([
+      prisma.groupResult.create({
+        data: {
+          members: {
+            groups,
+            leaderSelectionMode: parsed.data.leaderSelectionMode,
+            strategy: parsed.data.strategy,
+            unassigned,
+          },
+          name: parsed.data.name ?? createResultName(),
+          projectId,
+        },
+      }),
+      prisma.project.update({
+        data: { updatedAt: new Date() },
+        where: { id: projectId },
+      }),
+    ]);
 
     return Response.json(result, { status: 201 });
   } catch (error) {

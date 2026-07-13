@@ -18,6 +18,10 @@ export function rosterProjectRoute(projectId: string) {
   return `${ROUTES.rosters}?project=${encodeURIComponent(projectId)}`;
 }
 
+export function projectGroupResultRoute(projectId: string, groupResultId: string) {
+  return `${rosterProjectRoute(projectId)}&result=${encodeURIComponent(groupResultId)}`;
+}
+
 export const INPUT_DEPENDENT_BUTTON_CLASSES = {
   disabled: "cursor-not-allowed bg-[var(--canvas)] text-[var(--muted)]",
   enabled: "bg-[var(--ink)] text-[var(--surface)] transition-opacity hover:opacity-90",
@@ -26,9 +30,9 @@ export const INPUT_DEPENDENT_BUTTON_CLASSES = {
 export const LOGIN_CONTENT = {
   description: "명단을 정리하고, 조건에 맞는 조를 빠르게 구성하세요.",
   googleContinue: "Google로 계속하기",
-  previewNewRoster: "새로운 명단",
-  previewRosterHeading: "명단",
-  previewRosterLabel: "최근 명단",
+  previewNewRoster: "새 프로젝트",
+  previewRosterHeading: "프로젝트",
+  previewRosterLabel: "최근 프로젝트",
   previewDescription: "명단을 저장하면 조 편성 결과를 바로 확인할 수 있습니다.",
   previewStatus: "자동 편성 완료",
   previewTitle: "부산 워크숍",
@@ -72,6 +76,7 @@ export const GROUPING_LIMITS = {
   minimumAge: 0,
   minimumGroupCount: 1,
   minimumPeoplePerGroup: 1,
+  groupResultNameMaximumLength: 80,
   projectTitleMaximumLength: 80,
 } as const;
 
@@ -97,14 +102,25 @@ export const ROSTER_BOARD_DND_CONTEXT_ID = "roster-board";
 
 export const ROSTER_BOARD_STORAGE_KEY = "pinple-roster-board-draft-v1";
 
+export const ROSTER_BOARD_DRAFT_KEY = {
+  rosterScope: "roster",
+  separator: ":",
+} as const;
+
 export const ROSTER_BOARD = {
   addPerson: "추가",
   addedPeople: "대기 명단에 인원을 추가했습니다.",
   autoGrouping: "자동 조 편성",
   boardTitle: "명단 관리 보드",
-  distributionPreview: (groupSizes: number[]) =>
-    `예상 배정: ${groupSizes.map((size) => `${size}명`).join(" · ")}`,
+  distributionPreview: (groupSizes: number[], unassignedCount: number) =>
+    `예상 배정: ${groupSizes.map((size) => `${size}명`).join(" · ")} · 대기 ${unassignedCount}명`,
   groupCount: "조 개수",
+  groupResultName: "조 편성 이름",
+  groupResultNamePlaceholder: "예: 오전 활동",
+  groupResults: "조 편성 결과",
+  baseRoster: "기준 명단",
+  newGroupResult: "새 조 편성 결과",
+  noGroupResults: "저장된 조 편성 결과가 없습니다.",
   groupingStrategy: "편성 방식",
   movePerson: "인원 이동",
   personAge: "나이",
@@ -118,17 +134,24 @@ export const ROSTER_BOARD = {
   personEditorTitle: "대기 명단 인원 수정",
   personGender: "성별",
   personName: "이름",
+  project: "프로젝트",
   removePerson: "인원 삭제",
   savePerson: "수정 완료",
   unassigned: "대기 명단",
 } as const;
 
 export const ROSTER_CREATION = {
-  description: "명단을 모으고 조건에 맞는 조를 구성할 수 있습니다.",
-  heading: "첫 명단을 만들어 보세요.",
-  inputPlaceholder: "명단 이름",
-  start: "새로운 명단 시작",
-  subtitle: "새 작업을 시작하세요",
+  description: "하나의 기준 명단으로 여러 조 편성 결과를 독립적으로 관리할 수 있습니다.",
+  heading: "첫 프로젝트를 만들어 보세요.",
+  inputPlaceholder: "프로젝트 이름",
+  start: "새 프로젝트 시작",
+  subtitle: "새 프로젝트를 시작하세요",
+} as const;
+
+export const PROJECT_NAVIGATION = {
+  label: "프로젝트 목록",
+  newProject: "+ 새 프로젝트",
+  title: "프로젝트",
 } as const;
 
 export const GROUPING_STRATEGIES = {
@@ -171,18 +194,24 @@ export const UI_MESSAGES = {
   authenticationRequired: "로그인이 필요합니다.",
   emptyWorkbook: "파일에 읽을 수 있는 시트가 없습니다.",
   groupCapacityMismatch: "조 정원 합계를 전체 인원 수와 맞춰 주세요.",
+  groupCapacityExceedsPeople: "조 정원 합계는 전체 인원 수보다 클 수 없습니다.",
   boardGroupingRequired: "명단에 인원을 추가한 뒤 조 편성을 실행할 수 있습니다.",
   boardSaveFailed: "조 편성 결과를 저장하지 못했습니다. 보드 초안은 이 브라우저에 유지됩니다.",
   boardSnapshotInvalid: "보드 데이터를 확인해 주세요.",
   groupResultsRequired: "조 편성 결과를 만든 뒤 내보낼 수 있습니다.",
   groupCountExceedsPeople: "조 개수는 전체 인원 수보다 많을 수 없습니다.",
+  groupResultNameRequired: "조 편성 이름을 입력해 주세요.",
+  groupResultNotFound: "조 편성 결과를 찾을 수 없습니다.",
+  groupResultInvalid: "조 편성 데이터를 확인해 주세요.",
+  groupResultSaveFailed: "조 편성 결과를 저장하지 못했습니다. 브라우저 초안은 유지됩니다.",
   invalidFile: "지원하지 않는 파일입니다.",
   invalidInput: "입력 형식을 확인해 주세요.",
   leaderConflict: "대상 조에 이미 조장이 있습니다.",
-  rosterDeleteFailed: "명단을 삭제하지 못했습니다. 다시 시도해 주세요.",
-  rosterDeleteWarning: "정말 이 명단을 삭제하시겠습니까? 포함된 인원과 조 편성 결과가 모두 영구적으로 삭제됩니다.",
+  rosterDeleteFailed: "프로젝트를 삭제하지 못했습니다. 다시 시도해 주세요.",
+  rosterDeleteWarning: "정말 이 프로젝트를 삭제하시겠습니까? 포함된 기준 명단과 조 편성 결과가 모두 영구적으로 삭제됩니다.",
   noPeople: "먼저 인원 정보를 등록해 주세요.",
-  projectTitleRequired: "명단 이름을 입력한 뒤 시작할 수 있습니다.",
+  projectTitleRequired: "프로젝트 이름을 입력한 뒤 시작할 수 있습니다.",
+  projectTitleInvalid: "프로젝트 이름을 확인해 주세요.",
   saveFailed: "저장하지 못했습니다. 다시 시도해 주세요.",
   saveRosterRequired: "명단을 입력한 뒤 저장할 수 있습니다.",
   savedRosterRequired: "저장된 명단이 있어야 조 정원을 계산할 수 있습니다.",
@@ -197,10 +226,10 @@ export const UI_LABELS = {
   appointLeader: "조장으로 임명",
   assignMovingLeader: "B. 이동한 사람을 조장으로 지정",
   cancel: "취소",
-  creatingRoster: "명단 만드는 중...",
-  dashboardLoading: "명단을 불러오는 중...",
+  creatingRoster: "프로젝트 만드는 중...",
+  dashboardLoading: "프로젝트를 불러오는 중...",
   delete: "삭제",
-  deleteRoster: "명단 삭제",
+  deleteRoster: "프로젝트 삭제",
   deleting: "삭제 중",
   grouping: "조 편성 중...",
   leader: "조장",
@@ -210,5 +239,13 @@ export const UI_LABELS = {
   retainExistingLeader: "A. 기존 조장 유지",
   revokeLeader: "조장 해제",
   savingRoster: "저장 중...",
+  selectGroupResult: "조 편성 결과 선택",
   signOut: "로그아웃",
+} as const;
+
+export const VALIDATION_MESSAGES = {
+  duplicateBoardPersonIds: "Duplicate person ids are not allowed.",
+  duplicateGroupResultMembers: "A person can appear only once in a group result.",
+  groupLeaderLimit: "A team can have at most one leader.",
+  unknownGroupResultMember: "Group members must exist in the roster.",
 } as const;

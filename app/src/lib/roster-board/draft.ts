@@ -2,6 +2,7 @@ import {
   GROUPING_LIMITS,
   GROUPING_STRATEGIES,
   LEADER_SELECTION_MODES,
+  ROSTER_BOARD_DRAFT_KEY,
   formatGroupName,
 } from "@/lib/config/app";
 import type {
@@ -25,18 +26,23 @@ function defaultGroupCount(totalPeople: number) {
   );
 }
 
-export function createDefaultGroupSizes(totalPeople: number, groupCount: number) {
+export function createEqualGroupSizes(totalPeople: number, groupCount: number) {
   if (totalPeople === 0) {
     return Array.from({ length: groupCount }, () => GROUPING_LIMITS.minimumPeoplePerGroup);
   }
 
-  const baseSize = Math.floor(totalPeople / groupCount);
-  const remainder = totalPeople % groupCount;
-
-  return Array.from(
-    { length: groupCount },
-    (_, index) => baseSize + (index < remainder ? 1 : 0),
+  const targetSize = Math.max(
+    Math.floor(totalPeople / groupCount),
+    GROUPING_LIMITS.minimumPeoplePerGroup,
   );
+
+  return Array.from({ length: groupCount }, () => targetSize);
+}
+
+export function createBoardDraftKey(projectId: string, groupResultId?: string) {
+  const scope = groupResultId ?? ROSTER_BOARD_DRAFT_KEY.rosterScope;
+
+  return `${projectId}${ROSTER_BOARD_DRAFT_KEY.separator}${scope}`;
 }
 
 export function createGroupTemplates(groupSizes: number[]): Group[] {
@@ -80,7 +86,7 @@ export function createRosterBoardDraft(
 
     return {
       groupCount,
-      groups: createGroupTemplates(createDefaultGroupSizes(people.length, groupCount)),
+      groups: createGroupTemplates(createEqualGroupSizes(people.length, groupCount)),
       leaderSelectionMode: LEADER_SELECTION_MODES.none,
       strategy: GROUPING_STRATEGIES.even,
       unassigned: uniqueMembers(people.map((person) => ({ ...person }))),
@@ -91,14 +97,17 @@ export function createRosterBoardDraft(
   const assignedIdentities = new Set(
     groups.flatMap((group) => group.members.map(personIdentity)),
   );
-  const unassigned = people
-    .filter((person) => !assignedIdentities.has(personIdentity(person)))
-    .map((person) => ({ ...person }));
+  const unassigned = initialResult?.unassigned
+    ? initialResult.unassigned.map((person) => ({ ...person }))
+    : people
+        .filter((person) => !assignedIdentities.has(personIdentity(person)))
+        .map((person) => ({ ...person }));
 
   return {
     groupCount: savedGroups.length,
     groups,
-    leaderSelectionMode: LEADER_SELECTION_MODES.none,
+    leaderSelectionMode:
+      initialResult?.leaderSelectionMode ?? LEADER_SELECTION_MODES.none,
     strategy: initialResult?.strategy ?? GROUPING_STRATEGIES.even,
     unassigned: uniqueMembers(unassigned),
   };

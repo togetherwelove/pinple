@@ -1,21 +1,9 @@
-import { GROUP_RESULT_NAME_PREFIX, UI_MESSAGES } from "@/lib/config/app";
+import { UI_MESSAGES } from "@/lib/config/app";
 import { errorResponse } from "@/lib/api/response";
 import { requireCurrentUser } from "@/lib/auth/current-user";
 import { requireOwnedProject } from "@/lib/auth/project-access";
 import { prisma } from "@/lib/prisma";
 import { boardSnapshotSchema } from "@/lib/validation/schemas";
-
-function createResultName() {
-  const timestamp = new Intl.DateTimeFormat("sv-SE", {
-    dateStyle: "short",
-    timeStyle: "short",
-  })
-    .format(new Date())
-    .replace(" ", "_")
-    .replace(":", "-");
-
-  return `${GROUP_RESULT_NAME_PREFIX}_${timestamp}`;
-}
 
 export async function POST(
   request: Request,
@@ -44,7 +32,7 @@ export async function POST(
       return transaction.groupResult.create({
         data: {
           members: parsed.data.members,
-          name: createResultName(),
+          name: parsed.data.name,
           projectId,
         },
       });

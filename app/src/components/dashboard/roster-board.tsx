@@ -1,5 +1,7 @@
 "use client";
 
+/* eslint-disable react-hooks/refs -- dnd-kit exposes render-time bindings through hook return values. */
+
 import { closestCenter, DndContext, DragOverlay, type DragEndEvent, useDroppable } from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { Crown, Download, GripVertical, Pencil, Trash2 } from "lucide-react";
@@ -9,7 +11,6 @@ import {
   EXCEL_EXPORT,
   GENDER,
   GENDER_LABELS,
-  GROUPING_STRATEGY_LABELS,
   ROSTER_BOARD,
   ROSTER_BOARD_DND_CONTEXT_ID,
   UNKNOWN_AGE_LABEL,
