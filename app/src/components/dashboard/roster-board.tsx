@@ -116,6 +116,7 @@ function SortableMemberCard({
 }
 
 function BoardColumn({
+  compact = false,
   group,
   members,
   onDelete,
@@ -123,6 +124,7 @@ function BoardColumn({
   onLeaderAction,
   title,
 }: {
+  compact?: boolean;
   group: Group | null;
   members: GroupMember[];
   onDelete: (personId: string, groupId: string | null) => void;
@@ -138,7 +140,11 @@ function BoardColumn({
 
   return (
     <section
-      className="min-h-48 min-w-64 border border-[var(--border)] bg-[var(--surface)]"
+      className={
+        compact
+          ? "min-h-28 w-full border border-[var(--border)] bg-[var(--surface)]"
+          : "min-h-48 min-w-64 border border-[var(--border)] bg-[var(--surface)]"
+      }
       ref={droppable.setNodeRef}
     >
       <header className="flex items-center justify-between border-b border-[var(--border)] px-3 py-2">
@@ -356,6 +362,7 @@ export function RosterBoard({
           <div className="shrink-0 p-4">{leftPanelHeader}</div>
           <div className="shrink-0 p-4 pt-0">
             <BoardColumn
+              compact
               group={null}
               members={draft.unassigned}
               onDelete={onRemovePerson}

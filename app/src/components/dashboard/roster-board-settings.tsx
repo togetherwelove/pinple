@@ -53,10 +53,24 @@ export function RosterBoardSettings({
   }
 
   return (
-    <section className={compact ? "bg-[var(--surface)]" : "border-b border-[var(--border)] bg-[var(--surface)] p-4"}>
-      <div className={compact ? "space-y-4" : "grid gap-4 lg:grid-cols-[minmax(130px,180px)_minmax(240px,1fr)_minmax(180px,240px)]"}>
-        <label className="text-sm font-medium">
-            {ROSTER_BOARD.groupCount}
+    <section
+      className={
+        compact
+          ? "bg-[var(--surface)]"
+          : "border-b border-[var(--border)] bg-[var(--surface)] p-4"
+      }
+    >
+      <div
+        className={
+          compact
+            ? "space-y-4"
+            : "grid gap-4 lg:grid-cols-[minmax(130px,180px)_minmax(240px,1fr)_minmax(180px,240px)]"
+        }
+      >
+        <label
+          className={`block text-sm font-medium ${compact ? "border-b border-[var(--border)] pb-4" : ""}`}
+        >
+          {ROSTER_BOARD.groupCount}
           <input
             className="mt-2 w-full border border-[var(--border)] bg-[var(--surface)] px-2 py-1.5"
             max={GROUPING_LIMITS.maximumGroupCount}
@@ -66,14 +80,21 @@ export function RosterBoardSettings({
             value={draft.groups.length}
           />
         </label>
-        <div>
+        <div className={compact ? "border-b border-[var(--border)] pb-4" : ""}>
           <p className="text-sm font-medium">{ROSTER_BOARD.groupTargets}</p>
-          <div className={compact ? "mt-2 grid gap-2" : "mt-2 grid gap-2 sm:grid-cols-2 xl:grid-cols-3"}>
+          <div
+            className={
+              compact ? "mt-3 grid gap-2" : "mt-2 grid gap-2 sm:grid-cols-2 xl:grid-cols-3"
+            }
+          >
             {draft.groups.map((group, index) => (
-              <label className="flex items-center justify-between gap-2 text-sm" key={group.id}>
+              <label
+                className="flex min-h-8 items-center justify-between gap-3 text-sm"
+                key={group.id}
+              >
                 <span>{formatGroupName(index)}</span>
                 <input
-                  className="w-16 border border-[var(--border)] bg-[var(--surface)] px-2 py-1"
+                  className="w-20 border border-[var(--border)] bg-[var(--surface)] px-2 py-1.5 text-right"
                   min={Math.max(GROUPING_LIMITS.minimumPeoplePerGroup, group.members.length)}
                   onChange={(event) => onTargetSizeChange(group.id, Number(event.target.value))}
                   type="number"
@@ -83,10 +104,10 @@ export function RosterBoardSettings({
             ))}
           </div>
         </div>
-        <div className="space-y-3">
-          <fieldset>
+        <div className="space-y-4">
+          <fieldset className={compact ? "border-b border-[var(--border)] pb-4" : ""}>
             <legend className="text-sm font-medium">{ROSTER_BOARD.groupingStrategy}</legend>
-            <label className="mt-2 flex items-center gap-2 text-sm">
+            <label className="mt-3 flex min-h-7 items-center gap-2 text-sm">
               <input
                 checked={useSimilarAge}
                 onChange={(event) => updateStrategy(event.target.checked, separateGender)}
@@ -94,7 +115,7 @@ export function RosterBoardSettings({
               />
               {GROUPING_TOGGLE_LABELS.ageSimilar}
             </label>
-            <label className="mt-2 flex items-center gap-2 text-sm">
+            <label className="mt-1 flex min-h-7 items-center gap-2 text-sm">
               <input
                 checked={separateGender}
                 onChange={(event) => updateStrategy(useSimilarAge, event.target.checked)}
