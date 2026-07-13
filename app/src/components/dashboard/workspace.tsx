@@ -207,13 +207,11 @@ function RosterWorkspace({
         }
         rightPanelHeader={
           <div className="space-y-5">
-            <header className="flex flex-wrap items-end justify-between gap-3">
-              <div>
-                <p className="text-sm text-[var(--muted)]">{APP_NAME}</p>
-                <h1 className="text-2xl font-semibold">{project.title}</h1>
-              </div>
-              <span className="text-sm text-[var(--muted)]">{totalPeople}명</span>
-            </header>
+            <div>
+              <p className="text-sm text-[var(--muted)]">{APP_NAME}</p>
+              <h1 className="text-2xl font-semibold">{project.title}</h1>
+            </div>
+            <span className="text-sm text-[var(--muted)]">{totalPeople}명</span>
             {notice ? (
               <div className="border border-red-300 bg-red-50 p-3 text-sm text-red-800" role="alert">
                 {notice}
