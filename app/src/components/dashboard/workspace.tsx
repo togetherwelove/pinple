@@ -201,7 +201,6 @@ function RosterWorkspace({
         draft={draft}
         leftPanelFooter={
           <div className="space-y-4">
-            <h2 className="font-semibold">{ROSTER_BOARD.groupSettings}</h2>
             <RosterBoardSettings
               compact
               draft={draft}

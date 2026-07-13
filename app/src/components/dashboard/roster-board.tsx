@@ -363,7 +363,7 @@ export function RosterBoard({
               title={ROSTER_BOARD.unassigned}
             />
           </div>
-          <div className="min-h-0 flex-1 overflow-y-auto border-t border-[var(--border)] p-4">
+          <div className="min-h-0 flex-1 border-t border-[var(--border)] p-4">
             {leftPanelFooter}
           </div>
         </aside>
