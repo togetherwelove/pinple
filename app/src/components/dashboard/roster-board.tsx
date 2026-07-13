@@ -358,7 +358,7 @@ export function RosterBoard({
         />
       ) : null}
       <div className="flex h-full min-h-0 flex-col bg-[var(--canvas)] lg:flex-row">
-        <aside className="flex max-h-[65vh] w-full shrink-0 flex-col border-b border-[var(--border)] bg-[var(--surface)] lg:h-full lg:max-h-none lg:w-80 lg:border-r lg:border-b-0">
+        <aside className="flex max-h-[65vh] w-full shrink-0 flex-col overflow-y-auto border-b border-[var(--border)] bg-[var(--surface)] lg:h-full lg:max-h-none lg:w-80 lg:border-r lg:border-b-0">
           <div className="shrink-0 p-4">{leftPanelHeader}</div>
           <div className="shrink-0 p-4 pt-0">
             <BoardColumn
@@ -370,7 +370,7 @@ export function RosterBoard({
               title={ROSTER_BOARD.unassigned}
             />
           </div>
-          <div className="min-h-0 flex-1 border-t border-[var(--border)] p-4">
+          <div className="flex-1 border-t border-[var(--border)] p-4">
             {leftPanelFooter}
           </div>
         </aside>
