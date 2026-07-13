@@ -354,7 +354,7 @@ export function RosterBoard({
       <div className="flex h-full min-h-0 flex-col bg-[var(--canvas)] lg:flex-row">
         <aside className="flex max-h-[65vh] w-full shrink-0 flex-col border-b border-[var(--border)] bg-[var(--surface)] lg:h-full lg:max-h-none lg:w-80 lg:border-r lg:border-b-0">
           <div className="shrink-0 p-4">{leftPanelHeader}</div>
-          <div className="max-h-48 shrink-0 overflow-y-auto p-4 pt-0">
+          <div className="shrink-0 p-4 pt-0">
             <BoardColumn
               group={null}
               members={draft.unassigned}
