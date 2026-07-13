@@ -94,6 +94,7 @@ export const ROSTER_BOARD = {
   boardTitle: "명단 관리 보드",
   capacity: "남은 정원",
   groupCount: "조 개수",
+  groupSettings: "조 설정",
   groupTargets: "조별 정원",
   groupingStrategy: "편성 방식",
   movePerson: "인원 이동",

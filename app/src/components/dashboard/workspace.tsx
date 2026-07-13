@@ -199,29 +199,22 @@ function RosterWorkspace({
     <main className="h-full min-h-0 overflow-hidden bg-[var(--canvas)]">
       <RosterBoard
         draft={draft}
-        leftPanelHeader={<RosterBoardInput onAddPeople={handleAddPeople} onError={setNotice} />}
-        onDraftChange={(nextDraft) => replaceDraft(project.id, nextDraft)}
-        onRemovePerson={(personId, groupId) => removePerson(project.id, personId, groupId)}
-        onUpdateUnassignedPerson={(personId, updates) =>
-          updateUnassignedPerson(project.id, personId, updates)
-        }
-        rightPanelHeader={
-          <div className="space-y-5">
-            {notice ? (
-              <div className="border border-red-300 bg-red-50 p-3 text-sm text-red-800" role="alert">
-                {notice}
-              </div>
-            ) : null}
+        leftPanelFooter={
+          <div className="space-y-4">
+            <h2 className="font-semibold">{ROSTER_BOARD.groupSettings}</h2>
             <RosterBoardSettings
+              compact
               draft={draft}
               onChange={(nextDraft) => replaceDraft(project.id, nextDraft)}
               onGroupCountChange={(groupCount) => updateGroupCount(project.id, groupCount)}
-              onTargetSizeChange={(groupId, targetSize) => updateGroupTargetSize(project.id, groupId, targetSize)}
+              onTargetSizeChange={(groupId, targetSize) =>
+                updateGroupTargetSize(project.id, groupId, targetSize)
+              }
             />
-            <div className="flex flex-wrap items-center justify-between gap-3 border border-[var(--border)] bg-[var(--surface)] p-4">
+            <div className="flex flex-col items-stretch gap-3 border border-[var(--border)] bg-[var(--surface)] p-3">
               <p className="text-sm text-[var(--muted)]">{groupingMessage}</p>
               <button
-                className={`flex items-center gap-2 px-4 py-2 text-sm ${canRunGrouping ? INPUT_DEPENDENT_BUTTON_CLASSES.enabled : INPUT_DEPENDENT_BUTTON_CLASSES.disabled}`}
+                className={`flex items-center justify-center gap-2 px-4 py-2 text-sm ${canRunGrouping ? INPUT_DEPENDENT_BUTTON_CLASSES.enabled : INPUT_DEPENDENT_BUTTON_CLASSES.disabled}`}
                 disabled={!canRunGrouping}
                 onClick={() => void runGrouping()}
                 type="button"
@@ -231,6 +224,19 @@ function RosterWorkspace({
               </button>
             </div>
           </div>
+        }
+        leftPanelHeader={<RosterBoardInput onAddPeople={handleAddPeople} onError={setNotice} />}
+        onDraftChange={(nextDraft) => replaceDraft(project.id, nextDraft)}
+        onRemovePerson={(personId, groupId) => removePerson(project.id, personId, groupId)}
+        onUpdateUnassignedPerson={(personId, updates) =>
+          updateUnassignedPerson(project.id, personId, updates)
+        }
+        rightPanelHeader={
+          notice ? (
+            <div className="mb-5 border border-red-300 bg-red-50 p-3 text-sm text-red-800" role="alert">
+              {notice}
+            </div>
+          ) : null
         }
         rosterTitle={project.title}
         totalPeople={totalPeople}

@@ -11,6 +11,7 @@ import {
 import type { LeaderSelectionMode, RosterBoardDraft } from "@/lib/types/domain";
 
 type RosterBoardSettingsProps = {
+  compact?: boolean;
   draft: RosterBoardDraft;
   onChange: (draft: RosterBoardDraft) => void;
   onGroupCountChange: (groupCount: number) => void;
@@ -34,6 +35,7 @@ function resolveStrategy(useSimilarAge: boolean, separateGender: boolean) {
 }
 
 export function RosterBoardSettings({
+  compact = false,
   draft,
   onChange,
   onGroupCountChange,
@@ -51,8 +53,8 @@ export function RosterBoardSettings({
   }
 
   return (
-    <section className="border-b border-[var(--border)] bg-[var(--surface)] p-4">
-      <div className="grid gap-4 lg:grid-cols-[minmax(130px,180px)_minmax(240px,1fr)_minmax(180px,240px)]">
+    <section className={compact ? "bg-[var(--surface)]" : "border-b border-[var(--border)] bg-[var(--surface)] p-4"}>
+      <div className={compact ? "space-y-4" : "grid gap-4 lg:grid-cols-[minmax(130px,180px)_minmax(240px,1fr)_minmax(180px,240px)]"}>
         <label className="text-sm font-medium">
             {ROSTER_BOARD.groupCount}
           <input
@@ -66,7 +68,7 @@ export function RosterBoardSettings({
         </label>
         <div>
           <p className="text-sm font-medium">{ROSTER_BOARD.groupTargets}</p>
-          <div className="mt-2 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+          <div className={compact ? "mt-2 grid gap-2" : "mt-2 grid gap-2 sm:grid-cols-2 xl:grid-cols-3"}>
             {draft.groups.map((group, index) => (
               <label className="flex items-center justify-between gap-2 text-sm" key={group.id}>
                 <span>{formatGroupName(index)}</span>

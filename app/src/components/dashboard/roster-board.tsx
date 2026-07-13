@@ -29,6 +29,7 @@ type LeaderConflict = {
 
 type RosterBoardProps = {
   draft: RosterBoardDraft;
+  leftPanelFooter: ReactNode;
   leftPanelHeader: ReactNode;
   onDraftChange: (draft: RosterBoardDraft) => void;
   onRemovePerson: (personId: string, groupId: string | null) => void;
@@ -238,6 +239,7 @@ function PersonEditorDialog({
 
 export function RosterBoard({
   draft,
+  leftPanelFooter,
   leftPanelHeader,
   onDraftChange,
   onRemovePerson,
@@ -350,9 +352,9 @@ export function RosterBoard({
         />
       ) : null}
       <div className="flex h-full min-h-0 flex-col bg-[var(--canvas)] lg:flex-row">
-        <aside className="flex max-h-[46vh] w-full shrink-0 flex-col border-b border-[var(--border)] bg-[var(--surface)] lg:h-full lg:max-h-none lg:w-80 lg:border-r lg:border-b-0">
+        <aside className="flex max-h-[65vh] w-full shrink-0 flex-col border-b border-[var(--border)] bg-[var(--surface)] lg:h-full lg:max-h-none lg:w-80 lg:border-r lg:border-b-0">
           <div className="shrink-0 p-4">{leftPanelHeader}</div>
-          <div className="min-h-0 flex-1 overflow-y-auto p-4 pt-0">
+          <div className="h-48 shrink-0 overflow-y-auto p-4 pt-0">
             <BoardColumn
               group={null}
               members={draft.unassigned}
@@ -361,14 +363,16 @@ export function RosterBoard({
               title={ROSTER_BOARD.unassigned}
             />
           </div>
+          <div className="min-h-0 flex-1 overflow-y-auto border-t border-[var(--border)] p-4">
+            {leftPanelFooter}
+          </div>
         </aside>
         <section className="min-h-0 min-w-0 flex-1 overflow-y-auto bg-[var(--canvas)] p-4 md:p-6">
           {rightPanelHeader}
-          <div className="mt-5 border border-[var(--border)] bg-[var(--surface)] p-4">
+          <div className="border border-[var(--border)] bg-[var(--surface)] p-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <h2 className="font-semibold">{ROSTER_BOARD.boardTitle}</h2>
-                <p className="mt-1 text-xs text-[var(--muted)]">{GROUPING_STRATEGY_LABELS[draft.strategy]}</p>
               </div>
               <div className="flex items-center gap-3">
                 <span className="text-sm text-[var(--muted)]">{totalPeople}명</span>
