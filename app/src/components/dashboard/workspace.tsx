@@ -258,11 +258,11 @@ function ProjectWorkspace({
         draft={draft}
         leftPanelFooter={
           <div className="space-y-4">
-            <RosterBoardSettings
+            {/* <RosterBoardSettings
               compact
               draft={draft}
               onChange={(nextDraft) => commitDraft(nextDraft, false)}
-            />
+            /> */}
             <div className="flex flex-col items-stretch gap-3 border border-[var(--border)] bg-[var(--surface)] p-3">
               <p className="text-sm text-[var(--muted)]">{groupingMessage}</p>
               <button
