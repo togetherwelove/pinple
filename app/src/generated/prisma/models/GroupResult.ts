@@ -192,15 +192,15 @@ export type GroupResultOrderByWithRelationInput = {
 
 export type GroupResultWhereUniqueInput = Prisma.AtLeast<{
   id?: string
+  projectId?: string
   AND?: Prisma.GroupResultWhereInput | Prisma.GroupResultWhereInput[]
   OR?: Prisma.GroupResultWhereInput[]
   NOT?: Prisma.GroupResultWhereInput | Prisma.GroupResultWhereInput[]
-  projectId?: Prisma.UuidFilter<"GroupResult"> | string
   name?: Prisma.StringFilter<"GroupResult"> | string
   members?: Prisma.JsonFilter<"GroupResult">
   createdAt?: Prisma.DateTimeFilter<"GroupResult"> | Date | string
   project?: Prisma.XOR<Prisma.ProjectScalarRelationFilter, Prisma.ProjectWhereInput>
-}, "id">
+}, "id" | "projectId">
 
 export type GroupResultOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
@@ -229,7 +229,7 @@ export type GroupResultCreateInput = {
   name: string
   members: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
-  project: Prisma.ProjectCreateNestedOneWithoutGroupResultsInput
+  project: Prisma.ProjectCreateNestedOneWithoutGroupResultInput
 }
 
 export type GroupResultUncheckedCreateInput = {
@@ -245,7 +245,7 @@ export type GroupResultUpdateInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   members?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  project?: Prisma.ProjectUpdateOneRequiredWithoutGroupResultsNestedInput
+  project?: Prisma.ProjectUpdateOneRequiredWithoutGroupResultNestedInput
 }
 
 export type GroupResultUncheckedUpdateInput = {
@@ -279,14 +279,9 @@ export type GroupResultUncheckedUpdateManyInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
-export type GroupResultListRelationFilter = {
-  every?: Prisma.GroupResultWhereInput
-  some?: Prisma.GroupResultWhereInput
-  none?: Prisma.GroupResultWhereInput
-}
-
-export type GroupResultOrderByRelationAggregateInput = {
-  _count?: Prisma.SortOrder
+export type GroupResultNullableScalarRelationFilter = {
+  is?: Prisma.GroupResultWhereInput | null
+  isNot?: Prisma.GroupResultWhereInput | null
 }
 
 export type GroupResultCountOrderByAggregateInput = {
@@ -311,46 +306,36 @@ export type GroupResultMinOrderByAggregateInput = {
   createdAt?: Prisma.SortOrder
 }
 
-export type GroupResultCreateNestedManyWithoutProjectInput = {
-  create?: Prisma.XOR<Prisma.GroupResultCreateWithoutProjectInput, Prisma.GroupResultUncheckedCreateWithoutProjectInput> | Prisma.GroupResultCreateWithoutProjectInput[] | Prisma.GroupResultUncheckedCreateWithoutProjectInput[]
-  connectOrCreate?: Prisma.GroupResultCreateOrConnectWithoutProjectInput | Prisma.GroupResultCreateOrConnectWithoutProjectInput[]
-  createMany?: Prisma.GroupResultCreateManyProjectInputEnvelope
-  connect?: Prisma.GroupResultWhereUniqueInput | Prisma.GroupResultWhereUniqueInput[]
+export type GroupResultCreateNestedOneWithoutProjectInput = {
+  create?: Prisma.XOR<Prisma.GroupResultCreateWithoutProjectInput, Prisma.GroupResultUncheckedCreateWithoutProjectInput>
+  connectOrCreate?: Prisma.GroupResultCreateOrConnectWithoutProjectInput
+  connect?: Prisma.GroupResultWhereUniqueInput
 }
 
-export type GroupResultUncheckedCreateNestedManyWithoutProjectInput = {
-  create?: Prisma.XOR<Prisma.GroupResultCreateWithoutProjectInput, Prisma.GroupResultUncheckedCreateWithoutProjectInput> | Prisma.GroupResultCreateWithoutProjectInput[] | Prisma.GroupResultUncheckedCreateWithoutProjectInput[]
-  connectOrCreate?: Prisma.GroupResultCreateOrConnectWithoutProjectInput | Prisma.GroupResultCreateOrConnectWithoutProjectInput[]
-  createMany?: Prisma.GroupResultCreateManyProjectInputEnvelope
-  connect?: Prisma.GroupResultWhereUniqueInput | Prisma.GroupResultWhereUniqueInput[]
+export type GroupResultUncheckedCreateNestedOneWithoutProjectInput = {
+  create?: Prisma.XOR<Prisma.GroupResultCreateWithoutProjectInput, Prisma.GroupResultUncheckedCreateWithoutProjectInput>
+  connectOrCreate?: Prisma.GroupResultCreateOrConnectWithoutProjectInput
+  connect?: Prisma.GroupResultWhereUniqueInput
 }
 
-export type GroupResultUpdateManyWithoutProjectNestedInput = {
-  create?: Prisma.XOR<Prisma.GroupResultCreateWithoutProjectInput, Prisma.GroupResultUncheckedCreateWithoutProjectInput> | Prisma.GroupResultCreateWithoutProjectInput[] | Prisma.GroupResultUncheckedCreateWithoutProjectInput[]
-  connectOrCreate?: Prisma.GroupResultCreateOrConnectWithoutProjectInput | Prisma.GroupResultCreateOrConnectWithoutProjectInput[]
-  upsert?: Prisma.GroupResultUpsertWithWhereUniqueWithoutProjectInput | Prisma.GroupResultUpsertWithWhereUniqueWithoutProjectInput[]
-  createMany?: Prisma.GroupResultCreateManyProjectInputEnvelope
-  set?: Prisma.GroupResultWhereUniqueInput | Prisma.GroupResultWhereUniqueInput[]
-  disconnect?: Prisma.GroupResultWhereUniqueInput | Prisma.GroupResultWhereUniqueInput[]
-  delete?: Prisma.GroupResultWhereUniqueInput | Prisma.GroupResultWhereUniqueInput[]
-  connect?: Prisma.GroupResultWhereUniqueInput | Prisma.GroupResultWhereUniqueInput[]
-  update?: Prisma.GroupResultUpdateWithWhereUniqueWithoutProjectInput | Prisma.GroupResultUpdateWithWhereUniqueWithoutProjectInput[]
-  updateMany?: Prisma.GroupResultUpdateManyWithWhereWithoutProjectInput | Prisma.GroupResultUpdateManyWithWhereWithoutProjectInput[]
-  deleteMany?: Prisma.GroupResultScalarWhereInput | Prisma.GroupResultScalarWhereInput[]
+export type GroupResultUpdateOneWithoutProjectNestedInput = {
+  create?: Prisma.XOR<Prisma.GroupResultCreateWithoutProjectInput, Prisma.GroupResultUncheckedCreateWithoutProjectInput>
+  connectOrCreate?: Prisma.GroupResultCreateOrConnectWithoutProjectInput
+  upsert?: Prisma.GroupResultUpsertWithoutProjectInput
+  disconnect?: Prisma.GroupResultWhereInput | boolean
+  delete?: Prisma.GroupResultWhereInput | boolean
+  connect?: Prisma.GroupResultWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.GroupResultUpdateToOneWithWhereWithoutProjectInput, Prisma.GroupResultUpdateWithoutProjectInput>, Prisma.GroupResultUncheckedUpdateWithoutProjectInput>
 }
 
-export type GroupResultUncheckedUpdateManyWithoutProjectNestedInput = {
-  create?: Prisma.XOR<Prisma.GroupResultCreateWithoutProjectInput, Prisma.GroupResultUncheckedCreateWithoutProjectInput> | Prisma.GroupResultCreateWithoutProjectInput[] | Prisma.GroupResultUncheckedCreateWithoutProjectInput[]
-  connectOrCreate?: Prisma.GroupResultCreateOrConnectWithoutProjectInput | Prisma.GroupResultCreateOrConnectWithoutProjectInput[]
-  upsert?: Prisma.GroupResultUpsertWithWhereUniqueWithoutProjectInput | Prisma.GroupResultUpsertWithWhereUniqueWithoutProjectInput[]
-  createMany?: Prisma.GroupResultCreateManyProjectInputEnvelope
-  set?: Prisma.GroupResultWhereUniqueInput | Prisma.GroupResultWhereUniqueInput[]
-  disconnect?: Prisma.GroupResultWhereUniqueInput | Prisma.GroupResultWhereUniqueInput[]
-  delete?: Prisma.GroupResultWhereUniqueInput | Prisma.GroupResultWhereUniqueInput[]
-  connect?: Prisma.GroupResultWhereUniqueInput | Prisma.GroupResultWhereUniqueInput[]
-  update?: Prisma.GroupResultUpdateWithWhereUniqueWithoutProjectInput | Prisma.GroupResultUpdateWithWhereUniqueWithoutProjectInput[]
-  updateMany?: Prisma.GroupResultUpdateManyWithWhereWithoutProjectInput | Prisma.GroupResultUpdateManyWithWhereWithoutProjectInput[]
-  deleteMany?: Prisma.GroupResultScalarWhereInput | Prisma.GroupResultScalarWhereInput[]
+export type GroupResultUncheckedUpdateOneWithoutProjectNestedInput = {
+  create?: Prisma.XOR<Prisma.GroupResultCreateWithoutProjectInput, Prisma.GroupResultUncheckedCreateWithoutProjectInput>
+  connectOrCreate?: Prisma.GroupResultCreateOrConnectWithoutProjectInput
+  upsert?: Prisma.GroupResultUpsertWithoutProjectInput
+  disconnect?: Prisma.GroupResultWhereInput | boolean
+  delete?: Prisma.GroupResultWhereInput | boolean
+  connect?: Prisma.GroupResultWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.GroupResultUpdateToOneWithWhereWithoutProjectInput, Prisma.GroupResultUpdateWithoutProjectInput>, Prisma.GroupResultUncheckedUpdateWithoutProjectInput>
 }
 
 export type GroupResultCreateWithoutProjectInput = {
@@ -372,43 +357,15 @@ export type GroupResultCreateOrConnectWithoutProjectInput = {
   create: Prisma.XOR<Prisma.GroupResultCreateWithoutProjectInput, Prisma.GroupResultUncheckedCreateWithoutProjectInput>
 }
 
-export type GroupResultCreateManyProjectInputEnvelope = {
-  data: Prisma.GroupResultCreateManyProjectInput | Prisma.GroupResultCreateManyProjectInput[]
-  skipDuplicates?: boolean
-}
-
-export type GroupResultUpsertWithWhereUniqueWithoutProjectInput = {
-  where: Prisma.GroupResultWhereUniqueInput
+export type GroupResultUpsertWithoutProjectInput = {
   update: Prisma.XOR<Prisma.GroupResultUpdateWithoutProjectInput, Prisma.GroupResultUncheckedUpdateWithoutProjectInput>
   create: Prisma.XOR<Prisma.GroupResultCreateWithoutProjectInput, Prisma.GroupResultUncheckedCreateWithoutProjectInput>
+  where?: Prisma.GroupResultWhereInput
 }
 
-export type GroupResultUpdateWithWhereUniqueWithoutProjectInput = {
-  where: Prisma.GroupResultWhereUniqueInput
+export type GroupResultUpdateToOneWithWhereWithoutProjectInput = {
+  where?: Prisma.GroupResultWhereInput
   data: Prisma.XOR<Prisma.GroupResultUpdateWithoutProjectInput, Prisma.GroupResultUncheckedUpdateWithoutProjectInput>
-}
-
-export type GroupResultUpdateManyWithWhereWithoutProjectInput = {
-  where: Prisma.GroupResultScalarWhereInput
-  data: Prisma.XOR<Prisma.GroupResultUpdateManyMutationInput, Prisma.GroupResultUncheckedUpdateManyWithoutProjectInput>
-}
-
-export type GroupResultScalarWhereInput = {
-  AND?: Prisma.GroupResultScalarWhereInput | Prisma.GroupResultScalarWhereInput[]
-  OR?: Prisma.GroupResultScalarWhereInput[]
-  NOT?: Prisma.GroupResultScalarWhereInput | Prisma.GroupResultScalarWhereInput[]
-  id?: Prisma.UuidFilter<"GroupResult"> | string
-  projectId?: Prisma.UuidFilter<"GroupResult"> | string
-  name?: Prisma.StringFilter<"GroupResult"> | string
-  members?: Prisma.JsonFilter<"GroupResult">
-  createdAt?: Prisma.DateTimeFilter<"GroupResult"> | Date | string
-}
-
-export type GroupResultCreateManyProjectInput = {
-  id?: string
-  name: string
-  members: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  createdAt?: Date | string
 }
 
 export type GroupResultUpdateWithoutProjectInput = {
@@ -419,13 +376,6 @@ export type GroupResultUpdateWithoutProjectInput = {
 }
 
 export type GroupResultUncheckedUpdateWithoutProjectInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.StringFieldUpdateOperationsInput | string
-  members?: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-}
-
-export type GroupResultUncheckedUpdateManyWithoutProjectInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   members?: Prisma.JsonNullValueInput | runtime.InputJsonValue

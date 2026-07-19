@@ -18,14 +18,19 @@ export function rosterProjectRoute(projectId: string) {
   return `${ROUTES.rosters}?project=${encodeURIComponent(projectId)}`;
 }
 
-export function projectGroupResultRoute(projectId: string, groupResultId: string) {
-  return `${rosterProjectRoute(projectId)}&result=${encodeURIComponent(groupResultId)}`;
-}
-
 export const INPUT_DEPENDENT_BUTTON_CLASSES = {
   disabled: "cursor-not-allowed bg-[var(--canvas)] text-[var(--muted)]",
   enabled: "bg-[var(--ink)] text-[var(--surface)] transition-opacity hover:opacity-90",
 } as const;
+
+export const TOAST_DURATION_MS = 2_000;
+
+export const TOAST_TONES = {
+  error: "error",
+  success: "success",
+} as const;
+
+export const ROSTER_INPUT_ROWS = 3;
 
 export const LOGIN_CONTENT = {
   description: "명단을 정리하고, 조건에 맞는 조를 빠르게 구성하세요.",
@@ -80,15 +85,12 @@ export const GROUPING_LIMITS = {
   minimumAge: 0,
   minimumGroupCount: 1,
   minimumPeoplePerGroup: 1,
-  groupResultNameMaximumLength: 80,
   projectTitleMaximumLength: 80,
 } as const;
 
 export const GROUP_NAME_SUFFIX = "조";
 
 export const LEGACY_GROUP_NAME_PREFIX = "그룹";
-
-export const GROUP_RESULT_NAME_PREFIX = "자동 조 편성";
 
 export function formatGroupName(index: number) {
   return `${index + 1}${GROUP_NAME_SUFFIX}`;
@@ -100,8 +102,6 @@ export function displayGroupName(name: string) {
   return legacyMatch ? `${legacyMatch[1]}${GROUP_NAME_SUFFIX}` : name;
 }
 
-export const GROUP_RESULT_DND_CONTEXT_ID = "group-results";
-
 export const ROSTER_BOARD_DND_CONTEXT_ID = "roster-board";
 
 export const ROSTER_BOARD_DND_IDS = {
@@ -111,11 +111,6 @@ export const ROSTER_BOARD_DND_IDS = {
 } as const;
 
 export const ROSTER_BOARD_STORAGE_KEY = "pinple-roster-board-draft-v1";
-
-export const ROSTER_BOARD_DRAFT_KEY = {
-  rosterScope: "roster",
-  separator: ":",
-} as const;
 
 export const ROSTER_BOARD = {
   addPerson: "추가",
@@ -129,18 +124,6 @@ export const ROSTER_BOARD = {
   editGroupName: "조 이름 변경",
   groupName: "조 이름",
   moveGroup: "조 순서 이동",
-  groupResultName: "조 편성 이름",
-  groupResultNamePlaceholder: "예: 오전 활동",
-  groupResults: "조 편성 결과",
-  renameGroupResult: "조 편성 결과 이름 변경",
-  deleteGroupResult: "조 편성 결과 삭제",
-  renameGroupResultLabel: (name: string) => `${name} 이름 변경`,
-  deleteGroupResultLabel: (name: string) => `${name} 삭제`,
-  deleteGroupResultDescription: (name: string) =>
-    `\"${name}\" 결과를 삭제하시겠습니까? 이 결과의 대기 명단과 모든 조 배치가 영구적으로 삭제됩니다.`,
-  baseRoster: "기준 명단",
-  newGroupResult: "새 조 편성 결과",
-  noGroupResults: "저장된 조 편성 결과가 없습니다.",
   groupingStrategy: "편성 방식",
   movePerson: "인원 이동",
   personAge: "나이",
@@ -160,8 +143,30 @@ export const ROSTER_BOARD = {
   unassigned: "대기 명단",
 } as const;
 
+export const ROSTER_IMPORT_MODES = {
+  merge: "merge",
+  replace: "replace",
+} as const;
+
+export const ROSTER_IMPORT = {
+  action: "다른 프로젝트 명단 불러오기",
+  chooseProject: "불러올 프로젝트",
+  description: "원본 프로젝트와 연결되지 않는 독립 명단으로 복사합니다.",
+  dialogDescription:
+    "현재 명단이 있습니다. 기존 조 편성을 초기화하거나, 이름이 같은 인원만 덮어쓰고 새 인원을 추가할 수 있습니다.",
+  dialogTitle: "명단 불러오기 방식 선택",
+  emptyProjects: "불러올 수 있는 다른 프로젝트가 없습니다.",
+  loading: "명단 불러오는 중...",
+  merge: "중복 덮어쓰기 및 신규 추가",
+  mergeDescription: "현재 조 배치를 유지하고 이름이 같은 인원의 정보만 갱신합니다.",
+  replace: "전체 초기화 후 불러오기",
+  replaceDescription: "현재 명단과 조 편성을 제거하고 선택한 명단으로 교체합니다.",
+  selectPlaceholder: "프로젝트 선택",
+  success: (projectTitle: string) => `${projectTitle} 명단을 불러왔습니다.`,
+} as const;
+
 export const ROSTER_CREATION = {
-  description: "하나의 기준 명단으로 여러 조 편성 결과를 독립적으로 관리할 수 있습니다.",
+  description: "프로젝트마다 하나의 명단과 조 편성을 관리할 수 있습니다.",
   heading: "첫 프로젝트를 만들어 보세요.",
   inputPlaceholder: "프로젝트 이름",
   start: "새 프로젝트 시작",
@@ -216,21 +221,20 @@ export const UI_MESSAGES = {
   groupCapacityMismatch: "조 정원 합계를 전체 인원 수와 맞춰 주세요.",
   groupCapacityExceedsPeople: "조 정원 합계는 전체 인원 수보다 클 수 없습니다.",
   boardGroupingRequired: "명단에 인원을 추가한 뒤 조 편성을 실행할 수 있습니다.",
-  boardSaveFailed: "조 편성 결과를 저장하지 못했습니다. 보드 초안은 이 브라우저에 유지됩니다.",
   boardSnapshotInvalid: "보드 데이터를 확인해 주세요.",
-  groupResultsRequired: "조 편성 결과를 만든 뒤 내보낼 수 있습니다.",
   groupRequired: "인원 카드를 새 조 영역에 놓아 조를 먼저 만들어 주세요.",
-  groupResultNameRequired: "조 편성 이름을 입력해 주세요.",
   groupResultNotFound: "조 편성 결과를 찾을 수 없습니다.",
   groupResultInvalid: "조 편성 데이터를 확인해 주세요.",
   groupResultSaveFailed: "조 편성 결과를 저장하지 못했습니다. 브라우저 초안은 유지됩니다.",
-  groupResultRenameFailed: "조 편성 결과 이름을 변경하지 못했습니다.",
-  groupResultDeleteFailed: "조 편성 결과를 삭제하지 못했습니다.",
   invalidFile: "지원하지 않는 파일입니다.",
   invalidInput: "입력 형식을 확인해 주세요.",
+  rosterImportFailed: "다른 프로젝트의 명단을 불러오지 못했습니다.",
+  rosterImportInvalid: "명단 불러오기 요청을 확인해 주세요.",
+  rosterImportSourceNotFound: "불러올 프로젝트를 찾을 수 없습니다.",
+  rosterImportTargetNotFound: "현재 프로젝트를 찾을 수 없습니다.",
   leaderConflict: "대상 조에 이미 조장이 있습니다.",
   rosterDeleteFailed: "프로젝트를 삭제하지 못했습니다. 다시 시도해 주세요.",
-  rosterDeleteWarning: "정말 이 프로젝트를 삭제하시겠습니까? 포함된 기준 명단과 조 편성 결과가 모두 영구적으로 삭제됩니다.",
+  rosterDeleteWarning: "정말 이 프로젝트를 삭제하시겠습니까? 포함된 명단과 조 편성이 모두 영구적으로 삭제됩니다.",
   noPeople: "먼저 인원 정보를 등록해 주세요.",
   projectTitleRequired: "프로젝트 이름을 입력한 뒤 시작할 수 있습니다.",
   projectTitleInvalid: "프로젝트 이름을 확인해 주세요.",
@@ -253,6 +257,7 @@ export const UI_LABELS = {
   delete: "삭제",
   deleteRoster: "프로젝트 삭제",
   deleting: "삭제 중",
+  dismissToast: "알림 닫기",
   renaming: "변경 중...",
   grouping: "조 편성 중...",
   leader: "조장",
@@ -264,7 +269,6 @@ export const UI_LABELS = {
   savingRoster: "저장 중...",
   saveName: "이름 변경",
   saveGroupName: "조 이름 저장",
-  selectGroupResult: "조 편성 결과 선택",
   signOut: "로그아웃",
 } as const;
 
@@ -272,6 +276,5 @@ export const VALIDATION_MESSAGES = {
   duplicateBoardPersonIds: "Duplicate person ids are not allowed.",
   duplicateGroupResultMembers: "A person can appear only once in a group result.",
   groupLeaderLimit: "A team can have at most one leader.",
-  groupResultUpdateRequired: "A group result update must include a name or members.",
   unknownGroupResultMember: "Group members must exist in the roster.",
 } as const;

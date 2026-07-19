@@ -1,7 +1,6 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import {
-  ROSTER_BOARD_DRAFT_KEY,
   ROSTER_BOARD_STORAGE_KEY,
 } from "@/lib/config/app";
 import type { RosterBoardDraft } from "@/lib/types/domain";
@@ -17,31 +16,25 @@ type RosterBoardStore = {
 
 type PersistedRosterBoardState = Pick<RosterBoardStore, "drafts">;
 
-type LegacyRosterBoardDraft = RosterBoardDraft & { groupCount?: number };
-
 function migratePersistedState(
   persistedState: unknown,
   persistedVersion: number,
 ): PersistedRosterBoardState {
+  if (persistedVersion < 5) {
+    return { drafts: {} };
+  }
+
   const state = persistedState as {
-    drafts?: Record<string, LegacyRosterBoardDraft>;
+    drafts?: Record<string, RosterBoardDraft>;
   };
   const drafts = Object.fromEntries(
     Object.entries(state.drafts ?? {})
-      .filter(
-        ([draftKey]) =>
-          persistedVersion >= 3 ||
-          draftKey.includes(ROSTER_BOARD_DRAFT_KEY.separator),
-      )
       .map(([draftKey, draft]) => {
-        const nextDraft = { ...draft };
-        delete nextDraft.groupCount;
-
         return [
           draftKey,
           {
-            ...nextDraft,
-            groups: nextDraft.groups.filter((group) => group.members.length > 0),
+            ...draft,
+            groups: draft.groups.filter((group) => group.members.length > 0),
           },
         ];
       }),
@@ -78,7 +71,7 @@ export const useRosterBoardStore = create<RosterBoardStore>()(
       skipHydration: true,
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({ drafts: state.drafts }),
-      version: 4,
+      version: 5,
     },
   ),
 );

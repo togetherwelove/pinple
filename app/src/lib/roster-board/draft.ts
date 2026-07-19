@@ -1,7 +1,6 @@
 import {
   GROUPING_STRATEGIES,
   LEADER_SELECTION_MODES,
-  ROSTER_BOARD_DRAFT_KEY,
 } from "@/lib/config/app";
 import type {
   Group,
@@ -13,10 +12,8 @@ import type {
 
 export type BoardPerson = PersonInput & { id: string };
 
-export function createBoardDraftKey(projectId: string, groupResultId?: string) {
-  const scope = groupResultId ?? ROSTER_BOARD_DRAFT_KEY.rosterScope;
-
-  return `${projectId}${ROSTER_BOARD_DRAFT_KEY.separator}${scope}`;
+export function createBoardDraftKey(projectId: string) {
+  return projectId;
 }
 
 function personIdentity(person: PersonInput) {

@@ -1,4 +1,4 @@
-import { GROUP_RESULT_NAME_PREFIX, UI_MESSAGES } from "@/lib/config/app";
+import { UI_MESSAGES } from "@/lib/config/app";
 import { errorResponse } from "@/lib/api/response";
 import { requireCurrentUser } from "@/lib/auth/current-user";
 import { requireOwnedProject } from "@/lib/auth/project-access";
@@ -9,18 +9,6 @@ import { prisma } from "@/lib/prisma";
 import type { StoredGender } from "@/lib/types/domain";
 import { groupingRequestSchema } from "@/lib/validation/schemas";
 
-function createResultName() {
-  const timestamp = new Intl.DateTimeFormat("sv-SE", {
-    dateStyle: "short",
-    timeStyle: "short",
-  })
-    .format(new Date())
-    .replace(" ", "_")
-    .replace(":", "-");
-
-  return `${GROUP_RESULT_NAME_PREFIX}_${timestamp}`;
-}
-
 export async function POST(
   request: Request,
   context: { params: Promise<{ projectId: string }> },
@@ -28,7 +16,7 @@ export async function POST(
   try {
     const user = await requireCurrentUser();
     const { projectId } = await context.params;
-    await requireOwnedProject(projectId, user.id);
+    const project = await requireOwnedProject(projectId, user.id);
     const parsed = groupingRequestSchema.safeParse(await request.json());
 
     if (!parsed.success) {
@@ -64,18 +52,24 @@ export async function POST(
       ),
       parsed.data.leaderSelectionMode,
     );
+    const members = {
+      groups,
+      leaderSelectionMode: parsed.data.leaderSelectionMode,
+      strategy: parsed.data.strategy,
+      unassigned,
+    };
     const [result] = await prisma.$transaction([
-      prisma.groupResult.create({
-        data: {
-          members: {
-            groups,
-            leaderSelectionMode: parsed.data.leaderSelectionMode,
-            strategy: parsed.data.strategy,
-            unassigned,
-          },
-          name: parsed.data.name ?? createResultName(),
+      prisma.groupResult.upsert({
+        create: {
+          members,
+          name: project.title,
           projectId,
         },
+        update: {
+          members,
+          name: project.title,
+        },
+        where: { projectId },
       }),
       prisma.project.update({
         data: { updatedAt: new Date() },

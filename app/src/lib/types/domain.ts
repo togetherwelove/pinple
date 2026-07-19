@@ -2,6 +2,7 @@ import type {
   GENDER,
   GROUPING_STRATEGIES,
   LEADER_SELECTION_MODES,
+  ROSTER_IMPORT_MODES,
 } from "@/lib/config/app";
 
 export type StoredGender = (typeof GENDER)[keyof typeof GENDER];
@@ -11,6 +12,9 @@ export type GroupingStrategy =
 
 export type LeaderSelectionMode =
   (typeof LEADER_SELECTION_MODES)[keyof typeof LEADER_SELECTION_MODES];
+
+export type RosterImportMode =
+  (typeof ROSTER_IMPORT_MODES)[keyof typeof ROSTER_IMPORT_MODES];
 
 export type PersonInput = {
   age: number | null;
@@ -37,14 +41,14 @@ export type GroupResultMembers = {
   unassigned?: GroupMember[];
 };
 
-export type GroupResultSummary = {
-  createdAt: string;
+export type ProjectGroupResult = {
   id: string;
-  name: string;
+  members: GroupResultMembers;
 };
 
-export type GroupResultDetail = GroupResultSummary & {
-  members: GroupResultMembers;
+export type ProjectImportSource = {
+  id: string;
+  title: string;
 };
 
 export type RosterBoardDraft = {

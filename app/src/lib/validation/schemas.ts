@@ -5,6 +5,7 @@ import {
   GENDER,
   INPUT_GENDER,
   LEADER_SELECTION_MODES,
+  ROSTER_IMPORT_MODES,
   VALIDATION_MESSAGES,
 } from "@/lib/config/app";
 
@@ -28,6 +29,11 @@ export const peopleRequestSchema = z.object({
   people: z.array(personInputSchema).min(1),
 });
 
+export const rosterImportSchema = z.object({
+  mode: z.enum([ROSTER_IMPORT_MODES.replace, ROSTER_IMPORT_MODES.merge]),
+  sourceProjectId: z.string().uuid(),
+});
+
 export const groupSizeSchema = z
   .array(z.coerce.number().int().min(GROUPING_LIMITS.minimumPeoplePerGroup))
   .min(GROUPING_LIMITS.minimumGroupCount)
@@ -41,12 +47,6 @@ export const groupingRequestSchema = z.object({
       LEADER_SELECTION_MODES.random,
     ])
     .default(LEADER_SELECTION_MODES.none),
-  name: z
-    .string()
-    .trim()
-    .min(1)
-    .max(GROUPING_LIMITS.groupResultNameMaximumLength)
-    .optional(),
   strategy: z.enum([
     GROUPING_STRATEGIES.even,
     GROUPING_STRATEGIES.ageSimilar,
@@ -97,17 +97,9 @@ export const groupResultMembersSchema = z.object({
 
 export const groupResultUpdateSchema = z
   .object({
-    members: groupResultMembersSchema.optional(),
-    name: z
-      .string()
-      .trim()
-      .min(1)
-      .max(GROUPING_LIMITS.groupResultNameMaximumLength)
-      .optional(),
+    members: groupResultMembersSchema,
   })
-  .refine((update) => update.members !== undefined || update.name !== undefined, {
-    message: VALIDATION_MESSAGES.groupResultUpdateRequired,
-  });
+  .strict();
 
 export const boardPersonSchema = z.object({
   age: z.coerce.number().int().min(GROUPING_LIMITS.minimumAge).nullable(),
@@ -119,11 +111,6 @@ export const boardPersonSchema = z.object({
 export const boardSnapshotSchema = z
   .object({
     members: groupResultMembersSchema,
-    name: z
-      .string()
-      .trim()
-      .min(1)
-      .max(GROUPING_LIMITS.groupResultNameMaximumLength),
     people: z.array(boardPersonSchema),
   })
   .superRefine((snapshot, context) => {

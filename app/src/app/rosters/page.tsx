@@ -14,13 +14,12 @@ import {
 } from "@/lib/config/app";
 import { prisma } from "@/lib/prisma";
 import type {
-  GroupResultDetail,
-  GroupResultSummary,
+  ProjectGroupResult,
   StoredGender,
 } from "@/lib/types/domain";
 
 type RosterPageProps = {
-  searchParams: Promise<{ project?: string; result?: string; view?: string }>;
+  searchParams: Promise<{ project?: string; view?: string }>;
 };
 
 export default async function RosterPage({ searchParams }: RosterPageProps) {
@@ -39,38 +38,22 @@ export default async function RosterPage({ searchParams }: RosterPageProps) {
   const projectId = isCreateView ? undefined : params.project ?? projects[0]?.id;
   const project = projectId
     ? await prisma.project.findFirst({
-        include: { people: { orderBy: { createdAt: "asc" } } },
+        include: {
+          groupResult: { select: { id: true, members: true } },
+          people: { orderBy: { createdAt: "asc" } },
+        },
         where: { id: projectId, userId: user.id },
       })
     : null;
-  const [groupResultRecords, selectedGroupResultRecord] = project
-    ? await Promise.all([
-        prisma.groupResult.findMany({
-          orderBy: { createdAt: "desc" },
-          select: { createdAt: true, id: true, name: true },
-          where: { projectId: project.id },
-        }),
-        params.result
-          ? prisma.groupResult.findFirst({
-              select: { createdAt: true, id: true, members: true, name: true },
-              where: { id: params.result, projectId: project.id },
-            })
-          : null,
-      ])
-    : [[], null];
-  const groupResults: GroupResultSummary[] = groupResultRecords.map((result) => ({
-      createdAt: result.createdAt.toISOString(),
-      id: result.id,
-      name: result.name,
-    }));
-  const selectedGroupResult: GroupResultDetail | null = selectedGroupResultRecord
+  const groupResult: ProjectGroupResult | null = project?.groupResult
     ? {
-        createdAt: selectedGroupResultRecord.createdAt.toISOString(),
-        id: selectedGroupResultRecord.id,
-        members: selectedGroupResultRecord.members as unknown as GroupResultDetail["members"],
-        name: selectedGroupResultRecord.name,
+        id: project.groupResult.id,
+        members: project.groupResult.members as unknown as ProjectGroupResult["members"],
       }
     : null;
+  const projectImportSources = projects
+    .filter((item) => item.id !== project?.id)
+    .map(({ id, title }) => ({ id, title }));
   const accountName = user.user_metadata.full_name ?? user.user_metadata.name ?? null;
 
   return (
@@ -110,8 +93,8 @@ export default async function RosterPage({ searchParams }: RosterPageProps) {
         </nav>
         <div className="min-h-0 flex-1">
           <Workspace
-            groupResults={groupResults}
-            key={`${project?.id ?? "new-project"}:${selectedGroupResult?.id ?? "roster"}:${project?.people.length ?? 0}`}
+            groupResult={groupResult}
+            key={`${project?.id ?? "new-project"}:${groupResult?.id ?? "roster"}:${project?.people.length ?? 0}`}
             project={
               project
                 ? {
@@ -124,7 +107,7 @@ export default async function RosterPage({ searchParams }: RosterPageProps) {
                   }
                 : null
             }
-            selectedGroupResult={selectedGroupResult}
+            projectImportSources={projectImportSources}
           />
         </div>
       </div>

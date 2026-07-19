@@ -23,7 +23,7 @@ model Project {
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
   people       Person[]
-  groupResults GroupResult[]
+  groupResult  GroupResult?
 
   @@index([userId, updatedAt])
 }
@@ -43,11 +43,9 @@ model Person {
 
 model GroupResult {
   id        String   @id @default(uuid()) @db.Uuid
-  projectId String   @db.Uuid
+  projectId String   @unique @db.Uuid
   project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
   name      String
   members   Json
   createdAt DateTime @default(now())
-
-  @@index([projectId, createdAt])
 }

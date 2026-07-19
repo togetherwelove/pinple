@@ -12,7 +12,7 @@ export async function POST(
   try {
     const user = await requireCurrentUser();
     const { projectId } = await context.params;
-    await requireOwnedProject(projectId, user.id);
+    const project = await requireOwnedProject(projectId, user.id);
     const parsed = boardSnapshotSchema.safeParse(await request.json());
 
     if (!parsed.success) {
@@ -29,16 +29,18 @@ export async function POST(
         where: { id: projectId },
       });
 
-      return transaction.groupResult.create({
-        data: {
+      return transaction.groupResult.upsert({
+        create: {
           members: parsed.data.members,
-          name: parsed.data.name,
+          name: project.title,
           projectId,
         },
+        update: { members: parsed.data.members, name: project.title },
+        where: { projectId },
       });
     });
 
-    return Response.json(result, { status: 201 });
+    return Response.json(result);
   } catch (error) {
     return errorResponse(error);
   }

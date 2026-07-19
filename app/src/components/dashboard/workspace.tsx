@@ -1,20 +1,20 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { GroupResultNavigation } from "@/components/dashboard/group-result-navigation";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { NewProjectWorkspace } from "@/components/dashboard/new-project-workspace";
 import { RosterBoard } from "@/components/dashboard/roster-board";
 import { RosterBoardInput } from "@/components/dashboard/roster-board-input";
 import { RosterBoardSettings } from "@/components/dashboard/roster-board-settings";
 import { Spinner } from "@/components/spinner";
+import { Toast } from "@/components/toast";
 import {
-  GROUPING_LIMITS,
   INPUT_DEPENDENT_BUTTON_CLASSES,
   ROSTER_BOARD,
+  ROSTER_IMPORT,
+  TOAST_TONES,
   UI_LABELS,
   UI_MESSAGES,
-  projectGroupResultRoute,
 } from "@/lib/config/app";
 import {
   addPeopleToDraft,
@@ -33,21 +33,29 @@ import {
 import { useRosterBoardStore } from "@/lib/roster-board/store";
 import type {
   GroupMember,
-  GroupResultDetail,
-  GroupResultSummary,
+  GroupResultMembers,
   PersonInput,
+  ProjectGroupResult,
+  ProjectImportSource,
   RosterBoardDraft,
+  RosterImportMode,
 } from "@/lib/types/domain";
 
 type Project = { id: string; people: BoardPerson[]; title: string };
 
 type WorkspaceProps = {
-  groupResults: GroupResultSummary[];
+  groupResult: ProjectGroupResult | null;
   project: Project | null;
-  selectedGroupResult: GroupResultDetail | null;
+  projectImportSources: ProjectImportSource[];
 };
 
 type JsonMethod = "PATCH" | "POST";
+
+type ToastState = {
+  id: string;
+  message: string;
+  tone: (typeof TOAST_TONES)[keyof typeof TOAST_TONES];
+};
 
 async function jsonRequest<T>(url: string, method: JsonMethod, body: unknown): Promise<T> {
   const response = await fetch(url, {
@@ -69,29 +77,28 @@ function createClientMembers(people: PersonInput[]): GroupMember[] {
 }
 
 function ProjectWorkspace({
-  groupResults,
+  groupResult,
   project,
-  selectedGroupResult,
+  projectImportSources,
 }: {
-  groupResults: GroupResultSummary[];
+  groupResult: ProjectGroupResult | null;
   project: Project;
-  selectedGroupResult: GroupResultDetail | null;
+  projectImportSources: ProjectImportSource[];
 }) {
   const router = useRouter();
-  const selectedResult = selectedGroupResult;
-  const draftKey = createBoardDraftKey(project.id, selectedResult?.id);
+  const draftKey = createBoardDraftKey(project.id);
   const draft = useRosterBoardStore((state) => state.drafts[draftKey]);
   const hasHydrated = useRosterBoardStore((state) => state.hasHydrated);
   const initializeDraft = useRosterBoardStore((state) => state.initializeDraft);
   const replaceDraft = useRosterBoardStore((state) => state.replaceDraft);
   const setHasHydrated = useRosterBoardStore((state) => state.setHasHydrated);
+  const groupResultId = useRef(groupResult?.id ?? null);
   const saveQueue = useRef(Promise.resolve());
   const [isGrouping, setIsGrouping] = useState(false);
-  const [notice, setNotice] = useState<string | null>(null);
-  const [resultName, setResultName] = useState("");
+  const [toast, setToast] = useState<ToastState | null>(null);
   const initialDraft = useMemo(
-    () => createRosterBoardDraft(project.people, selectedResult?.members ?? null),
-    [project.people, selectedResult?.members],
+    () => createRosterBoardDraft(project.people, groupResult?.members ?? null),
+    [groupResult?.members, project.people],
   );
 
   useEffect(() => {
@@ -104,22 +111,45 @@ function ProjectWorkspace({
     }
   }, [draftKey, hasHydrated, initialDraft, initializeDraft]);
 
+  useEffect(() => {
+    groupResultId.current = groupResult?.id ?? null;
+  }, [groupResult?.id]);
+
+  const dismissToast = useCallback(() => setToast(null), []);
+
+  function showToast(
+    message: string,
+    tone: ToastState["tone"] = TOAST_TONES.success,
+  ) {
+    setToast({ id: crypto.randomUUID(), message, tone });
+  }
+
+  function showError(message: string) {
+    showToast(message, TOAST_TONES.error);
+  }
+
   function saveResultDraft(nextDraft: RosterBoardDraft) {
-    if (!selectedResult) {
+    const resultId = groupResultId.current;
+
+    if (!resultId) {
       return;
     }
 
     saveQueue.current = saveQueue.current
       .then(() =>
         jsonRequest(
-          `/api/group-results/${selectedResult.id}`,
+          `/api/group-results/${resultId}`,
           "PATCH",
           { members: createGroupResultMembers(nextDraft) },
         ),
       )
-      .then(() => setNotice(null))
+      .then(() => undefined)
       .catch((error: unknown) => {
-        setNotice(error instanceof Error ? error.message : UI_MESSAGES.groupResultSaveFailed);
+        showError(
+          error instanceof Error
+            ? error.message
+            : UI_MESSAGES.groupResultSaveFailed,
+        );
       });
   }
 
@@ -145,8 +175,7 @@ function ProjectWorkspace({
   const totalPeople = allBoardPeople(draft).length;
   const hasGroups = draft.groups.length > 0;
   const groupingPlan = hasGroups ? createGroupingPlan(draft) : null;
-  const hasResultName = Boolean(selectedResult || resultName.trim());
-  const canRunGrouping = totalPeople > 0 && hasGroups && hasResultName && !isGrouping;
+  const canRunGrouping = totalPeople > 0 && hasGroups && !isGrouping;
   const groupingMessage =
     totalPeople === 0
       ? UI_MESSAGES.boardGroupingRequired
@@ -158,7 +187,28 @@ function ProjectWorkspace({
 
   function handleAddPeople(people: PersonInput[]) {
     commitDraft(addPeopleToDraft(draft, createClientMembers(people)));
-    setNotice(ROSTER_BOARD.addedPeople);
+    showToast(ROSTER_BOARD.addedPeople);
+  }
+
+  async function handleImportProject(
+    source: ProjectImportSource,
+    mode: RosterImportMode,
+  ) {
+    await saveQueue.current;
+    const result = await jsonRequest<{
+      groupResultId: string | null;
+      members: GroupResultMembers;
+      people: BoardPerson[];
+    }>(`/api/projects/${project.id}/import-roster`, "POST", {
+      mode,
+      sourceProjectId: source.id,
+    });
+    const nextDraft = createRosterBoardDraft(result.people, result.members);
+
+    groupResultId.current = result.groupResultId;
+    replaceDraft(draftKey, nextDraft);
+    showToast(ROSTER_IMPORT.success(source.title));
+    router.refresh();
   }
 
   async function runGrouping() {
@@ -169,32 +219,26 @@ function ProjectWorkspace({
     const nextDraft = createGroupedDraft(draft);
     replaceDraft(draftKey, nextDraft);
     setIsGrouping(true);
-    setNotice(null);
 
     try {
-      if (selectedResult) {
-        await saveQueue.current;
-        await jsonRequest(
-          `/api/group-results/${selectedResult.id}`,
-          "PATCH",
-          { members: createGroupResultMembers(nextDraft) },
-        );
-      } else {
-        const result = await jsonRequest<{ id: string }>(
-          `/api/projects/${project.id}/board-snapshots`,
-          "POST",
-          {
-            members: createGroupResultMembers(nextDraft),
-            name: resultName.trim(),
-            people: allBoardPeople(nextDraft),
-          },
-        );
-        router.push(projectGroupResultRoute(project.id, result.id));
-      }
+      await saveQueue.current;
+      const result = await jsonRequest<{ id: string }>(
+        `/api/projects/${project.id}/board-snapshots`,
+        "POST",
+        {
+          members: createGroupResultMembers(nextDraft),
+          people: allBoardPeople(nextDraft),
+        },
+      );
 
+      groupResultId.current = result.id;
       router.refresh();
     } catch (error) {
-      setNotice(error instanceof Error ? error.message : UI_MESSAGES.groupResultSaveFailed);
+      showError(
+        error instanceof Error
+          ? error.message
+          : UI_MESSAGES.groupResultSaveFailed,
+      );
     } finally {
       setIsGrouping(false);
     }
@@ -202,22 +246,18 @@ function ProjectWorkspace({
 
   return (
     <main className="h-full min-h-0 overflow-hidden bg-[var(--canvas)]">
+      {toast ? (
+        <Toast
+          key={toast.id}
+          message={toast.message}
+          onDismiss={dismissToast}
+          tone={toast.tone}
+        />
+      ) : null}
       <RosterBoard
         draft={draft}
         leftPanelFooter={
           <div className="space-y-4">
-            {!selectedResult ? (
-              <label className="block border-b border-[var(--border)] pb-4 text-sm font-medium">
-                {ROSTER_BOARD.groupResultName}
-                <input
-                  className="mt-2 w-full border border-[var(--border)] bg-[var(--surface)] px-2 py-1.5"
-                  maxLength={GROUPING_LIMITS.groupResultNameMaximumLength}
-                  onChange={(event) => setResultName(event.target.value)}
-                  placeholder={ROSTER_BOARD.groupResultNamePlaceholder}
-                  value={resultName}
-                />
-              </label>
-            ) : null}
             <RosterBoardSettings
               compact
               draft={draft}
@@ -225,11 +265,6 @@ function ProjectWorkspace({
             />
             <div className="flex flex-col items-stretch gap-3 border border-[var(--border)] bg-[var(--surface)] p-3">
               <p className="text-sm text-[var(--muted)]">{groupingMessage}</p>
-              {!selectedResult && !resultName.trim() ? (
-                <p className="text-xs text-[var(--muted)]">
-                  {UI_MESSAGES.groupResultNameRequired}
-                </p>
-              ) : null}
               <button
                 className={`flex items-center justify-center gap-2 px-4 py-2 text-sm ${canRunGrouping ? INPUT_DEPENDENT_BUTTON_CLASSES.enabled : INPUT_DEPENDENT_BUTTON_CLASSES.disabled}`}
                 disabled={!canRunGrouping}
@@ -242,7 +277,15 @@ function ProjectWorkspace({
             </div>
           </div>
         }
-        leftPanelHeader={<RosterBoardInput onAddPeople={handleAddPeople} onError={setNotice} />}
+        leftPanelHeader={
+          <RosterBoardInput
+            currentPeopleCount={totalPeople}
+            onAddPeople={handleAddPeople}
+            onError={showError}
+            onImportProject={handleImportProject}
+            projectImportSources={projectImportSources}
+          />
+        }
         onDraftChange={commitDraft}
         onRemovePerson={(personId, groupId) =>
           commitDraft(removePersonFromDraft(draft, personId, groupId))
@@ -252,23 +295,13 @@ function ProjectWorkspace({
         }
         rightPanelHeader={
           <>
-            <GroupResultNavigation
-              groupResults={groupResults}
-              projectId={project.id}
-              projectTitle={project.title}
-              selectedGroupResultId={selectedResult?.id}
-            />
-            {notice ? (
-              <div
-                className="mb-5 border border-red-300 bg-red-50 p-3 text-sm text-red-800"
-                role="alert"
-              >
-                {notice}
-              </div>
-            ) : null}
+            <section className="mb-5 border border-[var(--border)] bg-[var(--surface)] p-4">
+              <p className="text-xs text-[var(--muted)]">{ROSTER_BOARD.project}</p>
+              <h1 className="mt-1 text-lg font-semibold">{project.title}</h1>
+            </section>
           </>
         }
-        rosterTitle={selectedResult?.name ?? project.title}
+        rosterTitle={project.title}
         totalPeople={totalPeople}
       />
     </main>
@@ -276,9 +309,9 @@ function ProjectWorkspace({
 }
 
 export function Workspace({
-  groupResults,
+  groupResult,
   project,
-  selectedGroupResult,
+  projectImportSources,
 }: WorkspaceProps) {
   if (!project) {
     return <NewProjectWorkspace />;
@@ -286,9 +319,9 @@ export function Workspace({
 
   return (
     <ProjectWorkspace
-      groupResults={groupResults}
+      groupResult={groupResult}
       project={project}
-      selectedGroupResult={selectedGroupResult}
+      projectImportSources={projectImportSources}
     />
   );
 }
