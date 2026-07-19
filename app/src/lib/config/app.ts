@@ -141,6 +141,7 @@ export const ROSTER_BOARD = {
   removePerson: "인원 삭제",
   savePerson: "수정 완료",
   unassigned: "대기 명단",
+  workArea: "명단 입력 및 설정",
 } as const;
 
 export const ROSTER_IMPORT_MODES = {
@@ -174,9 +175,11 @@ export const ROSTER_CREATION = {
 } as const;
 
 export const PROJECT_NAVIGATION = {
+  closeSidebar: "사이드바 닫기",
   label: "프로젝트 목록",
   newProject: "+ 새 프로젝트",
-  title: "프로젝트",
+  openSidebar: "사이드바 열기",
+  recent: "최근",
 } as const;
 
 export const GROUPING_STRATEGIES = {

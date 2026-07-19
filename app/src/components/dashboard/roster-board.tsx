@@ -503,24 +503,23 @@ export function RosterBoard({
           }}
         />
       ) : null}
-      <div className="flex h-full min-h-0 flex-col bg-[var(--canvas)] lg:flex-row">
-        <aside className="flex max-h-[65vh] w-full shrink-0 flex-col overflow-y-auto border-b border-[var(--border)] bg-[var(--surface)] lg:h-full lg:max-h-none lg:w-80 lg:border-r lg:border-b-0">
-          <div className="shrink-0 p-4">{leftPanelHeader}</div>
-          <div className="shrink-0 p-4 pt-0">
-            <BoardColumn
-              compact
-              group={null}
-              members={draft.unassigned}
-              onDelete={onRemovePerson}
-              onEdit={setEditingMember}
-              title={ROSTER_BOARD.unassigned}
-            />
-          </div>
-          <div className="flex-1 border-t border-[var(--border)] p-4">
-            {leftPanelFooter}
-          </div>
-        </aside>
-        <section className="min-h-0 min-w-0 flex-1 overflow-y-auto bg-[var(--canvas)] p-4 md:p-6">
+      <div className="grid h-full min-h-0 grid-cols-1 gap-4 overflow-y-auto bg-[var(--canvas)] p-4 lg:grid-cols-[20rem_minmax(0,1fr)] lg:gap-6 lg:overflow-hidden lg:p-6">
+        <section
+          aria-label={ROSTER_BOARD.workArea}
+          className="min-w-0 space-y-4 lg:min-h-0 lg:overflow-y-auto lg:pr-1"
+        >
+          {leftPanelHeader}
+          <BoardColumn
+            compact
+            group={null}
+            members={draft.unassigned}
+            onDelete={onRemovePerson}
+            onEdit={setEditingMember}
+            title={ROSTER_BOARD.unassigned}
+          />
+          <div>{leftPanelFooter}</div>
+        </section>
+        <section className="min-w-0 lg:min-h-0 lg:overflow-y-auto">
           {rightPanelHeader}
           <div className="border border-[var(--border)] bg-[var(--surface)] p-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
