@@ -75,7 +75,7 @@ export const ROSTER_PARSING = {
 } as const;
 
 export const GROUPING_LIMITS = {
-  defaultGroupCount: 2,
+  groupNameMaximumLength: 80,
   maximumGroupCount: 50,
   minimumAge: 0,
   minimumGroupCount: 1,
@@ -104,6 +104,12 @@ export const GROUP_RESULT_DND_CONTEXT_ID = "group-results";
 
 export const ROSTER_BOARD_DND_CONTEXT_ID = "roster-board";
 
+export const ROSTER_BOARD_DND_IDS = {
+  groupOrderPrefix: "group-order:",
+  newGroup: "new-group",
+  unassigned: "unassigned",
+} as const;
+
 export const ROSTER_BOARD_STORAGE_KEY = "pinple-roster-board-draft-v1";
 
 export const ROSTER_BOARD_DRAFT_KEY = {
@@ -116,9 +122,13 @@ export const ROSTER_BOARD = {
   addedPeople: "대기 명단에 인원을 추가했습니다.",
   autoGrouping: "자동 조 편성",
   boardTitle: "명단 관리 보드",
-  distributionPreview: (groupSizes: number[], unassignedCount: number) =>
-    `예상 배정: ${groupSizes.map((size) => `${size}명`).join(" · ")} · 대기 ${unassignedCount}명`,
-  groupCount: "조 개수",
+  distributionPreview: (groupSizes: number[]) =>
+    `예상 배정: ${groupSizes.map((size) => `${size}명`).join(" · ")}`,
+  createGroup: "새 조 만들기",
+  createGroupHint: "인원 카드를 여기에 놓으면 새 조가 생성됩니다.",
+  editGroupName: "조 이름 변경",
+  groupName: "조 이름",
+  moveGroup: "조 순서 이동",
   groupResultName: "조 편성 이름",
   groupResultNamePlaceholder: "예: 오전 활동",
   groupResults: "조 편성 결과",
@@ -209,7 +219,7 @@ export const UI_MESSAGES = {
   boardSaveFailed: "조 편성 결과를 저장하지 못했습니다. 보드 초안은 이 브라우저에 유지됩니다.",
   boardSnapshotInvalid: "보드 데이터를 확인해 주세요.",
   groupResultsRequired: "조 편성 결과를 만든 뒤 내보낼 수 있습니다.",
-  groupCountExceedsPeople: "조 개수는 전체 인원 수보다 많을 수 없습니다.",
+  groupRequired: "인원 카드를 새 조 영역에 놓아 조를 먼저 만들어 주세요.",
   groupResultNameRequired: "조 편성 이름을 입력해 주세요.",
   groupResultNotFound: "조 편성 결과를 찾을 수 없습니다.",
   groupResultInvalid: "조 편성 데이터를 확인해 주세요.",
@@ -253,6 +263,7 @@ export const UI_LABELS = {
   revokeLeader: "조장 해제",
   savingRoster: "저장 중...",
   saveName: "이름 변경",
+  saveGroupName: "조 이름 저장",
   selectGroupResult: "조 편성 결과 선택",
   signOut: "로그아웃",
 } as const;

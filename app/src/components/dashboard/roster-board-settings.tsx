@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  GROUPING_LIMITS,
   GROUPING_TOGGLE_LABELS,
   LEADER_SELECTION_OPTIONS,
   ROSTER_BOARD,
@@ -13,7 +12,6 @@ type RosterBoardSettingsProps = {
   compact?: boolean;
   draft: RosterBoardDraft;
   onChange: (draft: RosterBoardDraft) => void;
-  onGroupCountChange: (groupCount: number) => void;
 };
 
 function resolveStrategy(useSimilarAge: boolean, separateGender: boolean) {
@@ -36,7 +34,6 @@ export function RosterBoardSettings({
   compact = false,
   draft,
   onChange,
-  onGroupCountChange,
 }: RosterBoardSettingsProps) {
   const useSimilarAge = draft.strategy === "age_similar" || draft.strategy === "gender_age_similar";
   const separateGender =
@@ -57,26 +54,7 @@ export function RosterBoardSettings({
           : "border-b border-[var(--border)] bg-[var(--surface)] p-4"
       }
     >
-      <div
-        className={
-          compact
-            ? "space-y-4"
-            : "grid gap-4 lg:grid-cols-[minmax(130px,180px)_minmax(180px,240px)]"
-        }
-      >
-        <label
-          className={`block text-sm font-medium ${compact ? "border-b border-[var(--border)] pb-4" : ""}`}
-        >
-          {ROSTER_BOARD.groupCount}
-          <input
-            className="mt-2 w-full border border-[var(--border)] bg-[var(--surface)] px-2 py-1.5"
-            max={GROUPING_LIMITS.maximumGroupCount}
-            min={GROUPING_LIMITS.minimumGroupCount}
-            onChange={(event) => onGroupCountChange(Number(event.target.value))}
-            type="number"
-            value={draft.groupCount}
-          />
-        </label>
+      <div className="space-y-4">
         <div className="space-y-4">
           <fieldset className={compact ? "border-b border-[var(--border)] pb-4" : ""}>
             <legend className="text-sm font-medium">{ROSTER_BOARD.groupingStrategy}</legend>

@@ -23,7 +23,6 @@ import {
   createRosterBoardDraft,
   removePersonFromDraft,
   type BoardPerson,
-  updateGroupCount,
   updateUnassignedPerson,
 } from "@/lib/roster-board/draft";
 import {
@@ -144,20 +143,17 @@ function ProjectWorkspace({
   }
 
   const totalPeople = allBoardPeople(draft).length;
-  const hasValidGroupCount = draft.groupCount <= totalPeople;
-  const groupingPlan = hasValidGroupCount ? createGroupingPlan(draft) : null;
+  const hasGroups = draft.groups.length > 0;
+  const groupingPlan = hasGroups ? createGroupingPlan(draft) : null;
   const hasResultName = Boolean(selectedResult || resultName.trim());
-  const canRunGrouping = totalPeople > 0 && hasValidGroupCount && hasResultName && !isGrouping;
+  const canRunGrouping = totalPeople > 0 && hasGroups && hasResultName && !isGrouping;
   const groupingMessage =
     totalPeople === 0
       ? UI_MESSAGES.boardGroupingRequired
-      : !hasValidGroupCount
-        ? UI_MESSAGES.groupCountExceedsPeople
+      : !hasGroups
+        ? UI_MESSAGES.groupRequired
         : groupingPlan
-          ? ROSTER_BOARD.distributionPreview(
-              groupingPlan.groupSizes,
-              groupingPlan.unassignedCount,
-            )
+          ? ROSTER_BOARD.distributionPreview(groupingPlan.groupSizes)
           : UI_MESSAGES.invalidInput;
 
   function handleAddPeople(people: PersonInput[]) {
@@ -226,9 +222,6 @@ function ProjectWorkspace({
               compact
               draft={draft}
               onChange={(nextDraft) => commitDraft(nextDraft, false)}
-              onGroupCountChange={(groupCount) =>
-                commitDraft(updateGroupCount(draft, groupCount), false)
-              }
             />
             <div className="flex flex-col items-stretch gap-3 border border-[var(--border)] bg-[var(--surface)] p-3">
               <p className="text-sm text-[var(--muted)]">{groupingMessage}</p>

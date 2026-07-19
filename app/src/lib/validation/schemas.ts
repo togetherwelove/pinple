@@ -67,7 +67,7 @@ const groupSchema = z
   .object({
       id: z.string().min(1),
       members: z.array(groupMemberSchema),
-      name: z.string().min(1),
+      name: z.string().trim().min(1).max(GROUPING_LIMITS.groupNameMaximumLength),
       targetSize: z.number().int().min(GROUPING_LIMITS.minimumPeoplePerGroup),
   })
   .superRefine((group, context) => {

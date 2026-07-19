@@ -48,7 +48,6 @@ export type GroupResultDetail = GroupResultSummary & {
 };
 
 export type RosterBoardDraft = {
-  groupCount: number;
   groups: Group[];
   leaderSelectionMode: LeaderSelectionMode;
   strategy: GroupingStrategy;

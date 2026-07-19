@@ -3,8 +3,13 @@
 /* eslint-disable react-hooks/refs -- dnd-kit exposes render-time bindings through hook return values. */
 
 import { closestCenter, DndContext, DragOverlay, type DragEndEvent, useDroppable } from "@dnd-kit/core";
-import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
-import { Crown, Download, GripVertical, Pencil, Trash2 } from "lucide-react";
+import {
+  rectSortingStrategy,
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { Crown, Download, GripVertical, Pencil, Plus, Trash2 } from "lucide-react";
 import { type ReactNode, useState } from "react";
 import * as XLSX from "xlsx";
 import {
@@ -18,10 +23,19 @@ import {
   UI_LABELS,
   displayGroupName,
 } from "@/lib/config/app";
+import { GroupNameDialog } from "@/components/dashboard/group-name-dialog";
 import { LeaderConflictDialog } from "@/components/dashboard/leader-conflict-dialog";
 import { setGroupLeader } from "@/lib/grouping/leader-assignment";
 import { allBoardPeople } from "@/lib/roster-board/draft";
-import { reorderBoardMembers, UNASSIGNED_COLUMN_ID } from "@/lib/roster-board/reorder-board-members";
+import {
+  groupIdFromOrderItemId,
+  groupOrderItemId,
+  moveMemberToNewGroup,
+  NEW_GROUP_COLUMN_ID,
+  reorderBoardGroups,
+  reorderBoardMembers,
+  UNASSIGNED_COLUMN_ID,
+} from "@/lib/roster-board/reorder-board-members";
 import { exportRosterToExcel } from "@/lib/roster/export-roster";
 import { formatPersonDetails } from "@/lib/roster/format-person-details";
 import type { Group, GroupMember, PersonInput, RosterBoardDraft } from "@/lib/types/domain";
@@ -124,6 +138,7 @@ function SortableMemberCard({
 function BoardColumn({
   compact = false,
   group,
+  headerActions,
   members,
   onDelete,
   onEdit,
@@ -132,6 +147,7 @@ function BoardColumn({
 }: {
   compact?: boolean;
   group: Group | null;
+  headerActions?: ReactNode;
   members: GroupMember[];
   onDelete: (personId: string, groupId: string | null) => void;
   onEdit?: (member: GroupMember) => void;
@@ -151,9 +167,12 @@ function BoardColumn({
       }
       ref={droppable.setNodeRef}
     >
-      <header className="flex items-center justify-between border-b border-[var(--border)] px-3 py-2">
-        <strong className="text-sm">{title}</strong>
-        <span className="text-xs text-[var(--muted)]">{memberCountText}</span>
+      <header className="flex min-h-10 items-center justify-between gap-2 border-b border-[var(--border)] px-3 py-1.5">
+        <strong className="min-w-0 flex-1 truncate text-sm">{title}</strong>
+        <div className="flex shrink-0 items-center gap-1">
+          <span className="mr-1 text-xs text-[var(--muted)]">{memberCountText}</span>
+          {headerActions}
+        </div>
       </header>
       <SortableContext items={members.map((member) => member.id)} strategy={verticalListSortingStrategy}>
         <ul>
@@ -172,6 +191,86 @@ function BoardColumn({
       {members.length === 0 && group === null ? (
         <p className="px-3 py-6 text-center text-xs text-[var(--muted)]">{ROSTER_BOARD.emptyUnassigned}</p>
       ) : null}
+    </section>
+  );
+}
+
+function SortableGroupColumn({
+  group,
+  onDelete,
+  onEditName,
+  onLeaderAction,
+}: {
+  group: Group;
+  onDelete: (personId: string, groupId: string | null) => void;
+  onEditName: (group: Group) => void;
+  onLeaderAction: (groupId: string, member: GroupMember) => void;
+}) {
+  const sortable = useSortable({ id: groupOrderItemId(group.id) });
+  const transform = sortable.transform
+    ? `translate3d(${sortable.transform.x}px, ${sortable.transform.y}px, 0)`
+    : undefined;
+
+  return (
+    <div
+      className="min-w-0"
+      ref={sortable.setNodeRef}
+      style={{
+        opacity: sortable.isDragging ? 0.35 : undefined,
+        transform,
+        transition: sortable.transition,
+      }}
+    >
+      <BoardColumn
+        group={group}
+        headerActions={
+          <>
+            <button
+              aria-label={ROSTER_BOARD.moveGroup}
+              className="flex size-7 touch-none items-center justify-center text-[var(--muted)] hover:bg-[var(--canvas)] hover:text-[var(--ink)]"
+              title={ROSTER_BOARD.moveGroup}
+              type="button"
+              {...sortable.attributes}
+              {...sortable.listeners}
+            >
+              <GripVertical size={14} />
+            </button>
+            <button
+              aria-label={ROSTER_BOARD.editGroupName}
+              className="flex size-7 items-center justify-center text-[var(--muted)] hover:bg-[var(--canvas)] hover:text-[var(--ink)]"
+              onClick={() => onEditName(group)}
+              title={ROSTER_BOARD.editGroupName}
+              type="button"
+            >
+              <Pencil size={14} />
+            </button>
+          </>
+        }
+        members={group.members}
+        onDelete={onDelete}
+        onLeaderAction={onLeaderAction}
+        title={displayGroupName(group.name)}
+      />
+    </div>
+  );
+}
+
+function NewGroupDropZone() {
+  const droppable = useDroppable({ id: NEW_GROUP_COLUMN_ID });
+
+  return (
+    <section
+      aria-label={ROSTER_BOARD.createGroup}
+      className={`flex min-h-48 min-w-0 flex-col items-center justify-center border border-dashed p-6 text-center transition-colors ${
+        droppable.isOver
+          ? "border-[var(--ink)] bg-[var(--surface)] text-[var(--ink)]"
+          : "border-[var(--border)] text-[var(--muted)]"
+      }`}
+      ref={droppable.setNodeRef}
+    >
+      <Plus size={20} />
+      <strong className="mt-2 text-sm">{ROSTER_BOARD.createGroup}</strong>
+      <span className="mt-1 text-xs">{ROSTER_BOARD.createGroupHint}</span>
     </section>
   );
 }
@@ -259,6 +358,7 @@ export function RosterBoard({
   totalPeople,
 }: RosterBoardProps) {
   const [activeName, setActiveName] = useState("");
+  const [editingGroup, setEditingGroup] = useState<Group | null>(null);
   const [editingMember, setEditingMember] = useState<GroupMember | null>(null);
   const [leaderConflict, setLeaderConflict] = useState<LeaderConflict | null>(null);
   const hasGroupMembers = draft.groups.some((group) => group.members.length > 0);
@@ -272,11 +372,29 @@ export function RosterBoard({
   }
 
   function handleDragEnd(event: DragEndEvent) {
-    const memberId = String(event.active.id);
+    const activeId = String(event.active.id);
     const targetId = event.over ? String(event.over.id) : "";
     setActiveName("");
 
-    const nextDraft = reorderBoardMembers(draft, memberId, targetId);
+    if (!targetId) {
+      return;
+    }
+
+    if (groupIdFromOrderItemId(activeId)) {
+      const reorderedDraft = reorderBoardGroups(draft, activeId, targetId);
+
+      if (reorderedDraft) {
+        onDraftChange(reorderedDraft);
+      }
+
+      return;
+    }
+
+    const memberId = activeId;
+    const nextDraft =
+      targetId === NEW_GROUP_COLUMN_ID
+        ? moveMemberToNewGroup(draft, memberId, crypto.randomUUID())
+        : reorderBoardMembers(draft, memberId, targetId);
 
     if (!nextDraft) {
       return;
@@ -340,16 +458,35 @@ export function RosterBoard({
       id={ROSTER_BOARD_DND_CONTEXT_ID}
       onDragEnd={handleDragEnd}
       onDragStart={(event) => {
-        const member = [...draft.unassigned, ...draft.groups.flatMap((group) => group.members)].find(
-          (item) => item.id === event.active.id,
-        );
-        setActiveName(member?.name ?? "");
+        const activeId = String(event.active.id);
+        const activeGroupId = groupIdFromOrderItemId(activeId);
+        const group = draft.groups.find((item) => item.id === activeGroupId);
+        const member = [
+          ...draft.unassigned,
+          ...draft.groups.flatMap((item) => item.members),
+        ].find((item) => item.id === activeId);
+        setActiveName(group ? displayGroupName(group.name) : member?.name ?? "");
       }}
     >
       {leaderConflict ? (
         <LeaderConflictDialog
           onReplaceTargetLeader={() => resolveLeaderConflict(true)}
           onRetainTargetLeader={() => resolveLeaderConflict(false)}
+        />
+      ) : null}
+      {editingGroup ? (
+        <GroupNameDialog
+          initialName={displayGroupName(editingGroup.name)}
+          onClose={() => setEditingGroup(null)}
+          onSave={(name) => {
+            onDraftChange({
+              ...draft,
+              groups: draft.groups.map((group) =>
+                group.id === editingGroup.id ? { ...group, name } : group,
+              ),
+            });
+            setEditingGroup(null);
+          }}
         />
       ) : null}
       {editingMember ? (
@@ -412,18 +549,23 @@ export function RosterBoard({
                 </button>
               </div>
             </div>
-            <div className="mt-4 grid grid-cols-[repeat(auto-fit,minmax(16rem,1fr))] gap-4">
-              {draft.groups.map((group) => (
-                <BoardColumn
-                  group={group}
-                  key={group.id}
-                  members={group.members}
-                  onDelete={onRemovePerson}
-                  onLeaderAction={handleLeaderAction}
-                  title={displayGroupName(group.name)}
-                />
-              ))}
-            </div>
+            <SortableContext
+              items={draft.groups.map((group) => groupOrderItemId(group.id))}
+              strategy={rectSortingStrategy}
+            >
+              <div className="mt-4 grid grid-cols-[repeat(auto-fit,minmax(16rem,1fr))] gap-4">
+                {draft.groups.map((group) => (
+                  <SortableGroupColumn
+                    group={group}
+                    key={group.id}
+                    onDelete={onRemovePerson}
+                    onEditName={setEditingGroup}
+                    onLeaderAction={handleLeaderAction}
+                  />
+                ))}
+                <NewGroupDropZone />
+              </div>
+            </SortableContext>
           </div>
         </section>
       </div>
