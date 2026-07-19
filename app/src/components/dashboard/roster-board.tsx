@@ -162,7 +162,7 @@ function BoardColumn({
     <section
       className={
         compact
-          ? "min-h-28 w-full border border-[var(--border)] bg-[var(--surface)]"
+          ? "flex max-h-[min(40vh,24rem)] min-h-28 w-full flex-col overflow-hidden border border-[var(--border)] bg-[var(--surface)]"
           : "min-h-48 min-w-0 border border-[var(--border)] bg-[var(--surface)]"
       }
       ref={droppable.setNodeRef}
@@ -175,7 +175,7 @@ function BoardColumn({
         </div>
       </header>
       <SortableContext items={members.map((member) => member.id)} strategy={verticalListSortingStrategy}>
-        <ul>
+        <ul className={compact ? "min-h-0 overflow-y-auto overscroll-contain" : undefined}>
           {members.map((member) => (
             <SortableMemberCard
               groupId={group?.id ?? null}
