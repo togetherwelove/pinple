@@ -66,7 +66,7 @@ export function RosterBoardInput({
 
   return (
     <section className="border border-[var(--border)] bg-[var(--surface)] p-4">
-      <h2 className="font-semibold">명단 입력 2</h2>
+      <h2 className="font-semibold">명단 입력</h2>
       <div className="mt-3 flex items-end gap-2">
         <textarea
           className="min-h-9 min-w-0 flex-1 resize-y border border-[var(--border)] px-3 py-2 text-sm"
