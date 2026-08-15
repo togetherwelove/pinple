@@ -1,68 +1,45 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
-import {
-  ROSTER_BOARD_STORAGE_KEY,
-} from "@/lib/config/app";
+import { ROSTER_BOARD_STORAGE_KEY } from "@/lib/config/app";
 import type { RosterBoardDraft } from "@/lib/types/domain";
 
 type RosterBoardStore = {
-  drafts: Record<string, RosterBoardDraft>;
+  draft: RosterBoardDraft | null;
   hasHydrated: boolean;
-  initializeDraft: (draftKey: string, draft: RosterBoardDraft) => void;
-  removeDraft: (draftKey: string) => void;
-  replaceDraft: (draftKey: string, draft: RosterBoardDraft) => void;
+  initializeDraft: (draft: RosterBoardDraft) => void;
+  replaceDraft: (draft: RosterBoardDraft) => void;
   setHasHydrated: (hasHydrated: boolean) => void;
 };
 
-type PersistedRosterBoardState = Pick<RosterBoardStore, "drafts">;
+type PersistedRosterBoardState = Pick<RosterBoardStore, "draft">;
 
 function migratePersistedState(
   persistedState: unknown,
   persistedVersion: number,
 ): PersistedRosterBoardState {
-  if (persistedVersion < 5) {
-    return { drafts: {} };
+  if (persistedVersion < 1) {
+    return { draft: null };
   }
 
-  const state = persistedState as {
-    drafts?: Record<string, RosterBoardDraft>;
-  };
-  const drafts = Object.fromEntries(
-    Object.entries(state.drafts ?? {})
-      .map(([draftKey, draft]) => {
-        return [
-          draftKey,
-          {
-            ...draft,
-            groups: draft.groups.filter((group) => group.members.length > 0),
-          },
-        ];
-      }),
-  );
+  const state = persistedState as { draft?: RosterBoardDraft | null };
+  const draft = state.draft
+    ? {
+        ...state.draft,
+        groups: state.draft.groups.filter((group) => group.members.length > 0),
+      }
+    : null;
 
-  return { drafts };
+  return { draft };
 }
 
 export const useRosterBoardStore = create<RosterBoardStore>()(
   persist<RosterBoardStore, [], [], PersistedRosterBoardState>(
     (set) => ({
-      drafts: {},
+      draft: null,
       hasHydrated: false,
-      initializeDraft: (draftKey, draft) =>
-        set((state) =>
-          state.drafts[draftKey]
-            ? state
-            : { drafts: { ...state.drafts, [draftKey]: draft } },
-        ),
-      removeDraft: (draftKey) =>
-        set((state) => {
-          const drafts = { ...state.drafts };
-          delete drafts[draftKey];
-
-          return { drafts };
-        }),
-      replaceDraft: (draftKey, draft) =>
-        set((state) => ({ drafts: { ...state.drafts, [draftKey]: draft } })),
+      initializeDraft: (draft) =>
+        set((state) => (state.draft ? state : { draft })),
+      replaceDraft: (draft) => set({ draft }),
       setHasHydrated: (hasHydrated) => set({ hasHydrated }),
     }),
     {
@@ -70,8 +47,8 @@ export const useRosterBoardStore = create<RosterBoardStore>()(
       migrate: migratePersistedState,
       skipHydration: true,
       storage: createJSONStorage(() => localStorage),
-      partialize: (state) => ({ drafts: state.drafts }),
-      version: 5,
+      partialize: (state) => ({ draft: state.draft }),
+      version: 1,
     },
   ),
 );

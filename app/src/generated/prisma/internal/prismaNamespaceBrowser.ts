@@ -51,8 +51,7 @@ export const AnyNull = runtime.AnyNull
 
 
 export const ModelName = {
-  User: 'User',
-  Project: 'Project',
+  Workspace: 'Workspace',
   Person: 'Person',
   GroupResult: 'GroupResult'
 } as const
@@ -73,30 +72,18 @@ export const TransactionIsolationLevel = runtime.makeStrictEnum({
 export type TransactionIsolationLevel = (typeof TransactionIsolationLevel)[keyof typeof TransactionIsolationLevel]
 
 
-export const UserScalarFieldEnum = {
+export const WorkspaceScalarFieldEnum = {
   id: 'id',
-  email: 'email',
-  name: 'name',
-  createdAt: 'createdAt'
-} as const
-
-export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
-
-
-export const ProjectScalarFieldEnum = {
-  id: 'id',
-  title: 'title',
-  userId: 'userId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
 
-export type ProjectScalarFieldEnum = (typeof ProjectScalarFieldEnum)[keyof typeof ProjectScalarFieldEnum]
+export type WorkspaceScalarFieldEnum = (typeof WorkspaceScalarFieldEnum)[keyof typeof WorkspaceScalarFieldEnum]
 
 
 export const PersonScalarFieldEnum = {
   id: 'id',
-  projectId: 'projectId',
+  workspaceId: 'workspaceId',
   name: 'name',
   gender: 'gender',
   age: 'age',
@@ -108,10 +95,10 @@ export type PersonScalarFieldEnum = (typeof PersonScalarFieldEnum)[keyof typeof 
 
 export const GroupResultScalarFieldEnum = {
   id: 'id',
-  projectId: 'projectId',
-  name: 'name',
+  workspaceId: 'workspaceId',
   members: 'members',
-  createdAt: 'createdAt'
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
 } as const
 
 export type GroupResultScalarFieldEnum = (typeof GroupResultScalarFieldEnum)[keyof typeof GroupResultScalarFieldEnum]

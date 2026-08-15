@@ -26,48 +26,48 @@ export type AggregateGroupResult = {
 
 export type GroupResultMinAggregateOutputType = {
   id: string | null
-  projectId: string | null
-  name: string | null
+  workspaceId: string | null
   createdAt: Date | null
+  updatedAt: Date | null
 }
 
 export type GroupResultMaxAggregateOutputType = {
   id: string | null
-  projectId: string | null
-  name: string | null
+  workspaceId: string | null
   createdAt: Date | null
+  updatedAt: Date | null
 }
 
 export type GroupResultCountAggregateOutputType = {
   id: number
-  projectId: number
-  name: number
+  workspaceId: number
   members: number
   createdAt: number
+  updatedAt: number
   _all: number
 }
 
 
 export type GroupResultMinAggregateInputType = {
   id?: true
-  projectId?: true
-  name?: true
+  workspaceId?: true
   createdAt?: true
+  updatedAt?: true
 }
 
 export type GroupResultMaxAggregateInputType = {
   id?: true
-  projectId?: true
-  name?: true
+  workspaceId?: true
   createdAt?: true
+  updatedAt?: true
 }
 
 export type GroupResultCountAggregateInputType = {
   id?: true
-  projectId?: true
-  name?: true
+  workspaceId?: true
   members?: true
   createdAt?: true
+  updatedAt?: true
   _all?: true
 }
 
@@ -145,10 +145,10 @@ export type GroupResultGroupByArgs<ExtArgs extends runtime.Types.Extensions.Inte
 
 export type GroupResultGroupByOutputType = {
   id: string
-  projectId: string
-  name: string
+  workspaceId: string
   members: runtime.JsonValue
   createdAt: Date
+  updatedAt: Date
   _count: GroupResultCountAggregateOutputType | null
   _min: GroupResultMinAggregateOutputType | null
   _max: GroupResultMaxAggregateOutputType | null
@@ -174,40 +174,40 @@ export type GroupResultWhereInput = {
   OR?: Prisma.GroupResultWhereInput[]
   NOT?: Prisma.GroupResultWhereInput | Prisma.GroupResultWhereInput[]
   id?: Prisma.UuidFilter<"GroupResult"> | string
-  projectId?: Prisma.UuidFilter<"GroupResult"> | string
-  name?: Prisma.StringFilter<"GroupResult"> | string
+  workspaceId?: Prisma.UuidFilter<"GroupResult"> | string
   members?: Prisma.JsonFilter<"GroupResult">
   createdAt?: Prisma.DateTimeFilter<"GroupResult"> | Date | string
-  project?: Prisma.XOR<Prisma.ProjectScalarRelationFilter, Prisma.ProjectWhereInput>
+  updatedAt?: Prisma.DateTimeFilter<"GroupResult"> | Date | string
+  workspace?: Prisma.XOR<Prisma.WorkspaceScalarRelationFilter, Prisma.WorkspaceWhereInput>
 }
 
 export type GroupResultOrderByWithRelationInput = {
   id?: Prisma.SortOrder
-  projectId?: Prisma.SortOrder
-  name?: Prisma.SortOrder
+  workspaceId?: Prisma.SortOrder
   members?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
-  project?: Prisma.ProjectOrderByWithRelationInput
+  updatedAt?: Prisma.SortOrder
+  workspace?: Prisma.WorkspaceOrderByWithRelationInput
 }
 
 export type GroupResultWhereUniqueInput = Prisma.AtLeast<{
   id?: string
-  projectId?: string
+  workspaceId?: string
   AND?: Prisma.GroupResultWhereInput | Prisma.GroupResultWhereInput[]
   OR?: Prisma.GroupResultWhereInput[]
   NOT?: Prisma.GroupResultWhereInput | Prisma.GroupResultWhereInput[]
-  name?: Prisma.StringFilter<"GroupResult"> | string
   members?: Prisma.JsonFilter<"GroupResult">
   createdAt?: Prisma.DateTimeFilter<"GroupResult"> | Date | string
-  project?: Prisma.XOR<Prisma.ProjectScalarRelationFilter, Prisma.ProjectWhereInput>
-}, "id" | "projectId">
+  updatedAt?: Prisma.DateTimeFilter<"GroupResult"> | Date | string
+  workspace?: Prisma.XOR<Prisma.WorkspaceScalarRelationFilter, Prisma.WorkspaceWhereInput>
+}, "id" | "workspaceId">
 
 export type GroupResultOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
-  projectId?: Prisma.SortOrder
-  name?: Prisma.SortOrder
+  workspaceId?: Prisma.SortOrder
   members?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
+  updatedAt?: Prisma.SortOrder
   _count?: Prisma.GroupResultCountOrderByAggregateInput
   _max?: Prisma.GroupResultMaxOrderByAggregateInput
   _min?: Prisma.GroupResultMinOrderByAggregateInput
@@ -218,65 +218,65 @@ export type GroupResultScalarWhereWithAggregatesInput = {
   OR?: Prisma.GroupResultScalarWhereWithAggregatesInput[]
   NOT?: Prisma.GroupResultScalarWhereWithAggregatesInput | Prisma.GroupResultScalarWhereWithAggregatesInput[]
   id?: Prisma.UuidWithAggregatesFilter<"GroupResult"> | string
-  projectId?: Prisma.UuidWithAggregatesFilter<"GroupResult"> | string
-  name?: Prisma.StringWithAggregatesFilter<"GroupResult"> | string
+  workspaceId?: Prisma.UuidWithAggregatesFilter<"GroupResult"> | string
   members?: Prisma.JsonWithAggregatesFilter<"GroupResult">
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"GroupResult"> | Date | string
+  updatedAt?: Prisma.DateTimeWithAggregatesFilter<"GroupResult"> | Date | string
 }
 
 export type GroupResultCreateInput = {
   id?: string
-  name: string
   members: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
-  project: Prisma.ProjectCreateNestedOneWithoutGroupResultInput
+  updatedAt?: Date | string
+  workspace: Prisma.WorkspaceCreateNestedOneWithoutGroupResultInput
 }
 
 export type GroupResultUncheckedCreateInput = {
   id?: string
-  projectId: string
-  name: string
+  workspaceId: string
   members: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
+  updatedAt?: Date | string
 }
 
 export type GroupResultUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.StringFieldUpdateOperationsInput | string
   members?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  project?: Prisma.ProjectUpdateOneRequiredWithoutGroupResultNestedInput
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  workspace?: Prisma.WorkspaceUpdateOneRequiredWithoutGroupResultNestedInput
 }
 
 export type GroupResultUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  projectId?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.StringFieldUpdateOperationsInput | string
+  workspaceId?: Prisma.StringFieldUpdateOperationsInput | string
   members?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type GroupResultCreateManyInput = {
   id?: string
-  projectId: string
-  name: string
+  workspaceId: string
   members: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
+  updatedAt?: Date | string
 }
 
 export type GroupResultUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.StringFieldUpdateOperationsInput | string
   members?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type GroupResultUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  projectId?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.StringFieldUpdateOperationsInput | string
+  workspaceId?: Prisma.StringFieldUpdateOperationsInput | string
   members?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type GroupResultNullableScalarRelationFilter = {
@@ -286,161 +286,161 @@ export type GroupResultNullableScalarRelationFilter = {
 
 export type GroupResultCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
-  projectId?: Prisma.SortOrder
-  name?: Prisma.SortOrder
+  workspaceId?: Prisma.SortOrder
   members?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
+  updatedAt?: Prisma.SortOrder
 }
 
 export type GroupResultMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
-  projectId?: Prisma.SortOrder
-  name?: Prisma.SortOrder
+  workspaceId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
+  updatedAt?: Prisma.SortOrder
 }
 
 export type GroupResultMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
-  projectId?: Prisma.SortOrder
-  name?: Prisma.SortOrder
+  workspaceId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
+  updatedAt?: Prisma.SortOrder
 }
 
-export type GroupResultCreateNestedOneWithoutProjectInput = {
-  create?: Prisma.XOR<Prisma.GroupResultCreateWithoutProjectInput, Prisma.GroupResultUncheckedCreateWithoutProjectInput>
-  connectOrCreate?: Prisma.GroupResultCreateOrConnectWithoutProjectInput
+export type GroupResultCreateNestedOneWithoutWorkspaceInput = {
+  create?: Prisma.XOR<Prisma.GroupResultCreateWithoutWorkspaceInput, Prisma.GroupResultUncheckedCreateWithoutWorkspaceInput>
+  connectOrCreate?: Prisma.GroupResultCreateOrConnectWithoutWorkspaceInput
   connect?: Prisma.GroupResultWhereUniqueInput
 }
 
-export type GroupResultUncheckedCreateNestedOneWithoutProjectInput = {
-  create?: Prisma.XOR<Prisma.GroupResultCreateWithoutProjectInput, Prisma.GroupResultUncheckedCreateWithoutProjectInput>
-  connectOrCreate?: Prisma.GroupResultCreateOrConnectWithoutProjectInput
+export type GroupResultUncheckedCreateNestedOneWithoutWorkspaceInput = {
+  create?: Prisma.XOR<Prisma.GroupResultCreateWithoutWorkspaceInput, Prisma.GroupResultUncheckedCreateWithoutWorkspaceInput>
+  connectOrCreate?: Prisma.GroupResultCreateOrConnectWithoutWorkspaceInput
   connect?: Prisma.GroupResultWhereUniqueInput
 }
 
-export type GroupResultUpdateOneWithoutProjectNestedInput = {
-  create?: Prisma.XOR<Prisma.GroupResultCreateWithoutProjectInput, Prisma.GroupResultUncheckedCreateWithoutProjectInput>
-  connectOrCreate?: Prisma.GroupResultCreateOrConnectWithoutProjectInput
-  upsert?: Prisma.GroupResultUpsertWithoutProjectInput
+export type GroupResultUpdateOneWithoutWorkspaceNestedInput = {
+  create?: Prisma.XOR<Prisma.GroupResultCreateWithoutWorkspaceInput, Prisma.GroupResultUncheckedCreateWithoutWorkspaceInput>
+  connectOrCreate?: Prisma.GroupResultCreateOrConnectWithoutWorkspaceInput
+  upsert?: Prisma.GroupResultUpsertWithoutWorkspaceInput
   disconnect?: Prisma.GroupResultWhereInput | boolean
   delete?: Prisma.GroupResultWhereInput | boolean
   connect?: Prisma.GroupResultWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.GroupResultUpdateToOneWithWhereWithoutProjectInput, Prisma.GroupResultUpdateWithoutProjectInput>, Prisma.GroupResultUncheckedUpdateWithoutProjectInput>
+  update?: Prisma.XOR<Prisma.XOR<Prisma.GroupResultUpdateToOneWithWhereWithoutWorkspaceInput, Prisma.GroupResultUpdateWithoutWorkspaceInput>, Prisma.GroupResultUncheckedUpdateWithoutWorkspaceInput>
 }
 
-export type GroupResultUncheckedUpdateOneWithoutProjectNestedInput = {
-  create?: Prisma.XOR<Prisma.GroupResultCreateWithoutProjectInput, Prisma.GroupResultUncheckedCreateWithoutProjectInput>
-  connectOrCreate?: Prisma.GroupResultCreateOrConnectWithoutProjectInput
-  upsert?: Prisma.GroupResultUpsertWithoutProjectInput
+export type GroupResultUncheckedUpdateOneWithoutWorkspaceNestedInput = {
+  create?: Prisma.XOR<Prisma.GroupResultCreateWithoutWorkspaceInput, Prisma.GroupResultUncheckedCreateWithoutWorkspaceInput>
+  connectOrCreate?: Prisma.GroupResultCreateOrConnectWithoutWorkspaceInput
+  upsert?: Prisma.GroupResultUpsertWithoutWorkspaceInput
   disconnect?: Prisma.GroupResultWhereInput | boolean
   delete?: Prisma.GroupResultWhereInput | boolean
   connect?: Prisma.GroupResultWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.GroupResultUpdateToOneWithWhereWithoutProjectInput, Prisma.GroupResultUpdateWithoutProjectInput>, Prisma.GroupResultUncheckedUpdateWithoutProjectInput>
+  update?: Prisma.XOR<Prisma.XOR<Prisma.GroupResultUpdateToOneWithWhereWithoutWorkspaceInput, Prisma.GroupResultUpdateWithoutWorkspaceInput>, Prisma.GroupResultUncheckedUpdateWithoutWorkspaceInput>
 }
 
-export type GroupResultCreateWithoutProjectInput = {
+export type GroupResultCreateWithoutWorkspaceInput = {
   id?: string
-  name: string
   members: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
+  updatedAt?: Date | string
 }
 
-export type GroupResultUncheckedCreateWithoutProjectInput = {
+export type GroupResultUncheckedCreateWithoutWorkspaceInput = {
   id?: string
-  name: string
   members: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
+  updatedAt?: Date | string
 }
 
-export type GroupResultCreateOrConnectWithoutProjectInput = {
+export type GroupResultCreateOrConnectWithoutWorkspaceInput = {
   where: Prisma.GroupResultWhereUniqueInput
-  create: Prisma.XOR<Prisma.GroupResultCreateWithoutProjectInput, Prisma.GroupResultUncheckedCreateWithoutProjectInput>
+  create: Prisma.XOR<Prisma.GroupResultCreateWithoutWorkspaceInput, Prisma.GroupResultUncheckedCreateWithoutWorkspaceInput>
 }
 
-export type GroupResultUpsertWithoutProjectInput = {
-  update: Prisma.XOR<Prisma.GroupResultUpdateWithoutProjectInput, Prisma.GroupResultUncheckedUpdateWithoutProjectInput>
-  create: Prisma.XOR<Prisma.GroupResultCreateWithoutProjectInput, Prisma.GroupResultUncheckedCreateWithoutProjectInput>
+export type GroupResultUpsertWithoutWorkspaceInput = {
+  update: Prisma.XOR<Prisma.GroupResultUpdateWithoutWorkspaceInput, Prisma.GroupResultUncheckedUpdateWithoutWorkspaceInput>
+  create: Prisma.XOR<Prisma.GroupResultCreateWithoutWorkspaceInput, Prisma.GroupResultUncheckedCreateWithoutWorkspaceInput>
   where?: Prisma.GroupResultWhereInput
 }
 
-export type GroupResultUpdateToOneWithWhereWithoutProjectInput = {
+export type GroupResultUpdateToOneWithWhereWithoutWorkspaceInput = {
   where?: Prisma.GroupResultWhereInput
-  data: Prisma.XOR<Prisma.GroupResultUpdateWithoutProjectInput, Prisma.GroupResultUncheckedUpdateWithoutProjectInput>
+  data: Prisma.XOR<Prisma.GroupResultUpdateWithoutWorkspaceInput, Prisma.GroupResultUncheckedUpdateWithoutWorkspaceInput>
 }
 
-export type GroupResultUpdateWithoutProjectInput = {
+export type GroupResultUpdateWithoutWorkspaceInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.StringFieldUpdateOperationsInput | string
   members?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
-export type GroupResultUncheckedUpdateWithoutProjectInput = {
+export type GroupResultUncheckedUpdateWithoutWorkspaceInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.StringFieldUpdateOperationsInput | string
   members?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 
 
 export type GroupResultSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
-  projectId?: boolean
-  name?: boolean
+  workspaceId?: boolean
   members?: boolean
   createdAt?: boolean
-  project?: boolean | Prisma.ProjectDefaultArgs<ExtArgs>
+  updatedAt?: boolean
+  workspace?: boolean | Prisma.WorkspaceDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["groupResult"]>
 
 export type GroupResultSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
-  projectId?: boolean
-  name?: boolean
+  workspaceId?: boolean
   members?: boolean
   createdAt?: boolean
-  project?: boolean | Prisma.ProjectDefaultArgs<ExtArgs>
+  updatedAt?: boolean
+  workspace?: boolean | Prisma.WorkspaceDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["groupResult"]>
 
 export type GroupResultSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
-  projectId?: boolean
-  name?: boolean
+  workspaceId?: boolean
   members?: boolean
   createdAt?: boolean
-  project?: boolean | Prisma.ProjectDefaultArgs<ExtArgs>
+  updatedAt?: boolean
+  workspace?: boolean | Prisma.WorkspaceDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["groupResult"]>
 
 export type GroupResultSelectScalar = {
   id?: boolean
-  projectId?: boolean
-  name?: boolean
+  workspaceId?: boolean
   members?: boolean
   createdAt?: boolean
+  updatedAt?: boolean
 }
 
-export type GroupResultOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "projectId" | "name" | "members" | "createdAt", ExtArgs["result"]["groupResult"]>
+export type GroupResultOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "workspaceId" | "members" | "createdAt" | "updatedAt", ExtArgs["result"]["groupResult"]>
 export type GroupResultInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  project?: boolean | Prisma.ProjectDefaultArgs<ExtArgs>
+  workspace?: boolean | Prisma.WorkspaceDefaultArgs<ExtArgs>
 }
 export type GroupResultIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  project?: boolean | Prisma.ProjectDefaultArgs<ExtArgs>
+  workspace?: boolean | Prisma.WorkspaceDefaultArgs<ExtArgs>
 }
 export type GroupResultIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  project?: boolean | Prisma.ProjectDefaultArgs<ExtArgs>
+  workspace?: boolean | Prisma.WorkspaceDefaultArgs<ExtArgs>
 }
 
 export type $GroupResultPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "GroupResult"
   objects: {
-    project: Prisma.$ProjectPayload<ExtArgs>
+    workspace: Prisma.$WorkspacePayload<ExtArgs>
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
-    projectId: string
-    name: string
+    workspaceId: string
     members: runtime.JsonValue
     createdAt: Date
+    updatedAt: Date
   }, ExtArgs["result"]["groupResult"]>
   composites: {}
 }
@@ -835,7 +835,7 @@ readonly fields: GroupResultFieldRefs;
  */
 export interface Prisma__GroupResultClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
-  project<T extends Prisma.ProjectDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ProjectDefaultArgs<ExtArgs>>): Prisma.Prisma__ProjectClient<runtime.Types.Result.GetResult<Prisma.$ProjectPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+  workspace<T extends Prisma.WorkspaceDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.WorkspaceDefaultArgs<ExtArgs>>): Prisma.Prisma__WorkspaceClient<runtime.Types.Result.GetResult<Prisma.$WorkspacePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -866,10 +866,10 @@ export interface Prisma__GroupResultClient<T, Null = never, ExtArgs extends runt
  */
 export interface GroupResultFieldRefs {
   readonly id: Prisma.FieldRef<"GroupResult", 'String'>
-  readonly projectId: Prisma.FieldRef<"GroupResult", 'String'>
-  readonly name: Prisma.FieldRef<"GroupResult", 'String'>
+  readonly workspaceId: Prisma.FieldRef<"GroupResult", 'String'>
   readonly members: Prisma.FieldRef<"GroupResult", 'Json'>
   readonly createdAt: Prisma.FieldRef<"GroupResult", 'DateTime'>
+  readonly updatedAt: Prisma.FieldRef<"GroupResult", 'DateTime'>
 }
     
 

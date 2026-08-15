@@ -12,10 +12,6 @@ import type {
 
 export type BoardPerson = PersonInput & { id: string };
 
-export function createBoardDraftKey(projectId: string) {
-  return projectId;
-}
-
 function personIdentity(person: PersonInput) {
   return `${person.name}\u0000${person.gender}\u0000${person.age ?? "unknown-age"}`;
 }

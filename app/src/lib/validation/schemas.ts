@@ -5,13 +5,8 @@ import {
   GENDER,
   INPUT_GENDER,
   LEADER_SELECTION_MODES,
-  ROSTER_IMPORT_MODES,
   VALIDATION_MESSAGES,
 } from "@/lib/config/app";
-
-export const projectSchema = z.object({
-  title: z.string().trim().min(1).max(GROUPING_LIMITS.projectTitleMaximumLength),
-});
 
 export const personInputSchema = z.object({
   age: z.coerce.number().int().min(GROUPING_LIMITS.minimumAge).nullable(),
@@ -27,11 +22,6 @@ export const personInputSchema = z.object({
 
 export const peopleRequestSchema = z.object({
   people: z.array(personInputSchema).min(1),
-});
-
-export const rosterImportSchema = z.object({
-  mode: z.enum([ROSTER_IMPORT_MODES.replace, ROSTER_IMPORT_MODES.merge]),
-  sourceProjectId: z.string().uuid(),
 });
 
 export const groupSizeSchema = z
@@ -65,10 +55,10 @@ export const groupMemberSchema = z.object({
 
 const groupSchema = z
   .object({
-      id: z.string().min(1),
-      members: z.array(groupMemberSchema),
-      name: z.string().trim().min(1).max(GROUPING_LIMITS.groupNameMaximumLength),
-      targetSize: z.number().int().min(GROUPING_LIMITS.minimumPeoplePerGroup),
+    id: z.string().min(1),
+    members: z.array(groupMemberSchema),
+    name: z.string().trim().min(1).max(GROUPING_LIMITS.groupNameMaximumLength),
+    targetSize: z.number().int().min(GROUPING_LIMITS.minimumPeoplePerGroup),
   })
   .superRefine((group, context) => {
     if (group.members.filter((member) => member.isLeader).length > 1) {
@@ -135,7 +125,6 @@ export const boardSnapshotSchema = z
         message: VALIDATION_MESSAGES.unknownGroupResultMember,
       });
     }
-
 
     if (new Set(referencedIds).size !== referencedIds.length) {
       context.addIssue({

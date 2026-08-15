@@ -36,7 +36,7 @@ export type PersonSumAggregateOutputType = {
 
 export type PersonMinAggregateOutputType = {
   id: string | null
-  projectId: string | null
+  workspaceId: string | null
   name: string | null
   gender: string | null
   age: number | null
@@ -45,7 +45,7 @@ export type PersonMinAggregateOutputType = {
 
 export type PersonMaxAggregateOutputType = {
   id: string | null
-  projectId: string | null
+  workspaceId: string | null
   name: string | null
   gender: string | null
   age: number | null
@@ -54,7 +54,7 @@ export type PersonMaxAggregateOutputType = {
 
 export type PersonCountAggregateOutputType = {
   id: number
-  projectId: number
+  workspaceId: number
   name: number
   gender: number
   age: number
@@ -73,7 +73,7 @@ export type PersonSumAggregateInputType = {
 
 export type PersonMinAggregateInputType = {
   id?: true
-  projectId?: true
+  workspaceId?: true
   name?: true
   gender?: true
   age?: true
@@ -82,7 +82,7 @@ export type PersonMinAggregateInputType = {
 
 export type PersonMaxAggregateInputType = {
   id?: true
-  projectId?: true
+  workspaceId?: true
   name?: true
   gender?: true
   age?: true
@@ -91,7 +91,7 @@ export type PersonMaxAggregateInputType = {
 
 export type PersonCountAggregateInputType = {
   id?: true
-  projectId?: true
+  workspaceId?: true
   name?: true
   gender?: true
   age?: true
@@ -187,7 +187,7 @@ export type PersonGroupByArgs<ExtArgs extends runtime.Types.Extensions.InternalA
 
 export type PersonGroupByOutputType = {
   id: string
-  projectId: string
+  workspaceId: string
   name: string
   gender: string
   age: number | null
@@ -219,41 +219,41 @@ export type PersonWhereInput = {
   OR?: Prisma.PersonWhereInput[]
   NOT?: Prisma.PersonWhereInput | Prisma.PersonWhereInput[]
   id?: Prisma.UuidFilter<"Person"> | string
-  projectId?: Prisma.UuidFilter<"Person"> | string
+  workspaceId?: Prisma.UuidFilter<"Person"> | string
   name?: Prisma.StringFilter<"Person"> | string
   gender?: Prisma.StringFilter<"Person"> | string
   age?: Prisma.IntNullableFilter<"Person"> | number | null
   createdAt?: Prisma.DateTimeFilter<"Person"> | Date | string
-  project?: Prisma.XOR<Prisma.ProjectScalarRelationFilter, Prisma.ProjectWhereInput>
+  workspace?: Prisma.XOR<Prisma.WorkspaceScalarRelationFilter, Prisma.WorkspaceWhereInput>
 }
 
 export type PersonOrderByWithRelationInput = {
   id?: Prisma.SortOrder
-  projectId?: Prisma.SortOrder
+  workspaceId?: Prisma.SortOrder
   name?: Prisma.SortOrder
   gender?: Prisma.SortOrder
   age?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
-  project?: Prisma.ProjectOrderByWithRelationInput
+  workspace?: Prisma.WorkspaceOrderByWithRelationInput
 }
 
 export type PersonWhereUniqueInput = Prisma.AtLeast<{
   id?: string
-  projectId_name_gender_age?: Prisma.PersonProjectIdNameGenderAgeCompoundUniqueInput
+  workspaceId_name_gender_age?: Prisma.PersonWorkspaceIdNameGenderAgeCompoundUniqueInput
   AND?: Prisma.PersonWhereInput | Prisma.PersonWhereInput[]
   OR?: Prisma.PersonWhereInput[]
   NOT?: Prisma.PersonWhereInput | Prisma.PersonWhereInput[]
-  projectId?: Prisma.UuidFilter<"Person"> | string
+  workspaceId?: Prisma.UuidFilter<"Person"> | string
   name?: Prisma.StringFilter<"Person"> | string
   gender?: Prisma.StringFilter<"Person"> | string
   age?: Prisma.IntNullableFilter<"Person"> | number | null
   createdAt?: Prisma.DateTimeFilter<"Person"> | Date | string
-  project?: Prisma.XOR<Prisma.ProjectScalarRelationFilter, Prisma.ProjectWhereInput>
-}, "id" | "projectId_name_gender_age">
+  workspace?: Prisma.XOR<Prisma.WorkspaceScalarRelationFilter, Prisma.WorkspaceWhereInput>
+}, "id" | "workspaceId_name_gender_age">
 
 export type PersonOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
-  projectId?: Prisma.SortOrder
+  workspaceId?: Prisma.SortOrder
   name?: Prisma.SortOrder
   gender?: Prisma.SortOrder
   age?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -270,7 +270,7 @@ export type PersonScalarWhereWithAggregatesInput = {
   OR?: Prisma.PersonScalarWhereWithAggregatesInput[]
   NOT?: Prisma.PersonScalarWhereWithAggregatesInput | Prisma.PersonScalarWhereWithAggregatesInput[]
   id?: Prisma.UuidWithAggregatesFilter<"Person"> | string
-  projectId?: Prisma.UuidWithAggregatesFilter<"Person"> | string
+  workspaceId?: Prisma.UuidWithAggregatesFilter<"Person"> | string
   name?: Prisma.StringWithAggregatesFilter<"Person"> | string
   gender?: Prisma.StringWithAggregatesFilter<"Person"> | string
   age?: Prisma.IntNullableWithAggregatesFilter<"Person"> | number | null
@@ -283,12 +283,12 @@ export type PersonCreateInput = {
   gender: string
   age?: number | null
   createdAt?: Date | string
-  project: Prisma.ProjectCreateNestedOneWithoutPeopleInput
+  workspace: Prisma.WorkspaceCreateNestedOneWithoutPeopleInput
 }
 
 export type PersonUncheckedCreateInput = {
   id?: string
-  projectId: string
+  workspaceId: string
   name: string
   gender: string
   age?: number | null
@@ -301,12 +301,12 @@ export type PersonUpdateInput = {
   gender?: Prisma.StringFieldUpdateOperationsInput | string
   age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  project?: Prisma.ProjectUpdateOneRequiredWithoutPeopleNestedInput
+  workspace?: Prisma.WorkspaceUpdateOneRequiredWithoutPeopleNestedInput
 }
 
 export type PersonUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  projectId?: Prisma.StringFieldUpdateOperationsInput | string
+  workspaceId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   gender?: Prisma.StringFieldUpdateOperationsInput | string
   age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -315,7 +315,7 @@ export type PersonUncheckedUpdateInput = {
 
 export type PersonCreateManyInput = {
   id?: string
-  projectId: string
+  workspaceId: string
   name: string
   gender: string
   age?: number | null
@@ -332,7 +332,7 @@ export type PersonUpdateManyMutationInput = {
 
 export type PersonUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  projectId?: Prisma.StringFieldUpdateOperationsInput | string
+  workspaceId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   gender?: Prisma.StringFieldUpdateOperationsInput | string
   age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -349,8 +349,8 @@ export type PersonOrderByRelationAggregateInput = {
   _count?: Prisma.SortOrder
 }
 
-export type PersonProjectIdNameGenderAgeCompoundUniqueInput = {
-  projectId: string
+export type PersonWorkspaceIdNameGenderAgeCompoundUniqueInput = {
+  workspaceId: string
   name: string
   gender: string
   age: number
@@ -358,7 +358,7 @@ export type PersonProjectIdNameGenderAgeCompoundUniqueInput = {
 
 export type PersonCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
-  projectId?: Prisma.SortOrder
+  workspaceId?: Prisma.SortOrder
   name?: Prisma.SortOrder
   gender?: Prisma.SortOrder
   age?: Prisma.SortOrder
@@ -371,7 +371,7 @@ export type PersonAvgOrderByAggregateInput = {
 
 export type PersonMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
-  projectId?: Prisma.SortOrder
+  workspaceId?: Prisma.SortOrder
   name?: Prisma.SortOrder
   gender?: Prisma.SortOrder
   age?: Prisma.SortOrder
@@ -380,7 +380,7 @@ export type PersonMaxOrderByAggregateInput = {
 
 export type PersonMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
-  projectId?: Prisma.SortOrder
+  workspaceId?: Prisma.SortOrder
   name?: Prisma.SortOrder
   gender?: Prisma.SortOrder
   age?: Prisma.SortOrder
@@ -391,45 +391,45 @@ export type PersonSumOrderByAggregateInput = {
   age?: Prisma.SortOrder
 }
 
-export type PersonCreateNestedManyWithoutProjectInput = {
-  create?: Prisma.XOR<Prisma.PersonCreateWithoutProjectInput, Prisma.PersonUncheckedCreateWithoutProjectInput> | Prisma.PersonCreateWithoutProjectInput[] | Prisma.PersonUncheckedCreateWithoutProjectInput[]
-  connectOrCreate?: Prisma.PersonCreateOrConnectWithoutProjectInput | Prisma.PersonCreateOrConnectWithoutProjectInput[]
-  createMany?: Prisma.PersonCreateManyProjectInputEnvelope
+export type PersonCreateNestedManyWithoutWorkspaceInput = {
+  create?: Prisma.XOR<Prisma.PersonCreateWithoutWorkspaceInput, Prisma.PersonUncheckedCreateWithoutWorkspaceInput> | Prisma.PersonCreateWithoutWorkspaceInput[] | Prisma.PersonUncheckedCreateWithoutWorkspaceInput[]
+  connectOrCreate?: Prisma.PersonCreateOrConnectWithoutWorkspaceInput | Prisma.PersonCreateOrConnectWithoutWorkspaceInput[]
+  createMany?: Prisma.PersonCreateManyWorkspaceInputEnvelope
   connect?: Prisma.PersonWhereUniqueInput | Prisma.PersonWhereUniqueInput[]
 }
 
-export type PersonUncheckedCreateNestedManyWithoutProjectInput = {
-  create?: Prisma.XOR<Prisma.PersonCreateWithoutProjectInput, Prisma.PersonUncheckedCreateWithoutProjectInput> | Prisma.PersonCreateWithoutProjectInput[] | Prisma.PersonUncheckedCreateWithoutProjectInput[]
-  connectOrCreate?: Prisma.PersonCreateOrConnectWithoutProjectInput | Prisma.PersonCreateOrConnectWithoutProjectInput[]
-  createMany?: Prisma.PersonCreateManyProjectInputEnvelope
+export type PersonUncheckedCreateNestedManyWithoutWorkspaceInput = {
+  create?: Prisma.XOR<Prisma.PersonCreateWithoutWorkspaceInput, Prisma.PersonUncheckedCreateWithoutWorkspaceInput> | Prisma.PersonCreateWithoutWorkspaceInput[] | Prisma.PersonUncheckedCreateWithoutWorkspaceInput[]
+  connectOrCreate?: Prisma.PersonCreateOrConnectWithoutWorkspaceInput | Prisma.PersonCreateOrConnectWithoutWorkspaceInput[]
+  createMany?: Prisma.PersonCreateManyWorkspaceInputEnvelope
   connect?: Prisma.PersonWhereUniqueInput | Prisma.PersonWhereUniqueInput[]
 }
 
-export type PersonUpdateManyWithoutProjectNestedInput = {
-  create?: Prisma.XOR<Prisma.PersonCreateWithoutProjectInput, Prisma.PersonUncheckedCreateWithoutProjectInput> | Prisma.PersonCreateWithoutProjectInput[] | Prisma.PersonUncheckedCreateWithoutProjectInput[]
-  connectOrCreate?: Prisma.PersonCreateOrConnectWithoutProjectInput | Prisma.PersonCreateOrConnectWithoutProjectInput[]
-  upsert?: Prisma.PersonUpsertWithWhereUniqueWithoutProjectInput | Prisma.PersonUpsertWithWhereUniqueWithoutProjectInput[]
-  createMany?: Prisma.PersonCreateManyProjectInputEnvelope
+export type PersonUpdateManyWithoutWorkspaceNestedInput = {
+  create?: Prisma.XOR<Prisma.PersonCreateWithoutWorkspaceInput, Prisma.PersonUncheckedCreateWithoutWorkspaceInput> | Prisma.PersonCreateWithoutWorkspaceInput[] | Prisma.PersonUncheckedCreateWithoutWorkspaceInput[]
+  connectOrCreate?: Prisma.PersonCreateOrConnectWithoutWorkspaceInput | Prisma.PersonCreateOrConnectWithoutWorkspaceInput[]
+  upsert?: Prisma.PersonUpsertWithWhereUniqueWithoutWorkspaceInput | Prisma.PersonUpsertWithWhereUniqueWithoutWorkspaceInput[]
+  createMany?: Prisma.PersonCreateManyWorkspaceInputEnvelope
   set?: Prisma.PersonWhereUniqueInput | Prisma.PersonWhereUniqueInput[]
   disconnect?: Prisma.PersonWhereUniqueInput | Prisma.PersonWhereUniqueInput[]
   delete?: Prisma.PersonWhereUniqueInput | Prisma.PersonWhereUniqueInput[]
   connect?: Prisma.PersonWhereUniqueInput | Prisma.PersonWhereUniqueInput[]
-  update?: Prisma.PersonUpdateWithWhereUniqueWithoutProjectInput | Prisma.PersonUpdateWithWhereUniqueWithoutProjectInput[]
-  updateMany?: Prisma.PersonUpdateManyWithWhereWithoutProjectInput | Prisma.PersonUpdateManyWithWhereWithoutProjectInput[]
+  update?: Prisma.PersonUpdateWithWhereUniqueWithoutWorkspaceInput | Prisma.PersonUpdateWithWhereUniqueWithoutWorkspaceInput[]
+  updateMany?: Prisma.PersonUpdateManyWithWhereWithoutWorkspaceInput | Prisma.PersonUpdateManyWithWhereWithoutWorkspaceInput[]
   deleteMany?: Prisma.PersonScalarWhereInput | Prisma.PersonScalarWhereInput[]
 }
 
-export type PersonUncheckedUpdateManyWithoutProjectNestedInput = {
-  create?: Prisma.XOR<Prisma.PersonCreateWithoutProjectInput, Prisma.PersonUncheckedCreateWithoutProjectInput> | Prisma.PersonCreateWithoutProjectInput[] | Prisma.PersonUncheckedCreateWithoutProjectInput[]
-  connectOrCreate?: Prisma.PersonCreateOrConnectWithoutProjectInput | Prisma.PersonCreateOrConnectWithoutProjectInput[]
-  upsert?: Prisma.PersonUpsertWithWhereUniqueWithoutProjectInput | Prisma.PersonUpsertWithWhereUniqueWithoutProjectInput[]
-  createMany?: Prisma.PersonCreateManyProjectInputEnvelope
+export type PersonUncheckedUpdateManyWithoutWorkspaceNestedInput = {
+  create?: Prisma.XOR<Prisma.PersonCreateWithoutWorkspaceInput, Prisma.PersonUncheckedCreateWithoutWorkspaceInput> | Prisma.PersonCreateWithoutWorkspaceInput[] | Prisma.PersonUncheckedCreateWithoutWorkspaceInput[]
+  connectOrCreate?: Prisma.PersonCreateOrConnectWithoutWorkspaceInput | Prisma.PersonCreateOrConnectWithoutWorkspaceInput[]
+  upsert?: Prisma.PersonUpsertWithWhereUniqueWithoutWorkspaceInput | Prisma.PersonUpsertWithWhereUniqueWithoutWorkspaceInput[]
+  createMany?: Prisma.PersonCreateManyWorkspaceInputEnvelope
   set?: Prisma.PersonWhereUniqueInput | Prisma.PersonWhereUniqueInput[]
   disconnect?: Prisma.PersonWhereUniqueInput | Prisma.PersonWhereUniqueInput[]
   delete?: Prisma.PersonWhereUniqueInput | Prisma.PersonWhereUniqueInput[]
   connect?: Prisma.PersonWhereUniqueInput | Prisma.PersonWhereUniqueInput[]
-  update?: Prisma.PersonUpdateWithWhereUniqueWithoutProjectInput | Prisma.PersonUpdateWithWhereUniqueWithoutProjectInput[]
-  updateMany?: Prisma.PersonUpdateManyWithWhereWithoutProjectInput | Prisma.PersonUpdateManyWithWhereWithoutProjectInput[]
+  update?: Prisma.PersonUpdateWithWhereUniqueWithoutWorkspaceInput | Prisma.PersonUpdateWithWhereUniqueWithoutWorkspaceInput[]
+  updateMany?: Prisma.PersonUpdateManyWithWhereWithoutWorkspaceInput | Prisma.PersonUpdateManyWithWhereWithoutWorkspaceInput[]
   deleteMany?: Prisma.PersonScalarWhereInput | Prisma.PersonScalarWhereInput[]
 }
 
@@ -441,7 +441,7 @@ export type NullableIntFieldUpdateOperationsInput = {
   divide?: number
 }
 
-export type PersonCreateWithoutProjectInput = {
+export type PersonCreateWithoutWorkspaceInput = {
   id?: string
   name: string
   gender: string
@@ -449,7 +449,7 @@ export type PersonCreateWithoutProjectInput = {
   createdAt?: Date | string
 }
 
-export type PersonUncheckedCreateWithoutProjectInput = {
+export type PersonUncheckedCreateWithoutWorkspaceInput = {
   id?: string
   name: string
   gender: string
@@ -457,30 +457,30 @@ export type PersonUncheckedCreateWithoutProjectInput = {
   createdAt?: Date | string
 }
 
-export type PersonCreateOrConnectWithoutProjectInput = {
+export type PersonCreateOrConnectWithoutWorkspaceInput = {
   where: Prisma.PersonWhereUniqueInput
-  create: Prisma.XOR<Prisma.PersonCreateWithoutProjectInput, Prisma.PersonUncheckedCreateWithoutProjectInput>
+  create: Prisma.XOR<Prisma.PersonCreateWithoutWorkspaceInput, Prisma.PersonUncheckedCreateWithoutWorkspaceInput>
 }
 
-export type PersonCreateManyProjectInputEnvelope = {
-  data: Prisma.PersonCreateManyProjectInput | Prisma.PersonCreateManyProjectInput[]
+export type PersonCreateManyWorkspaceInputEnvelope = {
+  data: Prisma.PersonCreateManyWorkspaceInput | Prisma.PersonCreateManyWorkspaceInput[]
   skipDuplicates?: boolean
 }
 
-export type PersonUpsertWithWhereUniqueWithoutProjectInput = {
+export type PersonUpsertWithWhereUniqueWithoutWorkspaceInput = {
   where: Prisma.PersonWhereUniqueInput
-  update: Prisma.XOR<Prisma.PersonUpdateWithoutProjectInput, Prisma.PersonUncheckedUpdateWithoutProjectInput>
-  create: Prisma.XOR<Prisma.PersonCreateWithoutProjectInput, Prisma.PersonUncheckedCreateWithoutProjectInput>
+  update: Prisma.XOR<Prisma.PersonUpdateWithoutWorkspaceInput, Prisma.PersonUncheckedUpdateWithoutWorkspaceInput>
+  create: Prisma.XOR<Prisma.PersonCreateWithoutWorkspaceInput, Prisma.PersonUncheckedCreateWithoutWorkspaceInput>
 }
 
-export type PersonUpdateWithWhereUniqueWithoutProjectInput = {
+export type PersonUpdateWithWhereUniqueWithoutWorkspaceInput = {
   where: Prisma.PersonWhereUniqueInput
-  data: Prisma.XOR<Prisma.PersonUpdateWithoutProjectInput, Prisma.PersonUncheckedUpdateWithoutProjectInput>
+  data: Prisma.XOR<Prisma.PersonUpdateWithoutWorkspaceInput, Prisma.PersonUncheckedUpdateWithoutWorkspaceInput>
 }
 
-export type PersonUpdateManyWithWhereWithoutProjectInput = {
+export type PersonUpdateManyWithWhereWithoutWorkspaceInput = {
   where: Prisma.PersonScalarWhereInput
-  data: Prisma.XOR<Prisma.PersonUpdateManyMutationInput, Prisma.PersonUncheckedUpdateManyWithoutProjectInput>
+  data: Prisma.XOR<Prisma.PersonUpdateManyMutationInput, Prisma.PersonUncheckedUpdateManyWithoutWorkspaceInput>
 }
 
 export type PersonScalarWhereInput = {
@@ -488,14 +488,14 @@ export type PersonScalarWhereInput = {
   OR?: Prisma.PersonScalarWhereInput[]
   NOT?: Prisma.PersonScalarWhereInput | Prisma.PersonScalarWhereInput[]
   id?: Prisma.UuidFilter<"Person"> | string
-  projectId?: Prisma.UuidFilter<"Person"> | string
+  workspaceId?: Prisma.UuidFilter<"Person"> | string
   name?: Prisma.StringFilter<"Person"> | string
   gender?: Prisma.StringFilter<"Person"> | string
   age?: Prisma.IntNullableFilter<"Person"> | number | null
   createdAt?: Prisma.DateTimeFilter<"Person"> | Date | string
 }
 
-export type PersonCreateManyProjectInput = {
+export type PersonCreateManyWorkspaceInput = {
   id?: string
   name: string
   gender: string
@@ -503,7 +503,7 @@ export type PersonCreateManyProjectInput = {
   createdAt?: Date | string
 }
 
-export type PersonUpdateWithoutProjectInput = {
+export type PersonUpdateWithoutWorkspaceInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   gender?: Prisma.StringFieldUpdateOperationsInput | string
@@ -511,7 +511,7 @@ export type PersonUpdateWithoutProjectInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
-export type PersonUncheckedUpdateWithoutProjectInput = {
+export type PersonUncheckedUpdateWithoutWorkspaceInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   gender?: Prisma.StringFieldUpdateOperationsInput | string
@@ -519,7 +519,7 @@ export type PersonUncheckedUpdateWithoutProjectInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
-export type PersonUncheckedUpdateManyWithoutProjectInput = {
+export type PersonUncheckedUpdateManyWithoutWorkspaceInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   gender?: Prisma.StringFieldUpdateOperationsInput | string
@@ -531,62 +531,62 @@ export type PersonUncheckedUpdateManyWithoutProjectInput = {
 
 export type PersonSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
-  projectId?: boolean
+  workspaceId?: boolean
   name?: boolean
   gender?: boolean
   age?: boolean
   createdAt?: boolean
-  project?: boolean | Prisma.ProjectDefaultArgs<ExtArgs>
+  workspace?: boolean | Prisma.WorkspaceDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["person"]>
 
 export type PersonSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
-  projectId?: boolean
+  workspaceId?: boolean
   name?: boolean
   gender?: boolean
   age?: boolean
   createdAt?: boolean
-  project?: boolean | Prisma.ProjectDefaultArgs<ExtArgs>
+  workspace?: boolean | Prisma.WorkspaceDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["person"]>
 
 export type PersonSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
-  projectId?: boolean
+  workspaceId?: boolean
   name?: boolean
   gender?: boolean
   age?: boolean
   createdAt?: boolean
-  project?: boolean | Prisma.ProjectDefaultArgs<ExtArgs>
+  workspace?: boolean | Prisma.WorkspaceDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["person"]>
 
 export type PersonSelectScalar = {
   id?: boolean
-  projectId?: boolean
+  workspaceId?: boolean
   name?: boolean
   gender?: boolean
   age?: boolean
   createdAt?: boolean
 }
 
-export type PersonOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "projectId" | "name" | "gender" | "age" | "createdAt", ExtArgs["result"]["person"]>
+export type PersonOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "workspaceId" | "name" | "gender" | "age" | "createdAt", ExtArgs["result"]["person"]>
 export type PersonInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  project?: boolean | Prisma.ProjectDefaultArgs<ExtArgs>
+  workspace?: boolean | Prisma.WorkspaceDefaultArgs<ExtArgs>
 }
 export type PersonIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  project?: boolean | Prisma.ProjectDefaultArgs<ExtArgs>
+  workspace?: boolean | Prisma.WorkspaceDefaultArgs<ExtArgs>
 }
 export type PersonIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  project?: boolean | Prisma.ProjectDefaultArgs<ExtArgs>
+  workspace?: boolean | Prisma.WorkspaceDefaultArgs<ExtArgs>
 }
 
 export type $PersonPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "Person"
   objects: {
-    project: Prisma.$ProjectPayload<ExtArgs>
+    workspace: Prisma.$WorkspacePayload<ExtArgs>
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
-    projectId: string
+    workspaceId: string
     name: string
     gender: string
     age: number | null
@@ -985,7 +985,7 @@ readonly fields: PersonFieldRefs;
  */
 export interface Prisma__PersonClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
-  project<T extends Prisma.ProjectDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ProjectDefaultArgs<ExtArgs>>): Prisma.Prisma__ProjectClient<runtime.Types.Result.GetResult<Prisma.$ProjectPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+  workspace<T extends Prisma.WorkspaceDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.WorkspaceDefaultArgs<ExtArgs>>): Prisma.Prisma__WorkspaceClient<runtime.Types.Result.GetResult<Prisma.$WorkspacePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1016,7 +1016,7 @@ export interface Prisma__PersonClient<T, Null = never, ExtArgs extends runtime.T
  */
 export interface PersonFieldRefs {
   readonly id: Prisma.FieldRef<"Person", 'String'>
-  readonly projectId: Prisma.FieldRef<"Person", 'String'>
+  readonly workspaceId: Prisma.FieldRef<"Person", 'String'>
   readonly name: Prisma.FieldRef<"Person", 'String'>
   readonly gender: Prisma.FieldRef<"Person", 'String'>
   readonly age: Prisma.FieldRef<"Person", 'Int'>

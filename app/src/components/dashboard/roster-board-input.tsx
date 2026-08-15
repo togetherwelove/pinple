@@ -10,32 +10,18 @@ import {
   UI_MESSAGES,
 } from "@/lib/config/app";
 import { Spinner } from "@/components/spinner";
-import { ProjectRosterImport } from "@/components/dashboard/project-roster-import";
 import { parseRosterText } from "@/lib/roster/parse-roster";
 import { readRosterFile } from "@/lib/roster/read-roster-file";
-import type {
-  PersonInput,
-  ProjectImportSource,
-  RosterImportMode,
-} from "@/lib/types/domain";
+import type { PersonInput } from "@/lib/types/domain";
 
 type RosterBoardInputProps = {
-  currentPeopleCount: number;
   onAddPeople: (people: PersonInput[]) => void;
   onError: (message: string) => void;
-  onImportProject: (
-    source: ProjectImportSource,
-    mode: RosterImportMode,
-  ) => Promise<void>;
-  projectImportSources: ProjectImportSource[];
 };
 
 export function RosterBoardInput({
-  currentPeopleCount,
   onAddPeople,
   onError,
-  onImportProject,
-  projectImportSources,
 }: RosterBoardInputProps) {
   const [input, setInput] = useState("");
   const [isImporting, setIsImporting] = useState(false);
@@ -80,10 +66,10 @@ export function RosterBoardInput({
 
   return (
     <section className="border border-[var(--border)] bg-[var(--surface)] p-4">
-      <h2 className="font-semibold">명단 입력</h2>
+      <h2 className="font-semibold">명단 입력 2</h2>
       <div className="mt-3 flex items-end gap-2">
         <textarea
-          className="min-w-0 flex-1 resize-y border border-[var(--border)] px-3 py-2 text-sm"
+          className="min-h-9 min-w-0 flex-1 resize-y border border-[var(--border)] px-3 py-2 text-sm"
           onChange={(event) => setInput(event.target.value)}
           onKeyDown={handleKeyDown}
           placeholder={ROSTER_BOARD.inputPlaceholder}
@@ -122,12 +108,6 @@ export function RosterBoardInput({
           type="file"
         />
       </label>
-      <ProjectRosterImport
-        currentPeopleCount={currentPeopleCount}
-        onError={onError}
-        onImport={onImportProject}
-        sources={projectImportSources}
-      />
     </section>
   );
 }
