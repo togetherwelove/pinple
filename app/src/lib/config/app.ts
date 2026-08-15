@@ -21,38 +21,13 @@ export const TOAST_TONES = {
 
 export const ROSTER_INPUT_ROWS = 3;
 
-export const GENDER = {
-  female: "F",
-  male: "M",
-  unknown: "UNKNOWN",
-} as const;
-
-export const INPUT_GENDER = {
-  female: ["여", "여자"],
-  male: ["남", "남자"],
-} as const;
-
-export const GENDER_LABELS = {
-  [GENDER.female]: "여",
-  [GENDER.male]: "남",
-  [GENDER.unknown]: "",
-} as const;
-
-export const MISSING_FIELD_VALUE = "";
-
-export const OPTIONAL_FIELD_LABELS = {
-  notSet: "선택 안 함",
-} as const;
-
 export const ROSTER_PARSING = {
-  autoName: (lineNumber: number) => `이름 미입력 ${lineNumber}`,
   empty: "명단을 입력해 주세요.",
 } as const;
 
 export const GROUPING_LIMITS = {
   groupNameMaximumLength: 80,
   maximumGroupCount: 50,
-  minimumAge: 0,
   minimumGroupCount: 1,
   minimumPeoplePerGroup: 1,
 } as const;
@@ -73,13 +48,15 @@ export function displayGroupName(name: string) {
 
 export const ROSTER_BOARD_DND_CONTEXT_ID = "roster-board";
 
+export const ROSTER_BOARD_DRAG_ACTIVATION_DISTANCE = 4;
+
 export const ROSTER_BOARD_DND_IDS = {
   groupOrderPrefix: "group-order:",
   newGroup: "new-group",
   unassigned: "unassigned",
 } as const;
 
-export const ROSTER_BOARD_STORAGE_KEY = "pinple-roster-board-v2";
+export const ROSTER_BOARD_STORAGE_KEY = "pinple-roster-board-v3";
 
 export const ROSTER_BOARD = {
   addPerson: "추가",
@@ -91,45 +68,27 @@ export const ROSTER_BOARD = {
   createGroup: "새 조 만들기",
   createGroupHint: "인원 카드를 여기에 놓으면 새 조가 생성됩니다.",
   editGroupName: "조 이름 변경",
+  groupCount: "조 개수",
   groupName: "조 이름",
   moveGroup: "조 순서 이동",
-  groupingStrategy: "편성 방식",
   movePerson: "인원 이동",
-  personAge: "나이",
   editPerson: "인원 수정",
   emptyUnassigned: "대기 중인 인원이 없습니다.",
   export: "조 결과 내보내기",
-  exportRoster: "명단 내보내기",
+  exportRoster: "내보내기",
+  exportRosterTitle: "명단 내보내기",
+  exportTitle: "내보내기 제목",
   fileImport: "Excel 또는 CSV 불러오기",
-  inputPlaceholder: "이름, 성별, 나이",
+  inputPlaceholder: "이름",
   personEditorDescription: "수정 내용은 이 브라우저의 임시 보드에만 반영됩니다.",
   personEditorTitle: "대기 명단 인원 수정",
-  personGender: "성별",
   personName: "이름",
   rosterTitle: "명단",
+  regroupTitle: "조를 다시 편성할까요?",
   removePerson: "인원 삭제",
   savePerson: "수정 완료",
   unassigned: "대기 명단",
   workArea: "명단 입력 및 설정",
-} as const;
-
-export const GROUPING_STRATEGIES = {
-  ageSimilar: "age_similar",
-  even: "even",
-  genderAgeSimilar: "gender_age_similar",
-  genderSeparated: "gender_separated",
-} as const;
-
-export const GROUPING_TOGGLE_LABELS = {
-  ageSimilar: "나이 비슷한 사람끼리",
-  genderSeparated: "같은 성별끼리",
-} as const;
-
-export const GROUPING_STRATEGY_LABELS = {
-  [GROUPING_STRATEGIES.ageSimilar]: GROUPING_TOGGLE_LABELS.ageSimilar,
-  [GROUPING_STRATEGIES.even]: "골고루 섞기",
-  [GROUPING_STRATEGIES.genderAgeSimilar]: "같은 성별, 같은 나이끼리",
-  [GROUPING_STRATEGIES.genderSeparated]: GROUPING_TOGGLE_LABELS.genderSeparated,
 } as const;
 
 export const LEADER_SELECTION_MODES = {
@@ -144,6 +103,7 @@ export const LEADER_SELECTION_OPTIONS = [
 
 export const EXCEL_EXPORT = {
   fileNameSuffix: "조결과",
+  maximumTitleLength: 80,
   rosterFileNameSuffix: "명단",
   rosterSheetName: "명단",
   sheetName: "조 결과",
@@ -155,14 +115,18 @@ export const UI_MESSAGES = {
   groupCapacityExceedsPeople: "조 정원 합계는 전체 인원 수보다 클 수 없습니다.",
   boardGroupingRequired: "명단에 인원을 추가한 뒤 조 편성을 실행할 수 있습니다.",
   boardSnapshotInvalid: "보드 데이터를 확인해 주세요.",
-  groupRequired: "인원 카드를 새 조 영역에 놓아 조를 먼저 만들어 주세요.",
+  groupCountInvalid: (maximumCount: number) =>
+    `조 개수는 1개 이상 ${maximumCount}개 이하로 입력해 주세요.`,
   groupResultNotFound: "조 편성 결과를 찾을 수 없습니다.",
   groupResultInvalid: "조 편성 데이터를 확인해 주세요.",
   groupResultSaveFailed: "조 편성 결과를 저장하지 못했습니다. 브라우저 초안은 유지됩니다.",
+  groupUnassignConfirmation: (groupName: string, memberCount: number) =>
+    `${groupName}의 ${memberCount}명을 대기 명단으로 이동할까요?`,
   invalidFile: "지원하지 않는 파일입니다.",
   invalidInput: "입력 형식을 확인해 주세요.",
   leaderConflict: "대상 조에 이미 조장이 있습니다.",
   noPeople: "먼저 인원 정보를 등록해 주세요.",
+  regroupConfirmation: "현재 조 편성은 새 결과로 교체됩니다.",
   saveFailed: "저장하지 못했습니다. 다시 시도해 주세요.",
   unknownError: "예상하지 못한 오류가 발생했습니다.",
 } as const;
@@ -175,16 +139,17 @@ export const UI_LABELS = {
   delete: "삭제",
   deleting: "삭제 중",
   dismissToast: "알림 닫기",
-  renaming: "변경 중...",
   grouping: "조 편성 중...",
   leader: "조장",
   leaderAssignmentMode: "조장 선출 방식",
   loadingBoard: "명단 보드를 준비하는 중...",
   loadingRosterFile: "불러오는 중...",
+  moveGroupToUnassigned: "대기 명단으로 이동",
+  moveGroupToUnassignedTitle: "조 전체 이동",
   retainExistingLeader: "A. 기존 조장 유지",
+  regroup: "다시 편성",
   revokeLeader: "조장 해제",
   savingRoster: "저장 중...",
-  saveName: "이름 변경",
   saveGroupName: "조 이름 저장",
 } as const;
 

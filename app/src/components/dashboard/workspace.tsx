@@ -3,9 +3,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { RosterBoard } from "@/components/dashboard/roster-board";
 import { RosterBoardInput } from "@/components/dashboard/roster-board-input";
+import { RegroupConfirmationDialog } from "@/components/dashboard/regroup-confirmation-dialog";
 import { Spinner } from "@/components/spinner";
 import { Toast } from "@/components/toast";
 import {
+  GROUPING_LIMITS,
   INPUT_DEPENDENT_BUTTON_CLASSES,
   ROSTER_BOARD,
   TOAST_TONES,
@@ -26,6 +28,7 @@ import {
   createGroupResultMembers,
 } from "@/lib/roster-board/group-result";
 import { useRosterBoardStore } from "@/lib/roster-board/store";
+import { exportRosterToExcel } from "@/lib/roster/export-roster";
 import type {
   GroupMember,
   PersonInput,
@@ -74,7 +77,10 @@ export function Workspace({
   const setHasHydrated = useRosterBoardStore((state) => state.setHasHydrated);
   const hasGroupResult = useRef(groupResult !== null);
   const saveQueue = useRef(Promise.resolve());
+  const hasInitializedGroupCount = useRef(false);
   const [isGrouping, setIsGrouping] = useState(false);
+  const [isRegroupConfirmationOpen, setIsRegroupConfirmationOpen] = useState(false);
+  const [groupCountInput, setGroupCountInput] = useState("1");
   const [toast, setToast] = useState<ToastState | null>(null);
   const initialDraft = useMemo(
     () => createRosterBoardDraft(people, groupResult?.members ?? null),
@@ -94,6 +100,13 @@ export function Workspace({
   useEffect(() => {
     hasGroupResult.current = groupResult !== null;
   }, [groupResult]);
+
+  useEffect(() => {
+    if (draft && !hasInitializedGroupCount.current) {
+      setGroupCountInput(String(Math.max(draft.groups.length, 1)));
+      hasInitializedGroupCount.current = true;
+    }
+  }, [draft]);
 
   const dismissToast = useCallback(() => setToast(null), []);
 
@@ -151,17 +164,25 @@ export function Workspace({
 
   const currentDraft = draft;
   const totalPeople = allBoardPeople(currentDraft).length;
-  const hasGroups = currentDraft.groups.length > 0;
-  const groupingPlan = hasGroups ? createGroupingPlan(currentDraft) : null;
-  const canRunGrouping = totalPeople > 0 && hasGroups && !isGrouping;
+  const maximumGroupCount = Math.min(
+    totalPeople,
+    GROUPING_LIMITS.maximumGroupCount,
+  );
+  const groupCount = Number(groupCountInput);
+  const hasValidGroupCount =
+    Number.isInteger(groupCount) &&
+    groupCount >= GROUPING_LIMITS.minimumGroupCount &&
+    groupCount <= maximumGroupCount;
+  const groupingPlan = hasValidGroupCount
+    ? createGroupingPlan(currentDraft, groupCount)
+    : null;
+  const canRunGrouping = totalPeople > 0 && hasValidGroupCount && !isGrouping;
   const groupingMessage =
     totalPeople === 0
       ? UI_MESSAGES.boardGroupingRequired
-      : !hasGroups
-        ? UI_MESSAGES.groupRequired
-        : groupingPlan
-          ? ROSTER_BOARD.distributionPreview(groupingPlan.groupSizes)
-          : UI_MESSAGES.invalidInput;
+      : groupingPlan
+        ? ROSTER_BOARD.distributionPreview(groupingPlan.groupSizes)
+        : UI_MESSAGES.groupCountInvalid(maximumGroupCount);
 
   function handleAddPeople(people: PersonInput[]) {
     commitDraft(addPeopleToDraft(currentDraft, createClientMembers(people)));
@@ -173,7 +194,7 @@ export function Workspace({
       return;
     }
 
-    const nextDraft = createGroupedDraft(currentDraft);
+    const nextDraft = createGroupedDraft(currentDraft, groupCount);
     replaceDraft(nextDraft);
     setIsGrouping(true);
 
@@ -196,6 +217,15 @@ export function Workspace({
     }
   }
 
+  function requestGrouping() {
+    if (currentDraft.groups.some((group) => group.members.length > 0)) {
+      setIsRegroupConfirmationOpen(true);
+      return;
+    }
+
+    void runGrouping();
+  }
+
   return (
     <main className="h-full min-h-0 overflow-hidden bg-[var(--canvas)]">
       {toast ? (
@@ -206,15 +236,36 @@ export function Workspace({
           tone={toast.tone}
         />
       ) : null}
+      {isRegroupConfirmationOpen ? (
+        <RegroupConfirmationDialog
+          onCancel={() => setIsRegroupConfirmationOpen(false)}
+          onConfirm={() => {
+            setIsRegroupConfirmationOpen(false);
+            void runGrouping();
+          }}
+        />
+      ) : null}
       <RosterBoard
         draft={currentDraft}
         leftPanelFooter={
           <div className="flex flex-col items-stretch gap-3 border border-[var(--border)] bg-[var(--surface)] p-3">
+            <label className="text-sm font-medium">
+              {ROSTER_BOARD.groupCount}
+              <input
+                className="mt-2 w-full border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm"
+                inputMode="numeric"
+                max={Math.max(maximumGroupCount, 1)}
+                min={GROUPING_LIMITS.minimumGroupCount}
+                onChange={(event) => setGroupCountInput(event.target.value)}
+                type="number"
+                value={groupCountInput}
+              />
+            </label>
             <p className="text-sm text-[var(--muted)]">{groupingMessage}</p>
             <button
               className={`flex items-center justify-center gap-2 px-4 py-2 text-sm ${canRunGrouping ? INPUT_DEPENDENT_BUTTON_CLASSES.enabled : INPUT_DEPENDENT_BUTTON_CLASSES.disabled}`}
               disabled={!canRunGrouping}
-              onClick={() => void runGrouping()}
+              onClick={requestGrouping}
               type="button"
             >
               {isGrouping ? <Spinner size="sm" /> : null}
@@ -223,7 +274,17 @@ export function Workspace({
           </div>
         }
         leftPanelHeader={
-          <RosterBoardInput onAddPeople={handleAddPeople} onError={showError} />
+          <RosterBoardInput
+            canExport={totalPeople > 0}
+            onAddPeople={handleAddPeople}
+            onError={showError}
+            onExport={(title) =>
+              exportRosterToExcel(
+                allBoardPeople(currentDraft),
+                title,
+              )
+            }
+          />
         }
         onDraftChange={commitDraft}
         onRemovePerson={(personId, groupId) =>

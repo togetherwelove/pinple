@@ -1,7 +1,4 @@
-import {
-  GROUPING_STRATEGIES,
-  LEADER_SELECTION_MODES,
-} from "@/lib/config/app";
+import { LEADER_SELECTION_MODES } from "@/lib/config/app";
 import type {
   Group,
   GroupMember,
@@ -13,7 +10,15 @@ import type {
 export type BoardPerson = PersonInput & { id: string };
 
 function personIdentity(person: PersonInput) {
-  return `${person.name}\u0000${person.gender}\u0000${person.age ?? "unknown-age"}`;
+  return person.name;
+}
+
+function normalizeMember(person: GroupMember): GroupMember {
+  return {
+    id: person.id,
+    isLeader: person.isLeader,
+    name: person.name,
+  };
 }
 
 function uniqueMembers(people: GroupMember[]) {
@@ -31,7 +36,7 @@ function cloneNonEmptyGroups(groups: Group[]) {
     .filter((group) => group.members.length > 0)
     .map((group) => ({
       ...group,
-      members: group.members.map((member) => ({ ...member })),
+      members: group.members.map(normalizeMember),
     }));
 }
 
@@ -44,16 +49,15 @@ export function createRosterBoardDraft(
     groups.flatMap((group) => group.members.map(personIdentity)),
   );
   const unassigned = initialResult?.unassigned
-    ? initialResult.unassigned.map((person) => ({ ...person }))
+    ? initialResult.unassigned.map(normalizeMember)
     : people
         .filter((person) => !assignedIdentities.has(personIdentity(person)))
-        .map((person) => ({ ...person }));
+        .map(normalizeMember);
 
   return {
     groups,
     leaderSelectionMode:
       initialResult?.leaderSelectionMode ?? LEADER_SELECTION_MODES.none,
-    strategy: initialResult?.strategy ?? GROUPING_STRATEGIES.even,
     unassigned: uniqueMembers(unassigned),
   };
 }
@@ -63,8 +67,6 @@ export function allBoardPeople(draft: RosterBoardDraft): BoardPerson[] {
 
   [...draft.unassigned, ...draft.groups.flatMap((group) => group.members)].forEach((person) => {
     peopleById.set(person.id, {
-      age: person.age,
-      gender: person.gender,
       id: person.id,
       name: person.name,
     });
@@ -90,9 +92,9 @@ export function updateUnassignedPerson(
 ): RosterBoardDraft {
   return {
     ...draft,
-    unassigned: draft.unassigned.map((person) =>
+    unassigned: uniqueMembers(draft.unassigned.map((person) =>
       person.id === personId ? { ...person, ...updates } : person,
-    ),
+    )),
   };
 }
 

@@ -219,3 +219,37 @@ export function reorderBoardGroups(
 
   return { ...draft, groups };
 }
+
+export function moveGroupMembersToUnassigned(
+  draft: RosterBoardDraft,
+  activeItemId: string,
+  targetId: string,
+): RosterBoardDraft | null {
+  const activeGroupId = groupIdFromOrderItemId(activeItemId);
+  const targetMemberLocation = findMemberLocation(draft, targetId);
+  const isUnassignedTarget =
+    targetId === UNASSIGNED_COLUMN_ID ||
+    targetMemberLocation?.groupId === null;
+
+  if (!activeGroupId || !isUnassignedTarget) {
+    return null;
+  }
+
+  const sourceGroup = draft.groups.find((group) => group.id === activeGroupId);
+
+  if (!sourceGroup) {
+    return null;
+  }
+
+  return {
+    ...draft,
+    groups: draft.groups.filter((group) => group.id !== activeGroupId),
+    unassigned: [
+      ...draft.unassigned,
+      ...sourceGroup.members.map((member) => ({
+        ...member,
+        isLeader: false,
+      })),
+    ],
+  };
+}

@@ -1,10 +1,7 @@
 import { Workspace } from "@/components/dashboard/workspace";
 import { prisma } from "@/lib/prisma";
 import { requireAnonymousSession } from "@/lib/session/anonymous-session";
-import type {
-  StoredGroupResult,
-  StoredGender,
-} from "@/lib/types/domain";
+import type { StoredGroupResult } from "@/lib/types/domain";
 
 export default async function RosterPage() {
   const session = await requireAnonymousSession();
@@ -27,10 +24,7 @@ export default async function RosterPage() {
     <div className="h-screen overflow-hidden bg-[var(--canvas)]">
       <Workspace
         groupResult={groupResult}
-        people={workspace.people.map((person) => ({
-          ...person,
-          gender: person.gender as StoredGender,
-        }))}
+        people={workspace.people}
       />
     </div>
   );

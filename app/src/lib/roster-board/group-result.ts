@@ -1,5 +1,6 @@
 import { appointLeaders } from "@/lib/grouping/leader-assignment";
 import { distributePeople } from "@/lib/grouping/distribute-people";
+import { formatGroupName } from "@/lib/config/app";
 import { allBoardPeople } from "@/lib/roster-board/draft";
 import type {
   GroupResultMembers,
@@ -20,21 +21,36 @@ export function createBalancedGroupSizes(totalPeople: number, groupCount: number
   );
 }
 
-export function createGroupingPlan(draft: RosterBoardDraft) {
+export function createGroupingPlan(draft: RosterBoardDraft, groupCount: number) {
   return {
     groupSizes: createBalancedGroupSizes(
       allBoardPeople(draft).length,
-      draft.groups.length,
+      groupCount,
     ),
   };
 }
 
-export function createGroupedDraft(draft: RosterBoardDraft): RosterBoardDraft {
+function createTargetGroups(draft: RosterBoardDraft, groupCount: number) {
+  return Array.from({ length: groupCount }, (_, index) =>
+    draft.groups[index] ?? {
+      id: crypto.randomUUID(),
+      members: [],
+      name: formatGroupName(index),
+      targetSize: 1,
+    },
+  );
+}
+
+export function createGroupedDraft(
+  draft: RosterBoardDraft,
+  groupCount: number,
+): RosterBoardDraft {
   const people = allBoardPeople(draft);
-  const { groupSizes } = createGroupingPlan(draft);
-  const distributedGroups = distributePeople(people, groupSizes, draft.strategy);
+  const { groupSizes } = createGroupingPlan(draft, groupCount);
+  const distributedGroups = distributePeople(people, groupSizes);
+  const targetGroups = createTargetGroups(draft, groupCount);
   const groups = distributedGroups.map((group, index) => ({
-    ...draft.groups[index],
+    ...targetGroups[index],
     members: group.members,
     targetSize: groupSizes[index],
   }));
@@ -52,7 +68,6 @@ export function createGroupResultMembers(
   return {
     groups: draft.groups,
     leaderSelectionMode: draft.leaderSelectionMode,
-    strategy: draft.strategy,
     unassigned: draft.unassigned,
   };
 }

@@ -2,48 +2,63 @@
 
 /* eslint-disable react-hooks/refs -- dnd-kit exposes render-time bindings through hook return values. */
 
-import { closestCenter, DndContext, DragOverlay, type DragEndEvent, useDroppable } from "@dnd-kit/core";
+import {
+  closestCenter,
+  type CollisionDetection,
+  DndContext,
+  DragOverlay,
+  type DragEndEvent,
+  KeyboardSensor,
+  PointerSensor,
+  pointerWithin,
+  useDroppable,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
 import {
   rectSortingStrategy,
+  sortableKeyboardCoordinates,
   SortableContext,
   useSortable,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { Crown, Download, GripVertical, Pencil, Plus, Trash2 } from "lucide-react";
+import { Check, Crown, Download, GripVertical, Pencil, Plus, Trash2, X } from "lucide-react";
 import { type ReactNode, useState } from "react";
 import * as XLSX from "xlsx";
 import {
   EXCEL_EXPORT,
-  GENDER,
-  GENDER_LABELS,
-  MISSING_FIELD_VALUE,
-  OPTIONAL_FIELD_LABELS,
+  GROUPING_LIMITS,
   ROSTER_BOARD,
+  ROSTER_BOARD_DRAG_ACTIVATION_DISTANCE,
   ROSTER_BOARD_DND_CONTEXT_ID,
   UI_LABELS,
   displayGroupName,
 } from "@/lib/config/app";
-import { GroupNameDialog } from "@/components/dashboard/group-name-dialog";
+import { GroupUnassignDialog } from "@/components/dashboard/group-unassign-dialog";
 import { LeaderConflictDialog } from "@/components/dashboard/leader-conflict-dialog";
 import { setGroupLeader } from "@/lib/grouping/leader-assignment";
-import { allBoardPeople } from "@/lib/roster-board/draft";
 import {
   groupIdFromOrderItemId,
   groupOrderItemId,
+  moveGroupMembersToUnassigned,
   moveMemberToNewGroup,
   NEW_GROUP_COLUMN_ID,
   reorderBoardGroups,
   reorderBoardMembers,
   UNASSIGNED_COLUMN_ID,
 } from "@/lib/roster-board/reorder-board-members";
-import { exportRosterToExcel } from "@/lib/roster/export-roster";
-import { formatPersonDetails } from "@/lib/roster/format-person-details";
 import type { Group, GroupMember, PersonInput, RosterBoardDraft } from "@/lib/types/domain";
 
 type LeaderConflict = {
   leaderId: string;
   nextDraft: RosterBoardDraft;
   targetGroupId: string;
+};
+
+type GroupUnassignConfirmation = {
+  groupName: string;
+  memberCount: number;
+  nextDraft: RosterBoardDraft;
 };
 
 type RosterBoardProps = {
@@ -64,6 +79,24 @@ type MemberCardProps = {
   onDelete: (personId: string, groupId: string | null) => void;
   onEdit?: (member: GroupMember) => void;
   onLeaderAction?: (groupId: string, member: GroupMember) => void;
+  onRename?: (memberId: string, name: string) => void;
+};
+
+type InlineTitleEditor = {
+  onCancel: () => void;
+  onChange: (value: string) => void;
+  onSave: () => void;
+  value: string;
+};
+
+const boardCollisionDetection: CollisionDetection = (arguments_) => {
+  const pointerCollisions = pointerWithin(arguments_).filter(
+    (collision) => String(collision.id) !== String(arguments_.active.id),
+  );
+
+  return pointerCollisions.length > 0
+    ? pointerCollisions
+    : closestCenter(arguments_);
 };
 
 function SortableMemberCard({
@@ -72,37 +105,106 @@ function SortableMemberCard({
   onDelete,
   onEdit,
   onLeaderAction,
+  onRename,
 }: MemberCardProps) {
-  const sortable = useSortable({ id: member.id });
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [name, setName] = useState(member.name);
+  const sortable = useSortable({ disabled: isEditingName, id: member.id });
   const transform = sortable.transform
     ? `translate3d(${sortable.transform.x}px, ${sortable.transform.y}px, 0)`
     : undefined;
   const leaderActionLabel = member.isLeader ? UI_LABELS.revokeLeader : UI_LABELS.appointLeader;
-  const personDetails = formatPersonDetails(member);
+
+  function cancelEditingName() {
+    setName(member.name);
+    setIsEditingName(false);
+  }
+
+  function saveName() {
+    const normalizedName = name.trim();
+
+    if (!normalizedName) {
+      cancelEditingName();
+      return;
+    }
+
+    onRename?.(member.id, normalizedName);
+    setName(normalizedName);
+    setIsEditingName(false);
+  }
 
   return (
     <li
-      className={`flex touch-none items-center gap-2 border-b border-[var(--border)] px-3 py-2 text-sm ${member.isLeader ? "bg-amber-50" : ""}`}
+      className={`group flex touch-none items-center gap-2 border-b border-[var(--border)] px-3 py-2 text-sm last:border-b-0 ${member.isLeader ? "bg-amber-50" : ""}`}
       ref={sortable.setNodeRef}
       style={{ opacity: sortable.isDragging ? 0.35 : undefined, transform, transition: sortable.transition }}
     >
-      <button
-        aria-label={ROSTER_BOARD.movePerson}
-        className="cursor-grab touch-none text-[var(--muted)] active:cursor-grabbing"
-        type="button"
-        {...sortable.attributes}
-        {...sortable.listeners}
-      >
-        <GripVertical size={14} />
-      </button>
-      {member.isLeader ? (
-        <Crown aria-label={UI_LABELS.leader} className="shrink-0 text-amber-600" fill="currentColor" size={14} />
-      ) : null}
-      <span className="min-w-0 flex-1 truncate">{member.name}</span>
-      {personDetails ? (
-        <span className="shrink-0 text-xs text-[var(--muted)]">{personDetails}</span>
-      ) : null}
-      {groupId === null && onEdit ? (
+      {isEditingName ? (
+        <>
+          <input
+            aria-label={ROSTER_BOARD.personName}
+            autoFocus
+            className="min-w-0 flex-1 border border-[var(--ink)] bg-[var(--surface)] px-2 py-1 text-sm outline-none"
+            onBlur={saveName}
+            onChange={(event) => setName(event.target.value)}
+            onFocus={(event) => event.currentTarget.select()}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                event.preventDefault();
+                saveName();
+              }
+
+              if (event.key === "Escape") {
+                event.preventDefault();
+                cancelEditingName();
+              }
+            }}
+            value={name}
+          />
+          <button
+            aria-label={ROSTER_BOARD.savePerson}
+            className="flex size-7 shrink-0 items-center justify-center bg-[var(--ink)] text-[var(--surface)] hover:opacity-90"
+            onClick={saveName}
+            onMouseDown={(event) => event.preventDefault()}
+            type="button"
+          >
+            <Check size={14} />
+          </button>
+          <button
+            aria-label={UI_LABELS.cancel}
+            className="flex size-7 shrink-0 items-center justify-center text-[var(--muted)] hover:bg-[var(--canvas)] hover:text-[var(--ink)]"
+            onClick={cancelEditingName}
+            onMouseDown={(event) => event.preventDefault()}
+            type="button"
+          >
+            <X size={14} />
+          </button>
+        </>
+      ) : (
+        <div
+          aria-label={ROSTER_BOARD.movePerson}
+          className="flex min-w-0 flex-1 cursor-grab touch-none items-center gap-2 active:cursor-grabbing"
+          {...sortable.attributes}
+          {...sortable.listeners}
+        >
+          <GripVertical className="shrink-0 text-[var(--muted)]" size={14} />
+          {member.isLeader ? (
+            <Crown aria-label={UI_LABELS.leader} className="shrink-0 text-amber-600" fill="currentColor" size={14} />
+          ) : null}
+          <span
+            className="min-w-0 flex-1 truncate"
+            onPointerUp={() => {
+              if (onRename && !sortable.isDragging) {
+                setName(member.name);
+                setIsEditingName(true);
+              }
+            }}
+          >
+            {member.name}
+          </span>
+        </div>
+      )}
+      {!isEditingName && groupId === null && onEdit ? (
         <button
           aria-label={ROSTER_BOARD.editPerson}
           className="flex size-7 shrink-0 items-center justify-center text-[var(--muted)] hover:bg-[var(--canvas)] hover:text-[var(--ink)]"
@@ -112,67 +214,143 @@ function SortableMemberCard({
           <Pencil size={14} />
         </button>
       ) : null}
-      {groupId !== null && onLeaderAction ? (
+      {!isEditingName && groupId !== null && onLeaderAction ? (
         <button
           aria-label={leaderActionLabel}
-          className="flex size-7 shrink-0 items-center justify-center text-[var(--muted)] hover:bg-[var(--canvas)] hover:text-amber-700"
+          className="flex size-7 shrink-0 items-center justify-center text-[var(--muted)] transition-opacity hover:bg-[var(--canvas)] hover:text-amber-700 lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-within:opacity-100"
           onClick={() => onLeaderAction(groupId, member)}
           type="button"
         >
           <Crown fill={member.isLeader ? "currentColor" : "none"} size={14} />
         </button>
       ) : null}
-      <button
-        aria-label={ROSTER_BOARD.removePerson}
-        className="flex size-7 shrink-0 items-center justify-center text-[var(--muted)] hover:bg-red-50 hover:text-red-700"
-        onClick={() => onDelete(member.id, groupId)}
-        title={ROSTER_BOARD.removePerson}
-        type="button"
-      >
-        <Trash2 size={14} />
-      </button>
+      {!isEditingName ? (
+        <button
+          aria-label={ROSTER_BOARD.removePerson}
+          className="flex size-7 shrink-0 items-center justify-center text-[var(--muted)] transition-opacity hover:bg-red-50 hover:text-red-700 lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-within:opacity-100"
+          onClick={() => onDelete(member.id, groupId)}
+          title={ROSTER_BOARD.removePerson}
+          type="button"
+        >
+          <Trash2 size={14} />
+        </button>
+      ) : null}
     </li>
   );
 }
 
 function BoardColumn({
   compact = false,
+  dragHandle,
+  inlineTitleEditor,
   group,
-  headerActions,
+  isGroupDragging = false,
   members,
   onDelete,
   onEdit,
   onLeaderAction,
+  onRenameMember,
+  onTitleActivate,
   title,
 }: {
   compact?: boolean;
+  dragHandle?: Pick<ReturnType<typeof useSortable>, "attributes" | "listeners">;
+  inlineTitleEditor?: InlineTitleEditor;
   group: Group | null;
-  headerActions?: ReactNode;
+  isGroupDragging?: boolean;
   members: GroupMember[];
   onDelete: (personId: string, groupId: string | null) => void;
   onEdit?: (member: GroupMember) => void;
   onLeaderAction?: (groupId: string, member: GroupMember) => void;
+  onRenameMember?: (memberId: string, name: string) => void;
+  onTitleActivate?: () => void;
   title: string;
 }) {
   const columnId = group?.id ?? UNASSIGNED_COLUMN_ID;
   const droppable = useDroppable({ id: columnId });
   const memberCountText = `${members.length}`;
+  const dropStateClass = droppable.isOver
+    ? "border-[var(--ink)] bg-[var(--canvas)]"
+    : "border-[var(--border)] bg-[var(--surface)]";
 
   return (
     <section
+      aria-label={title}
       className={
         compact
-          ? "flex max-h-[min(40vh,24rem)] min-h-28 w-full flex-col overflow-hidden border border-[var(--border)] bg-[var(--surface)]"
-          : "min-h-48 min-w-0 border border-[var(--border)] bg-[var(--surface)]"
+          ? `flex max-h-[min(40vh,24rem)] min-h-28 w-full flex-col overflow-hidden border transition-colors ${dropStateClass}`
+          : `min-h-48 min-w-0 border transition-colors ${dropStateClass}`
       }
       ref={droppable.setNodeRef}
     >
-      <header className="flex min-h-10 items-center justify-between gap-2 border-b border-[var(--border)] px-3 py-1.5">
-        <strong className="min-w-0 flex-1 truncate text-sm">{title}</strong>
-        <div className="flex shrink-0 items-center gap-1">
-          <span className="mr-1 text-xs text-[var(--muted)]">{memberCountText}</span>
-          {headerActions}
-        </div>
+      <header className="flex min-h-10 items-center gap-1 border-b border-[var(--border)] px-3 py-1.5">
+        {inlineTitleEditor ? (
+          <>
+            <input
+              aria-label={ROSTER_BOARD.groupName}
+              autoFocus
+              className="min-w-0 flex-1 border border-[var(--ink)] bg-[var(--surface)] px-2 py-1 text-sm font-semibold outline-none"
+              maxLength={GROUPING_LIMITS.groupNameMaximumLength}
+              onBlur={inlineTitleEditor.onSave}
+              onChange={(event) => inlineTitleEditor.onChange(event.target.value)}
+              onFocus={(event) => event.currentTarget.select()}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  event.preventDefault();
+                  inlineTitleEditor.onSave();
+                }
+
+                if (event.key === "Escape") {
+                  event.preventDefault();
+                  inlineTitleEditor.onCancel();
+                }
+              }}
+              value={inlineTitleEditor.value}
+            />
+            <button
+              aria-label={UI_LABELS.saveGroupName}
+              className="flex size-7 shrink-0 items-center justify-center bg-[var(--ink)] text-[var(--surface)] hover:opacity-90"
+              onClick={inlineTitleEditor.onSave}
+              onMouseDown={(event) => event.preventDefault()}
+              type="button"
+            >
+              <Check size={14} />
+            </button>
+            <button
+              aria-label={UI_LABELS.cancel}
+              className="flex size-7 shrink-0 items-center justify-center text-[var(--muted)] hover:bg-[var(--canvas)] hover:text-[var(--ink)]"
+              onClick={inlineTitleEditor.onCancel}
+              onMouseDown={(event) => event.preventDefault()}
+              type="button"
+            >
+              <X size={14} />
+            </button>
+          </>
+        ) : (
+          <div
+            aria-label={dragHandle ? ROSTER_BOARD.moveGroup : undefined}
+            className={`flex min-w-0 flex-1 items-center gap-2 ${dragHandle ? "cursor-grab touch-none active:cursor-grabbing" : ""}`}
+            {...dragHandle?.attributes}
+            {...dragHandle?.listeners}
+          >
+            {dragHandle ? <GripVertical className="shrink-0 text-[var(--muted)]" size={14} /> : null}
+            {onTitleActivate ? (
+              <span
+                className="min-w-0 flex-1 truncate text-sm font-semibold"
+                onPointerUp={() => {
+                  if (!isGroupDragging) {
+                    onTitleActivate();
+                  }
+                }}
+              >
+                {title}
+              </span>
+            ) : (
+              <strong className="min-w-0 flex-1 truncate text-sm">{title}</strong>
+            )}
+            <span className="shrink-0 text-xs text-[var(--muted)]">{memberCountText}</span>
+          </div>
+        )}
       </header>
       <SortableContext items={members.map((member) => member.id)} strategy={verticalListSortingStrategy}>
         <ul className={compact ? "min-h-0 overflow-y-auto overscroll-contain" : undefined}>
@@ -184,6 +362,7 @@ function BoardColumn({
               onDelete={onDelete}
               onEdit={onEdit}
               onLeaderAction={onLeaderAction}
+              onRename={onRenameMember}
             />
           ))}
         </ul>
@@ -198,18 +377,43 @@ function BoardColumn({
 function SortableGroupColumn({
   group,
   onDelete,
-  onEditName,
   onLeaderAction,
+  onRename,
+  onRenameMember,
 }: {
   group: Group;
   onDelete: (personId: string, groupId: string | null) => void;
-  onEditName: (group: Group) => void;
   onLeaderAction: (groupId: string, member: GroupMember) => void;
+  onRename: (groupId: string, name: string) => void;
+  onRenameMember: (groupId: string, memberId: string, name: string) => void;
 }) {
-  const sortable = useSortable({ id: groupOrderItemId(group.id) });
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [name, setName] = useState(displayGroupName(group.name));
+  const sortable = useSortable({
+    disabled: isEditingName,
+    id: groupOrderItemId(group.id),
+  });
   const transform = sortable.transform
     ? `translate3d(${sortable.transform.x}px, ${sortable.transform.y}px, 0)`
     : undefined;
+
+  function cancelEditingName() {
+    setName(displayGroupName(group.name));
+    setIsEditingName(false);
+  }
+
+  function saveName() {
+    const normalizedName = name.trim();
+
+    if (!normalizedName) {
+      cancelEditingName();
+      return;
+    }
+
+    onRename(group.id, normalizedName);
+    setName(normalizedName);
+    setIsEditingName(false);
+  }
 
   return (
     <div
@@ -222,33 +426,36 @@ function SortableGroupColumn({
       }}
     >
       <BoardColumn
-        group={group}
-        headerActions={
-          <>
-            <button
-              aria-label={ROSTER_BOARD.moveGroup}
-              className="flex size-7 touch-none items-center justify-center text-[var(--muted)] hover:bg-[var(--canvas)] hover:text-[var(--ink)]"
-              title={ROSTER_BOARD.moveGroup}
-              type="button"
-              {...sortable.attributes}
-              {...sortable.listeners}
-            >
-              <GripVertical size={14} />
-            </button>
-            <button
-              aria-label={ROSTER_BOARD.editGroupName}
-              className="flex size-7 items-center justify-center text-[var(--muted)] hover:bg-[var(--canvas)] hover:text-[var(--ink)]"
-              onClick={() => onEditName(group)}
-              title={ROSTER_BOARD.editGroupName}
-              type="button"
-            >
-              <Pencil size={14} />
-            </button>
-          </>
+        dragHandle={
+          isEditingName
+            ? undefined
+            : {
+                attributes: sortable.attributes,
+                listeners: sortable.listeners,
+              }
         }
+        group={group}
+        inlineTitleEditor={
+          isEditingName
+            ? {
+                onCancel: cancelEditingName,
+                onChange: setName,
+                onSave: saveName,
+                value: name,
+              }
+            : undefined
+        }
+        isGroupDragging={sortable.isDragging}
         members={group.members}
         onDelete={onDelete}
         onLeaderAction={onLeaderAction}
+        onRenameMember={(memberId, memberName) =>
+          onRenameMember(group.id, memberId, memberName)
+        }
+        onTitleActivate={() => {
+          setName(displayGroupName(group.name));
+          setIsEditingName(true);
+        }}
         title={displayGroupName(group.name)}
       />
     </div>
@@ -287,8 +494,6 @@ function PersonEditorDialog({
   onSave: (updates: PersonInput) => void;
 }) {
   const [name, setName] = useState(member.name);
-  const [age, setAge] = useState(member.age === null ? "" : String(member.age));
-  const [gender, setGender] = useState(member.gender);
 
   function save() {
     const normalizedName = name.trim();
@@ -297,11 +502,7 @@ function PersonEditorDialog({
       return;
     }
 
-    onSave({
-      age: age === "" ? null : Number(age),
-      gender,
-      name: normalizedName,
-    });
+    onSave({ name: normalizedName });
   }
 
   return (
@@ -313,20 +514,6 @@ function PersonEditorDialog({
           {ROSTER_BOARD.personName}
           <input className="mt-1 w-full border border-[var(--border)] p-2" onChange={(event) => setName(event.target.value)} value={name} />
         </label>
-        <div className="mt-3 grid grid-cols-2 gap-3">
-          <label className="text-sm">
-            {ROSTER_BOARD.personAge}
-            <input className="mt-1 w-full border border-[var(--border)] p-2" min="0" onChange={(event) => setAge(event.target.value)} type="number" value={age} />
-          </label>
-          <label className="text-sm">
-            {ROSTER_BOARD.personGender}
-            <select className="mt-1 w-full border border-[var(--border)] bg-[var(--surface)] p-2" onChange={(event) => setGender(event.target.value as GroupMember["gender"])} value={gender}>
-              <option value={GENDER.male}>{GENDER_LABELS[GENDER.male]}</option>
-              <option value={GENDER.female}>{GENDER_LABELS[GENDER.female]}</option>
-              <option value={GENDER.unknown}>{OPTIONAL_FIELD_LABELS.notSet}</option>
-            </select>
-          </label>
-        </div>
         <div className="mt-5 flex justify-between gap-2">
           <button className="flex items-center gap-2 px-3 py-2 text-sm text-red-700 hover:bg-red-50" onClick={onDelete} type="button">
             <Trash2 size={15} />
@@ -358,11 +545,17 @@ export function RosterBoard({
   totalPeople,
 }: RosterBoardProps) {
   const [activeName, setActiveName] = useState("");
-  const [editingGroup, setEditingGroup] = useState<Group | null>(null);
   const [editingMember, setEditingMember] = useState<GroupMember | null>(null);
+  const [groupUnassignConfirmation, setGroupUnassignConfirmation] =
+    useState<GroupUnassignConfirmation | null>(null);
   const [leaderConflict, setLeaderConflict] = useState<LeaderConflict | null>(null);
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: ROSTER_BOARD_DRAG_ACTIVATION_DISTANCE },
+    }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
   const hasGroupMembers = draft.groups.some((group) => group.members.length > 0);
-  const hasRosterPeople = totalPeople > 0;
 
   function handleLeaderAction(groupId: string, member: GroupMember) {
     onDraftChange({
@@ -380,7 +573,27 @@ export function RosterBoard({
       return;
     }
 
-    if (groupIdFromOrderItemId(activeId)) {
+    const activeGroupId = groupIdFromOrderItemId(activeId);
+
+    if (activeGroupId) {
+      const unassignedDraft = moveGroupMembersToUnassigned(
+        draft,
+        activeId,
+        targetId,
+      );
+      const sourceGroup = draft.groups.find(
+        (group) => group.id === activeGroupId,
+      );
+
+      if (unassignedDraft && sourceGroup) {
+        setGroupUnassignConfirmation({
+          groupName: displayGroupName(sourceGroup.name),
+          memberCount: sourceGroup.members.length,
+          nextDraft: unassignedDraft,
+        });
+        return;
+      }
+
       const reorderedDraft = reorderBoardGroups(draft, activeId, targetId);
 
       if (reorderedDraft) {
@@ -437,8 +650,6 @@ export function RosterBoard({
   function exportExcel() {
     const rows = draft.groups.flatMap((group) =>
       group.members.map((member) => ({
-        "나이": member.age ?? MISSING_FIELD_VALUE,
-        "성별": GENDER_LABELS[member.gender],
         "이름": member.name,
         "조명": displayGroupName(group.name),
       })),
@@ -448,13 +659,9 @@ export function RosterBoard({
     XLSX.writeFile(workbook, `${rosterTitle}_${EXCEL_EXPORT.fileNameSuffix}.xlsx`);
   }
 
-  function exportRoster() {
-    exportRosterToExcel(allBoardPeople(draft), rosterTitle);
-  }
-
   return (
     <DndContext
-      collisionDetection={closestCenter}
+      collisionDetection={boardCollisionDetection}
       id={ROSTER_BOARD_DND_CONTEXT_ID}
       onDragEnd={handleDragEnd}
       onDragStart={(event) => {
@@ -467,26 +674,23 @@ export function RosterBoard({
         ].find((item) => item.id === activeId);
         setActiveName(group ? displayGroupName(group.name) : member?.name ?? "");
       }}
+      sensors={sensors}
     >
+      {groupUnassignConfirmation ? (
+        <GroupUnassignDialog
+          groupName={groupUnassignConfirmation.groupName}
+          memberCount={groupUnassignConfirmation.memberCount}
+          onCancel={() => setGroupUnassignConfirmation(null)}
+          onConfirm={() => {
+            onDraftChange(groupUnassignConfirmation.nextDraft);
+            setGroupUnassignConfirmation(null);
+          }}
+        />
+      ) : null}
       {leaderConflict ? (
         <LeaderConflictDialog
           onReplaceTargetLeader={() => resolveLeaderConflict(true)}
           onRetainTargetLeader={() => resolveLeaderConflict(false)}
-        />
-      ) : null}
-      {editingGroup ? (
-        <GroupNameDialog
-          initialName={displayGroupName(editingGroup.name)}
-          onClose={() => setEditingGroup(null)}
-          onSave={(name) => {
-            onDraftChange({
-              ...draft,
-              groups: draft.groups.map((group) =>
-                group.id === editingGroup.id ? { ...group, name } : group,
-              ),
-            });
-            setEditingGroup(null);
-          }}
         />
       ) : null}
       {editingMember ? (
@@ -529,15 +733,6 @@ export function RosterBoard({
               <div className="flex flex-wrap items-center justify-end gap-2">
                 <span className="text-sm text-[var(--muted)]">{totalPeople}명</span>
                 <button
-                  className={`flex items-center gap-2 border border-[var(--border)] px-3 py-2 text-sm ${hasRosterPeople ? "bg-[var(--surface)] hover:bg-[var(--canvas)]" : "cursor-not-allowed bg-[var(--canvas)] text-[var(--muted)]"}`}
-                  disabled={!hasRosterPeople}
-                  onClick={exportRoster}
-                  type="button"
-                >
-                  <Download size={16} />
-                  {ROSTER_BOARD.exportRoster}
-                </button>
-                <button
                   className={`flex items-center gap-2 px-3 py-2 text-sm ${hasGroupMembers ? "bg-[var(--ink)] text-[var(--surface)] hover:opacity-90" : "cursor-not-allowed bg-[var(--canvas)] text-[var(--muted)]"}`}
                   disabled={!hasGroupMembers}
                   onClick={exportExcel}
@@ -558,8 +753,30 @@ export function RosterBoard({
                     group={group}
                     key={group.id}
                     onDelete={onRemovePerson}
-                    onEditName={setEditingGroup}
                     onLeaderAction={handleLeaderAction}
+                    onRenameMember={(groupId, memberId, name) =>
+                      onDraftChange({
+                        ...draft,
+                        groups: draft.groups.map((group) =>
+                          group.id === groupId
+                            ? {
+                                ...group,
+                                members: group.members.map((member) =>
+                                  member.id === memberId ? { ...member, name } : member,
+                                ),
+                              }
+                            : group,
+                        ),
+                      })
+                    }
+                    onRename={(groupId, name) =>
+                      onDraftChange({
+                        ...draft,
+                        groups: draft.groups.map((item) =>
+                          item.id === groupId ? { ...item, name } : item,
+                        ),
+                      })
+                    }
                   />
                 ))}
                 <NewGroupDropZone />

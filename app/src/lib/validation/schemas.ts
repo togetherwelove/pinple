@@ -1,56 +1,14 @@
 import { z } from "zod";
 import {
   GROUPING_LIMITS,
-  GROUPING_STRATEGIES,
-  GENDER,
-  INPUT_GENDER,
   LEADER_SELECTION_MODES,
   VALIDATION_MESSAGES,
 } from "@/lib/config/app";
 
-export const personInputSchema = z.object({
-  age: z.coerce.number().int().min(GROUPING_LIMITS.minimumAge).nullable(),
-  gender: z.enum([
-    GENDER.male,
-    GENDER.female,
-    GENDER.unknown,
-    ...INPUT_GENDER.male,
-    ...INPUT_GENDER.female,
-  ]),
-  name: z.string().trim().min(1),
-});
-
-export const peopleRequestSchema = z.object({
-  people: z.array(personInputSchema).min(1),
-});
-
-export const groupSizeSchema = z
-  .array(z.coerce.number().int().min(GROUPING_LIMITS.minimumPeoplePerGroup))
-  .min(GROUPING_LIMITS.minimumGroupCount)
-  .max(GROUPING_LIMITS.maximumGroupCount);
-
-export const groupingRequestSchema = z.object({
-  groupSizes: groupSizeSchema,
-  leaderSelectionMode: z
-    .enum([
-      LEADER_SELECTION_MODES.none,
-      LEADER_SELECTION_MODES.random,
-    ])
-    .default(LEADER_SELECTION_MODES.none),
-  strategy: z.enum([
-    GROUPING_STRATEGIES.even,
-    GROUPING_STRATEGIES.ageSimilar,
-    GROUPING_STRATEGIES.genderAgeSimilar,
-    GROUPING_STRATEGIES.genderSeparated,
-  ]),
-});
-
-export const groupMemberSchema = z.object({
-  age: z.number().int().min(GROUPING_LIMITS.minimumAge).nullable(),
-  gender: z.enum([GENDER.male, GENDER.female, GENDER.unknown]),
+const groupMemberSchema = z.object({
   id: z.string().uuid(),
   isLeader: z.boolean().optional(),
-  name: z.string().min(1),
+  name: z.string().trim().min(1),
 });
 
 const groupSchema = z
@@ -69,31 +27,15 @@ const groupSchema = z
     }
   });
 
-export const groupResultMembersSchema = z.object({
+const groupResultMembersSchema = z.object({
   groups: z.array(groupSchema),
   leaderSelectionMode: z
     .enum([LEADER_SELECTION_MODES.none, LEADER_SELECTION_MODES.random])
     .optional(),
-  strategy: z
-    .enum([
-      GROUPING_STRATEGIES.even,
-      GROUPING_STRATEGIES.ageSimilar,
-      GROUPING_STRATEGIES.genderAgeSimilar,
-      GROUPING_STRATEGIES.genderSeparated,
-    ])
-    .optional(),
   unassigned: z.array(groupMemberSchema).optional(),
 });
 
-export const groupResultUpdateSchema = z
-  .object({
-    members: groupResultMembersSchema,
-  })
-  .strict();
-
-export const boardPersonSchema = z.object({
-  age: z.coerce.number().int().min(GROUPING_LIMITS.minimumAge).nullable(),
-  gender: z.enum([GENDER.male, GENDER.female, GENDER.unknown]),
+const boardPersonSchema = z.object({
   id: z.string().uuid(),
   name: z.string().trim().min(1),
 });

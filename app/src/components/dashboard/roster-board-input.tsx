@@ -1,6 +1,6 @@
 "use client";
 
-import { Upload } from "lucide-react";
+import { Download, Upload } from "lucide-react";
 import { type KeyboardEvent, useState } from "react";
 import {
   INPUT_DEPENDENT_BUTTON_CLASSES,
@@ -9,21 +9,27 @@ import {
   UI_LABELS,
   UI_MESSAGES,
 } from "@/lib/config/app";
+import { RosterExportDialog } from "@/components/dashboard/roster-export-dialog";
 import { Spinner } from "@/components/spinner";
 import { parseRosterText } from "@/lib/roster/parse-roster";
 import { readRosterFile } from "@/lib/roster/read-roster-file";
 import type { PersonInput } from "@/lib/types/domain";
 
 type RosterBoardInputProps = {
+  canExport: boolean;
   onAddPeople: (people: PersonInput[]) => void;
   onError: (message: string) => void;
+  onExport: (title: string) => void;
 };
 
 export function RosterBoardInput({
+  canExport,
   onAddPeople,
   onError,
+  onExport,
 }: RosterBoardInputProps) {
   const [input, setInput] = useState("");
+  const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const canAdd = input.trim().length > 0 && !isImporting;
 
@@ -85,29 +91,49 @@ export function RosterBoardInput({
           {ROSTER_BOARD.addPerson}
         </button>
       </div>
-      <label
-        aria-busy={isImporting}
-        className={`mt-3 flex w-fit items-center gap-2 text-sm ${isImporting ? "cursor-not-allowed text-[var(--muted)]" : "cursor-pointer"}`}
-      >
-        <Upload size={16} />
-        {isImporting ? <Spinner size="sm" /> : null}
-        {isImporting ? UI_LABELS.loadingRosterFile : ROSTER_BOARD.fileImport}
-        <input
-          accept=".csv,.xls,.xlsx"
-          className="hidden"
-          disabled={isImporting}
-          onChange={(event) => {
-            const file = event.target.files?.[0];
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+        <label
+          aria-busy={isImporting}
+          className={`flex w-fit items-center gap-1.5 px-2 py-1.5 text-sm ${isImporting ? "cursor-not-allowed text-[var(--muted)]" : "cursor-pointer hover:bg-[var(--canvas)]"}`}
+        >
+          <Upload size={16} />
+          {isImporting ? <Spinner size="sm" /> : null}
+          {isImporting ? UI_LABELS.loadingRosterFile : ROSTER_BOARD.fileImport}
+          <input
+            accept=".csv,.xls,.xlsx"
+            className="hidden"
+            disabled={isImporting}
+            onChange={(event) => {
+              const file = event.target.files?.[0];
 
-            if (file) {
-              void importFile(file);
-            }
+              if (file) {
+                void importFile(file);
+              }
 
-            event.target.value = "";
+              event.target.value = "";
+            }}
+            type="file"
+          />
+        </label>
+        <button
+          className={`flex items-center gap-1.5 px-2 py-1.5 text-sm ${canExport ? "hover:bg-[var(--canvas)]" : "cursor-not-allowed text-[var(--muted)]"}`}
+          disabled={!canExport}
+          onClick={() => setIsExportDialogOpen(true)}
+          type="button"
+        >
+          <Download size={15} />
+          {ROSTER_BOARD.exportRoster}
+        </button>
+      </div>
+      {isExportDialogOpen ? (
+        <RosterExportDialog
+          onCancel={() => setIsExportDialogOpen(false)}
+          onConfirm={(title) => {
+            onExport(title);
+            setIsExportDialogOpen(false);
           }}
-          type="file"
         />
-      </label>
+      ) : null}
     </section>
   );
 }

@@ -20,12 +20,10 @@ model Person {
   workspaceId String    @db.Uuid
   workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   name        String
-  gender      String    @db.VarChar(7)
-  age         Int?
   createdAt   DateTime  @default(now())
 
   @@index([workspaceId])
-  @@unique([workspaceId, name, gender, age])
+  @@unique([workspaceId, name])
 }
 
 model GroupResult {

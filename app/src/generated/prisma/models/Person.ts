@@ -20,26 +20,14 @@ export type PersonModel = runtime.Types.Result.DefaultSelection<Prisma.$PersonPa
 
 export type AggregatePerson = {
   _count: PersonCountAggregateOutputType | null
-  _avg: PersonAvgAggregateOutputType | null
-  _sum: PersonSumAggregateOutputType | null
   _min: PersonMinAggregateOutputType | null
   _max: PersonMaxAggregateOutputType | null
-}
-
-export type PersonAvgAggregateOutputType = {
-  age: number | null
-}
-
-export type PersonSumAggregateOutputType = {
-  age: number | null
 }
 
 export type PersonMinAggregateOutputType = {
   id: string | null
   workspaceId: string | null
   name: string | null
-  gender: string | null
-  age: number | null
   createdAt: Date | null
 }
 
@@ -47,8 +35,6 @@ export type PersonMaxAggregateOutputType = {
   id: string | null
   workspaceId: string | null
   name: string | null
-  gender: string | null
-  age: number | null
   createdAt: Date | null
 }
 
@@ -56,27 +42,15 @@ export type PersonCountAggregateOutputType = {
   id: number
   workspaceId: number
   name: number
-  gender: number
-  age: number
   createdAt: number
   _all: number
 }
 
 
-export type PersonAvgAggregateInputType = {
-  age?: true
-}
-
-export type PersonSumAggregateInputType = {
-  age?: true
-}
-
 export type PersonMinAggregateInputType = {
   id?: true
   workspaceId?: true
   name?: true
-  gender?: true
-  age?: true
   createdAt?: true
 }
 
@@ -84,8 +58,6 @@ export type PersonMaxAggregateInputType = {
   id?: true
   workspaceId?: true
   name?: true
-  gender?: true
-  age?: true
   createdAt?: true
 }
 
@@ -93,8 +65,6 @@ export type PersonCountAggregateInputType = {
   id?: true
   workspaceId?: true
   name?: true
-  gender?: true
-  age?: true
   createdAt?: true
   _all?: true
 }
@@ -137,18 +107,6 @@ export type PersonAggregateArgs<ExtArgs extends runtime.Types.Extensions.Interna
   /**
    * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
    * 
-   * Select which fields to average
-  **/
-  _avg?: PersonAvgAggregateInputType
-  /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-   * 
-   * Select which fields to sum
-  **/
-  _sum?: PersonSumAggregateInputType
-  /**
-   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-   * 
    * Select which fields to find the minimum value
   **/
   _min?: PersonMinAggregateInputType
@@ -179,8 +137,6 @@ export type PersonGroupByArgs<ExtArgs extends runtime.Types.Extensions.InternalA
   take?: number
   skip?: number
   _count?: PersonCountAggregateInputType | true
-  _avg?: PersonAvgAggregateInputType
-  _sum?: PersonSumAggregateInputType
   _min?: PersonMinAggregateInputType
   _max?: PersonMaxAggregateInputType
 }
@@ -189,12 +145,8 @@ export type PersonGroupByOutputType = {
   id: string
   workspaceId: string
   name: string
-  gender: string
-  age: number | null
   createdAt: Date
   _count: PersonCountAggregateOutputType | null
-  _avg: PersonAvgAggregateOutputType | null
-  _sum: PersonSumAggregateOutputType | null
   _min: PersonMinAggregateOutputType | null
   _max: PersonMaxAggregateOutputType | null
 }
@@ -221,8 +173,6 @@ export type PersonWhereInput = {
   id?: Prisma.UuidFilter<"Person"> | string
   workspaceId?: Prisma.UuidFilter<"Person"> | string
   name?: Prisma.StringFilter<"Person"> | string
-  gender?: Prisma.StringFilter<"Person"> | string
-  age?: Prisma.IntNullableFilter<"Person"> | number | null
   createdAt?: Prisma.DateTimeFilter<"Person"> | Date | string
   workspace?: Prisma.XOR<Prisma.WorkspaceScalarRelationFilter, Prisma.WorkspaceWhereInput>
 }
@@ -231,38 +181,30 @@ export type PersonOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   workspaceId?: Prisma.SortOrder
   name?: Prisma.SortOrder
-  gender?: Prisma.SortOrder
-  age?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   workspace?: Prisma.WorkspaceOrderByWithRelationInput
 }
 
 export type PersonWhereUniqueInput = Prisma.AtLeast<{
   id?: string
-  workspaceId_name_gender_age?: Prisma.PersonWorkspaceIdNameGenderAgeCompoundUniqueInput
+  workspaceId_name?: Prisma.PersonWorkspaceIdNameCompoundUniqueInput
   AND?: Prisma.PersonWhereInput | Prisma.PersonWhereInput[]
   OR?: Prisma.PersonWhereInput[]
   NOT?: Prisma.PersonWhereInput | Prisma.PersonWhereInput[]
   workspaceId?: Prisma.UuidFilter<"Person"> | string
   name?: Prisma.StringFilter<"Person"> | string
-  gender?: Prisma.StringFilter<"Person"> | string
-  age?: Prisma.IntNullableFilter<"Person"> | number | null
   createdAt?: Prisma.DateTimeFilter<"Person"> | Date | string
   workspace?: Prisma.XOR<Prisma.WorkspaceScalarRelationFilter, Prisma.WorkspaceWhereInput>
-}, "id" | "workspaceId_name_gender_age">
+}, "id" | "workspaceId_name">
 
 export type PersonOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   workspaceId?: Prisma.SortOrder
   name?: Prisma.SortOrder
-  gender?: Prisma.SortOrder
-  age?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   _count?: Prisma.PersonCountOrderByAggregateInput
-  _avg?: Prisma.PersonAvgOrderByAggregateInput
   _max?: Prisma.PersonMaxOrderByAggregateInput
   _min?: Prisma.PersonMinOrderByAggregateInput
-  _sum?: Prisma.PersonSumOrderByAggregateInput
 }
 
 export type PersonScalarWhereWithAggregatesInput = {
@@ -272,16 +214,12 @@ export type PersonScalarWhereWithAggregatesInput = {
   id?: Prisma.UuidWithAggregatesFilter<"Person"> | string
   workspaceId?: Prisma.UuidWithAggregatesFilter<"Person"> | string
   name?: Prisma.StringWithAggregatesFilter<"Person"> | string
-  gender?: Prisma.StringWithAggregatesFilter<"Person"> | string
-  age?: Prisma.IntNullableWithAggregatesFilter<"Person"> | number | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Person"> | Date | string
 }
 
 export type PersonCreateInput = {
   id?: string
   name: string
-  gender: string
-  age?: number | null
   createdAt?: Date | string
   workspace: Prisma.WorkspaceCreateNestedOneWithoutPeopleInput
 }
@@ -290,16 +228,12 @@ export type PersonUncheckedCreateInput = {
   id?: string
   workspaceId: string
   name: string
-  gender: string
-  age?: number | null
   createdAt?: Date | string
 }
 
 export type PersonUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
-  gender?: Prisma.StringFieldUpdateOperationsInput | string
-  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   workspace?: Prisma.WorkspaceUpdateOneRequiredWithoutPeopleNestedInput
 }
@@ -308,8 +242,6 @@ export type PersonUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   workspaceId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
-  gender?: Prisma.StringFieldUpdateOperationsInput | string
-  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -317,16 +249,12 @@ export type PersonCreateManyInput = {
   id?: string
   workspaceId: string
   name: string
-  gender: string
-  age?: number | null
   createdAt?: Date | string
 }
 
 export type PersonUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
-  gender?: Prisma.StringFieldUpdateOperationsInput | string
-  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -334,8 +262,6 @@ export type PersonUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   workspaceId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
-  gender?: Prisma.StringFieldUpdateOperationsInput | string
-  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -349,32 +275,22 @@ export type PersonOrderByRelationAggregateInput = {
   _count?: Prisma.SortOrder
 }
 
-export type PersonWorkspaceIdNameGenderAgeCompoundUniqueInput = {
+export type PersonWorkspaceIdNameCompoundUniqueInput = {
   workspaceId: string
   name: string
-  gender: string
-  age: number
 }
 
 export type PersonCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   workspaceId?: Prisma.SortOrder
   name?: Prisma.SortOrder
-  gender?: Prisma.SortOrder
-  age?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
-}
-
-export type PersonAvgOrderByAggregateInput = {
-  age?: Prisma.SortOrder
 }
 
 export type PersonMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   workspaceId?: Prisma.SortOrder
   name?: Prisma.SortOrder
-  gender?: Prisma.SortOrder
-  age?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -382,13 +298,7 @@ export type PersonMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   workspaceId?: Prisma.SortOrder
   name?: Prisma.SortOrder
-  gender?: Prisma.SortOrder
-  age?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
-}
-
-export type PersonSumOrderByAggregateInput = {
-  age?: Prisma.SortOrder
 }
 
 export type PersonCreateNestedManyWithoutWorkspaceInput = {
@@ -433,27 +343,15 @@ export type PersonUncheckedUpdateManyWithoutWorkspaceNestedInput = {
   deleteMany?: Prisma.PersonScalarWhereInput | Prisma.PersonScalarWhereInput[]
 }
 
-export type NullableIntFieldUpdateOperationsInput = {
-  set?: number | null
-  increment?: number
-  decrement?: number
-  multiply?: number
-  divide?: number
-}
-
 export type PersonCreateWithoutWorkspaceInput = {
   id?: string
   name: string
-  gender: string
-  age?: number | null
   createdAt?: Date | string
 }
 
 export type PersonUncheckedCreateWithoutWorkspaceInput = {
   id?: string
   name: string
-  gender: string
-  age?: number | null
   createdAt?: Date | string
 }
 
@@ -490,40 +388,30 @@ export type PersonScalarWhereInput = {
   id?: Prisma.UuidFilter<"Person"> | string
   workspaceId?: Prisma.UuidFilter<"Person"> | string
   name?: Prisma.StringFilter<"Person"> | string
-  gender?: Prisma.StringFilter<"Person"> | string
-  age?: Prisma.IntNullableFilter<"Person"> | number | null
   createdAt?: Prisma.DateTimeFilter<"Person"> | Date | string
 }
 
 export type PersonCreateManyWorkspaceInput = {
   id?: string
   name: string
-  gender: string
-  age?: number | null
   createdAt?: Date | string
 }
 
 export type PersonUpdateWithoutWorkspaceInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
-  gender?: Prisma.StringFieldUpdateOperationsInput | string
-  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type PersonUncheckedUpdateWithoutWorkspaceInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
-  gender?: Prisma.StringFieldUpdateOperationsInput | string
-  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type PersonUncheckedUpdateManyWithoutWorkspaceInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
-  gender?: Prisma.StringFieldUpdateOperationsInput | string
-  age?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -533,8 +421,6 @@ export type PersonSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   id?: boolean
   workspaceId?: boolean
   name?: boolean
-  gender?: boolean
-  age?: boolean
   createdAt?: boolean
   workspace?: boolean | Prisma.WorkspaceDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["person"]>
@@ -543,8 +429,6 @@ export type PersonSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extens
   id?: boolean
   workspaceId?: boolean
   name?: boolean
-  gender?: boolean
-  age?: boolean
   createdAt?: boolean
   workspace?: boolean | Prisma.WorkspaceDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["person"]>
@@ -553,8 +437,6 @@ export type PersonSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extens
   id?: boolean
   workspaceId?: boolean
   name?: boolean
-  gender?: boolean
-  age?: boolean
   createdAt?: boolean
   workspace?: boolean | Prisma.WorkspaceDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["person"]>
@@ -563,12 +445,10 @@ export type PersonSelectScalar = {
   id?: boolean
   workspaceId?: boolean
   name?: boolean
-  gender?: boolean
-  age?: boolean
   createdAt?: boolean
 }
 
-export type PersonOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "workspaceId" | "name" | "gender" | "age" | "createdAt", ExtArgs["result"]["person"]>
+export type PersonOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "workspaceId" | "name" | "createdAt", ExtArgs["result"]["person"]>
 export type PersonInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   workspace?: boolean | Prisma.WorkspaceDefaultArgs<ExtArgs>
 }
@@ -588,8 +468,6 @@ export type $PersonPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs
     id: string
     workspaceId: string
     name: string
-    gender: string
-    age: number | null
     createdAt: Date
   }, ExtArgs["result"]["person"]>
   composites: {}
@@ -1018,8 +896,6 @@ export interface PersonFieldRefs {
   readonly id: Prisma.FieldRef<"Person", 'String'>
   readonly workspaceId: Prisma.FieldRef<"Person", 'String'>
   readonly name: Prisma.FieldRef<"Person", 'String'>
-  readonly gender: Prisma.FieldRef<"Person", 'String'>
-  readonly age: Prisma.FieldRef<"Person", 'Int'>
   readonly createdAt: Prisma.FieldRef<"Person", 'DateTime'>
 }
     
