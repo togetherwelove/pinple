@@ -2,6 +2,10 @@ export const APP_NAME = "Pinple";
 
 export const APP_DESCRIPTION = "인원 정보를 균형 있게 조로 나누는 작업 공간";
 
+export function formatCopyrightNotice(year: number) {
+  return `© ${year} ${APP_NAME}. All rights reserved.`;
+}
+
 export const ROUTES = {
   rosters: "/rosters",
   root: "/",
@@ -18,8 +22,6 @@ export const TOAST_TONES = {
   error: "error",
   success: "success",
 } as const;
-
-export const ROSTER_INPUT_ROWS = 3;
 
 export const ROSTER_PARSING = {
   empty: "명단을 입력해 주세요.",
@@ -88,6 +90,7 @@ export const ROSTER_BOARD = {
   removePerson: "인원 삭제",
   savePerson: "수정 완료",
   unassigned: "대기 명단",
+  unassignedCount: (remaining: number, total: number) => `${remaining}/${total}`,
   workArea: "명단 입력 및 설정",
 } as const;
 

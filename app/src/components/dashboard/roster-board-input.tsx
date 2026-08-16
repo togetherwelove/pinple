@@ -1,35 +1,28 @@
 "use client";
 
-import { Download, Upload } from "lucide-react";
+import { Upload } from "lucide-react";
 import { type KeyboardEvent, useState } from "react";
 import {
   INPUT_DEPENDENT_BUTTON_CLASSES,
   ROSTER_BOARD,
-  ROSTER_INPUT_ROWS,
   UI_LABELS,
   UI_MESSAGES,
 } from "@/lib/config/app";
-import { ExportTitleDialog } from "@/components/dashboard/export-title-dialog";
 import { Spinner } from "@/components/spinner";
 import { parseRosterText } from "@/lib/roster/parse-roster";
 import { readRosterFile } from "@/lib/roster/read-roster-file";
 import type { PersonInput } from "@/lib/types/domain";
 
 type RosterBoardInputProps = {
-  canExport: boolean;
   onAddPeople: (people: PersonInput[]) => void;
   onError: (message: string) => void;
-  onExport: (title: string) => void;
 };
 
 export function RosterBoardInput({
-  canExport,
   onAddPeople,
   onError,
-  onExport,
 }: RosterBoardInputProps) {
   const [input, setInput] = useState("");
-  const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const canAdd = input.trim().length > 0 && !isImporting;
 
@@ -42,10 +35,9 @@ export function RosterBoardInput({
     }
   }
 
-  function handleKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
+  function handleKeyDown(event: KeyboardEvent<HTMLInputElement>) {
     if (
       event.key !== "Enter" ||
-      event.shiftKey ||
       event.nativeEvent.isComposing
     ) {
       return;
@@ -74,16 +66,16 @@ export function RosterBoardInput({
     <section className="border border-[var(--border)] bg-[var(--surface)] p-4">
       <h2 className="font-semibold">명단 입력</h2>
       <div className="mt-3 flex items-end gap-2">
-        <textarea
-          className="min-h-9 min-w-0 flex-1 resize-y border border-[var(--border)] px-3 py-2 text-sm"
+        <input
+          className="h-9 min-w-0 flex-1 border border-[var(--border)] px-3 text-sm"
           onChange={(event) => setInput(event.target.value)}
           onKeyDown={handleKeyDown}
           placeholder={ROSTER_BOARD.inputPlaceholder}
-          rows={ROSTER_INPUT_ROWS}
+          type="text"
           value={input}
         />
         <button
-          className={`px-3 py-2 text-sm ${canAdd ? INPUT_DEPENDENT_BUTTON_CLASSES.enabled : INPUT_DEPENDENT_BUTTON_CLASSES.disabled}`}
+          className={`h-9 px-3 text-sm ${canAdd ? INPUT_DEPENDENT_BUTTON_CLASSES.enabled : INPUT_DEPENDENT_BUTTON_CLASSES.disabled}`}
           disabled={!canAdd}
           onClick={addInput}
           type="button"
@@ -91,7 +83,7 @@ export function RosterBoardInput({
           {ROSTER_BOARD.addPerson}
         </button>
       </div>
-      <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+      <div className="mt-3 flex flex-wrap items-center gap-2">
         <label
           aria-busy={isImporting}
           className={`flex w-fit items-center gap-1.5 px-2 py-1.5 text-sm ${isImporting ? "cursor-not-allowed text-[var(--muted)]" : "cursor-pointer hover:bg-[var(--canvas)]"}`}
@@ -115,27 +107,7 @@ export function RosterBoardInput({
             type="file"
           />
         </label>
-        <button
-          className={`flex items-center gap-1.5 px-2 py-1.5 text-sm ${canExport ? "hover:bg-[var(--canvas)]" : "cursor-not-allowed text-[var(--muted)]"}`}
-          disabled={!canExport}
-          onClick={() => setIsExportDialogOpen(true)}
-          type="button"
-        >
-          <Download size={15} />
-          {ROSTER_BOARD.exportRoster}
-        </button>
       </div>
-      {isExportDialogOpen ? (
-        <ExportTitleDialog
-          dialogTitle={ROSTER_BOARD.exportRosterTitle}
-          initialTitle={ROSTER_BOARD.rosterTitle}
-          onCancel={() => setIsExportDialogOpen(false)}
-          onConfirm={(title) => {
-            onExport(title);
-            setIsExportDialogOpen(false);
-          }}
-        />
-      ) : null}
     </section>
   );
 }

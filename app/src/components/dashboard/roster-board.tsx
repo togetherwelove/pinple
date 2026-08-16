@@ -37,7 +37,9 @@ import { GroupUnassignDialog } from "@/components/dashboard/group-unassign-dialo
 import { LeaderConflictDialog } from "@/components/dashboard/leader-conflict-dialog";
 import { ExportTitleDialog } from "@/components/dashboard/export-title-dialog";
 import { setGroupLeader } from "@/lib/grouping/leader-assignment";
+import { allBoardPeople } from "@/lib/roster-board/draft";
 import { exportGroupResultsToExcel } from "@/lib/roster/export-group-results";
+import { exportRosterToExcel } from "@/lib/roster/export-roster";
 import {
   groupIdFromOrderItemId,
   groupOrderItemId,
@@ -88,6 +90,13 @@ type InlineTitleEditor = {
   onSave: () => void;
   value: string;
 };
+
+const EXPORT_TARGETS = {
+  groupResult: "group-result",
+  roster: "roster",
+} as const;
+
+type ExportTarget = (typeof EXPORT_TARGETS)[keyof typeof EXPORT_TARGETS];
 
 const boardCollisionDetection: CollisionDetection = (arguments_) => {
   const pointerCollisions = pointerWithin(arguments_).filter(
@@ -241,6 +250,7 @@ function SortableMemberCard({
 
 function BoardColumn({
   compact = false,
+  countText,
   dragHandle,
   inlineTitleEditor,
   group,
@@ -254,6 +264,7 @@ function BoardColumn({
   title,
 }: {
   compact?: boolean;
+  countText?: string;
   dragHandle?: Pick<ReturnType<typeof useSortable>, "attributes" | "listeners">;
   inlineTitleEditor?: InlineTitleEditor;
   group: Group | null;
@@ -268,7 +279,7 @@ function BoardColumn({
 }) {
   const columnId = group?.id ?? UNASSIGNED_COLUMN_ID;
   const droppable = useDroppable({ id: columnId });
-  const memberCountText = `${members.length}`;
+  const memberCountText = countText ?? `${members.length}`;
   const dropStateClass = droppable.isOver
     ? "border-[var(--ink)] bg-[var(--canvas)]"
     : "border-[var(--border)] bg-[var(--surface)]";
@@ -545,7 +556,7 @@ export function RosterBoard({
 }: RosterBoardProps) {
   const [activeName, setActiveName] = useState("");
   const [editingMember, setEditingMember] = useState<GroupMember | null>(null);
-  const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
+  const [exportTarget, setExportTarget] = useState<ExportTarget | null>(null);
   const [groupUnassignConfirmation, setGroupUnassignConfirmation] =
     useState<GroupUnassignConfirmation | null>(null);
   const [leaderConflict, setLeaderConflict] = useState<LeaderConflict | null>(null);
@@ -675,14 +686,27 @@ export function RosterBoard({
           }}
         />
       ) : null}
-      {isExportDialogOpen ? (
+      {exportTarget ? (
         <ExportTitleDialog
-          dialogTitle={ROSTER_BOARD.export}
-          initialTitle={EXCEL_EXPORT.groupResultFileTitle}
-          onCancel={() => setIsExportDialogOpen(false)}
+          dialogTitle={
+            exportTarget === EXPORT_TARGETS.roster
+              ? ROSTER_BOARD.exportRosterTitle
+              : ROSTER_BOARD.export
+          }
+          initialTitle={
+            exportTarget === EXPORT_TARGETS.roster
+              ? ROSTER_BOARD.rosterTitle
+              : EXCEL_EXPORT.groupResultFileTitle
+          }
+          onCancel={() => setExportTarget(null)}
           onConfirm={(title) => {
-            exportGroupResultsToExcel(draft.groups, title);
-            setIsExportDialogOpen(false);
+            if (exportTarget === EXPORT_TARGETS.roster) {
+              exportRosterToExcel(allBoardPeople(draft), title);
+            } else {
+              exportGroupResultsToExcel(draft.groups, title);
+            }
+
+            setExportTarget(null);
           }}
         />
       ) : null}
@@ -714,6 +738,10 @@ export function RosterBoard({
           {leftPanelHeader}
           <BoardColumn
             compact
+            countText={ROSTER_BOARD.unassignedCount(
+              draft.unassigned.length,
+              totalPeople,
+            )}
             group={null}
             members={draft.unassigned}
             onDelete={onRemovePerson}
@@ -726,15 +754,24 @@ export function RosterBoard({
           {rightPanelHeader}
           <div className="border border-[var(--border)] bg-[var(--surface)] p-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
+              <div className="flex items-center gap-2">
                 <h2 className="font-semibold">{ROSTER_BOARD.boardTitle}</h2>
+                <span className="text-sm text-[var(--muted)]">{totalPeople}명</span>
               </div>
               <div className="flex flex-wrap items-center justify-end gap-2">
-                <span className="text-sm text-[var(--muted)]">{totalPeople}명</span>
+                <button
+                  className={`flex items-center gap-2 border border-[var(--border)] px-3 py-2 text-sm ${totalPeople > 0 ? "bg-[var(--surface)] hover:bg-[var(--canvas)]" : "cursor-not-allowed bg-[var(--canvas)] text-[var(--muted)]"}`}
+                  disabled={totalPeople === 0}
+                  onClick={() => setExportTarget(EXPORT_TARGETS.roster)}
+                  type="button"
+                >
+                  <Download size={16} />
+                  {ROSTER_BOARD.exportRosterTitle}
+                </button>
                 <button
                   className={`flex items-center gap-2 px-3 py-2 text-sm ${hasGroupMembers ? "bg-[var(--ink)] text-[var(--surface)] hover:opacity-90" : "cursor-not-allowed bg-[var(--canvas)] text-[var(--muted)]"}`}
                   disabled={!hasGroupMembers}
-                  onClick={() => setIsExportDialogOpen(true)}
+                  onClick={() => setExportTarget(EXPORT_TARGETS.groupResult)}
                   type="button"
                 >
                   <Download size={16} />

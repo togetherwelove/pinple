@@ -21,7 +21,7 @@ export default async function RosterPage() {
     : null;
 
   return (
-    <div className="h-screen overflow-hidden bg-[var(--canvas)]">
+    <div className="h-full overflow-hidden bg-[var(--canvas)]">
       <Workspace
         groupResult={groupResult}
         people={workspace.people}

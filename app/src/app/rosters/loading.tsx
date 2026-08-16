@@ -5,7 +5,7 @@ const SKELETON_ROWS = 4;
 
 export default function RosterLoading() {
   return (
-    <main className="min-h-screen bg-[var(--canvas)] p-4 md:p-8">
+    <main className="h-full overflow-y-auto bg-[var(--canvas)] p-4 md:p-8">
       <div className="mx-auto max-w-7xl animate-pulse">
         <div className="h-7 w-40 bg-[var(--border)]" />
         <div className="mt-6 grid gap-5 lg:grid-cols-[360px_1fr]">

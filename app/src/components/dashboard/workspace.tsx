@@ -28,7 +28,6 @@ import {
   createGroupResultMembers,
 } from "@/lib/roster-board/group-result";
 import { useRosterBoardStore } from "@/lib/roster-board/store";
-import { exportRosterToExcel } from "@/lib/roster/export-roster";
 import type {
   GroupMember,
   PersonInput,
@@ -275,15 +274,8 @@ export function Workspace({
         }
         leftPanelHeader={
           <RosterBoardInput
-            canExport={totalPeople > 0}
             onAddPeople={handleAddPeople}
             onError={showError}
-            onExport={(title) =>
-              exportRosterToExcel(
-                allBoardPeople(currentDraft),
-                title,
-              )
-            }
           />
         }
         onDraftChange={commitDraft}
