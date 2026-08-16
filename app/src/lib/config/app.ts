@@ -102,8 +102,14 @@ export const LEADER_SELECTION_OPTIONS = [
 ] as const;
 
 export const EXCEL_EXPORT = {
-  fileNameSuffix: "조결과",
+  columnWidthPadding: 4,
+  fileExtension: ".xlsx",
+  groupNameHeader: "조명",
+  groupResultFileTitle: "조 결과",
   maximumTitleLength: 80,
+  memberNameHeader: "이름",
+  minimumColumnWidth: 12,
+  rawSheetName: "원본 데이터",
   rosterFileNameSuffix: "명단",
   rosterSheetName: "명단",
   sheetName: "조 결과",

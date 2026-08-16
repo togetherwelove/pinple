@@ -3,13 +3,20 @@
 import { useState } from "react";
 import { EXCEL_EXPORT, ROSTER_BOARD, UI_LABELS } from "@/lib/config/app";
 
-type RosterExportDialogProps = {
+type ExportTitleDialogProps = {
+  dialogTitle: string;
+  initialTitle: string;
   onCancel: () => void;
   onConfirm: (title: string) => void;
 };
 
-export function RosterExportDialog({ onCancel, onConfirm }: RosterExportDialogProps) {
-  const [title, setTitle] = useState<string>(ROSTER_BOARD.rosterTitle);
+export function ExportTitleDialog({
+  dialogTitle,
+  initialTitle,
+  onCancel,
+  onConfirm,
+}: ExportTitleDialogProps) {
+  const [title, setTitle] = useState(initialTitle);
   const normalizedTitle = title.trim();
 
   return (
@@ -28,16 +35,22 @@ export function RosterExportDialog({ onCancel, onConfirm }: RosterExportDialogPr
           }
         }}
       >
-        <h2 className="font-semibold">{ROSTER_BOARD.exportRosterTitle}</h2>
+        <h2 className="font-semibold">{dialogTitle}</h2>
         <label className="mt-4 block text-sm font-medium">
           {ROSTER_BOARD.exportTitle}
-          <input
-            autoFocus
-            className="mt-1.5 w-full border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm"
-            maxLength={EXCEL_EXPORT.maximumTitleLength}
-            onChange={(event) => setTitle(event.target.value)}
-            value={title}
-          />
+          <span className="mt-1.5 flex">
+            <input
+              autoFocus
+              className="min-w-0 flex-1 border border-r-0 border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm"
+              maxLength={EXCEL_EXPORT.maximumTitleLength}
+              onChange={(event) => setTitle(event.target.value)}
+              onFocus={(event) => event.currentTarget.select()}
+              value={title}
+            />
+            <span className="flex shrink-0 items-center border border-[var(--border)] bg-[var(--canvas)] px-3 text-sm text-[var(--muted)]">
+              {EXCEL_EXPORT.fileExtension}
+            </span>
+          </span>
         </label>
         <div className="mt-5 flex justify-end gap-2">
           <button

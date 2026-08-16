@@ -9,7 +9,7 @@ import {
   UI_LABELS,
   UI_MESSAGES,
 } from "@/lib/config/app";
-import { RosterExportDialog } from "@/components/dashboard/roster-export-dialog";
+import { ExportTitleDialog } from "@/components/dashboard/export-title-dialog";
 import { Spinner } from "@/components/spinner";
 import { parseRosterText } from "@/lib/roster/parse-roster";
 import { readRosterFile } from "@/lib/roster/read-roster-file";
@@ -126,7 +126,9 @@ export function RosterBoardInput({
         </button>
       </div>
       {isExportDialogOpen ? (
-        <RosterExportDialog
+        <ExportTitleDialog
+          dialogTitle={ROSTER_BOARD.exportRosterTitle}
+          initialTitle={ROSTER_BOARD.rosterTitle}
           onCancel={() => setIsExportDialogOpen(false)}
           onConfirm={(title) => {
             onExport(title);

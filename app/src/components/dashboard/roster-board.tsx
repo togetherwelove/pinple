@@ -24,7 +24,6 @@ import {
 } from "@dnd-kit/sortable";
 import { Check, Crown, Download, GripVertical, Pencil, Plus, Trash2, X } from "lucide-react";
 import { type ReactNode, useState } from "react";
-import * as XLSX from "xlsx";
 import {
   EXCEL_EXPORT,
   GROUPING_LIMITS,
@@ -36,7 +35,9 @@ import {
 } from "@/lib/config/app";
 import { GroupUnassignDialog } from "@/components/dashboard/group-unassign-dialog";
 import { LeaderConflictDialog } from "@/components/dashboard/leader-conflict-dialog";
+import { ExportTitleDialog } from "@/components/dashboard/export-title-dialog";
 import { setGroupLeader } from "@/lib/grouping/leader-assignment";
+import { exportGroupResultsToExcel } from "@/lib/roster/export-group-results";
 import {
   groupIdFromOrderItemId,
   groupOrderItemId,
@@ -69,7 +70,6 @@ type RosterBoardProps = {
   onRemovePerson: (personId: string, groupId: string | null) => void;
   onUpdateUnassignedPerson: (personId: string, updates: PersonInput) => void;
   rightPanelHeader: ReactNode;
-  rosterTitle: string;
   totalPeople: number;
 };
 
@@ -541,11 +541,11 @@ export function RosterBoard({
   onRemovePerson,
   onUpdateUnassignedPerson,
   rightPanelHeader,
-  rosterTitle,
   totalPeople,
 }: RosterBoardProps) {
   const [activeName, setActiveName] = useState("");
   const [editingMember, setEditingMember] = useState<GroupMember | null>(null);
+  const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
   const [groupUnassignConfirmation, setGroupUnassignConfirmation] =
     useState<GroupUnassignConfirmation | null>(null);
   const [leaderConflict, setLeaderConflict] = useState<LeaderConflict | null>(null);
@@ -647,18 +647,6 @@ export function RosterBoard({
     setLeaderConflict(null);
   }
 
-  function exportExcel() {
-    const rows = draft.groups.flatMap((group) =>
-      group.members.map((member) => ({
-        "이름": member.name,
-        "조명": displayGroupName(group.name),
-      })),
-    );
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, XLSX.utils.json_to_sheet(rows), EXCEL_EXPORT.sheetName);
-    XLSX.writeFile(workbook, `${rosterTitle}_${EXCEL_EXPORT.fileNameSuffix}.xlsx`);
-  }
-
   return (
     <DndContext
       collisionDetection={boardCollisionDetection}
@@ -684,6 +672,17 @@ export function RosterBoard({
           onConfirm={() => {
             onDraftChange(groupUnassignConfirmation.nextDraft);
             setGroupUnassignConfirmation(null);
+          }}
+        />
+      ) : null}
+      {isExportDialogOpen ? (
+        <ExportTitleDialog
+          dialogTitle={ROSTER_BOARD.export}
+          initialTitle={EXCEL_EXPORT.groupResultFileTitle}
+          onCancel={() => setIsExportDialogOpen(false)}
+          onConfirm={(title) => {
+            exportGroupResultsToExcel(draft.groups, title);
+            setIsExportDialogOpen(false);
           }}
         />
       ) : null}
@@ -735,7 +734,7 @@ export function RosterBoard({
                 <button
                   className={`flex items-center gap-2 px-3 py-2 text-sm ${hasGroupMembers ? "bg-[var(--ink)] text-[var(--surface)] hover:opacity-90" : "cursor-not-allowed bg-[var(--canvas)] text-[var(--muted)]"}`}
                   disabled={!hasGroupMembers}
-                  onClick={exportExcel}
+                  onClick={() => setIsExportDialogOpen(true)}
                   type="button"
                 >
                   <Download size={16} />

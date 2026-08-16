@@ -294,7 +294,6 @@ export function Workspace({
           commitDraft(updateUnassignedPerson(currentDraft, personId, updates))
         }
         rightPanelHeader={null}
-        rosterTitle={ROSTER_BOARD.rosterTitle}
         totalPeople={totalPeople}
       />
     </main>
