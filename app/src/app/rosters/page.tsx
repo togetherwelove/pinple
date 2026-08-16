@@ -6,26 +6,33 @@ import type { StoredGroupResult } from "@/lib/types/domain";
 export default async function RosterPage() {
   const session = await requireAnonymousSession();
   const workspace = await prisma.workspace.findUniqueOrThrow({
-    include: {
-      groupResult: { select: { id: true, members: true } },
-      people: { orderBy: { createdAt: "asc" } },
+    select: {
+      groupResults: {
+        orderBy: { updatedAt: "desc" },
+        select: {
+          createdAt: true,
+          id: true,
+          members: true,
+          name: true,
+          updatedAt: true,
+        },
+      },
     },
     where: { id: session.id },
   });
-  const groupResult: StoredGroupResult | null = workspace.groupResult
-    ? {
-        id: workspace.groupResult.id,
-        members:
-          workspace.groupResult.members as unknown as StoredGroupResult["members"],
-      }
-    : null;
+  const savedGroupResults: StoredGroupResult[] = workspace.groupResults.map(
+    (result) => ({
+      createdAt: result.createdAt.toISOString(),
+      id: result.id,
+      members: result.members as unknown as StoredGroupResult["members"],
+      name: result.name,
+      updatedAt: result.updatedAt.toISOString(),
+    }),
+  );
 
   return (
     <div className="h-full overflow-hidden bg-[var(--canvas)]">
-      <Workspace
-        groupResult={groupResult}
-        people={workspace.people}
-      />
+      <Workspace savedGroupResults={savedGroupResults} />
     </div>
   );
 }

@@ -94,6 +94,7 @@ export type PersonScalarFieldEnum = (typeof PersonScalarFieldEnum)[keyof typeof 
 export const GroupResultScalarFieldEnum = {
   id: 'id',
   workspaceId: 'workspaceId',
+  name: 'name',
   members: 'members',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'

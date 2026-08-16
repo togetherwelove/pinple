@@ -27,6 +27,7 @@ export type AggregateGroupResult = {
 export type GroupResultMinAggregateOutputType = {
   id: string | null
   workspaceId: string | null
+  name: string | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -34,6 +35,7 @@ export type GroupResultMinAggregateOutputType = {
 export type GroupResultMaxAggregateOutputType = {
   id: string | null
   workspaceId: string | null
+  name: string | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -41,6 +43,7 @@ export type GroupResultMaxAggregateOutputType = {
 export type GroupResultCountAggregateOutputType = {
   id: number
   workspaceId: number
+  name: number
   members: number
   createdAt: number
   updatedAt: number
@@ -51,6 +54,7 @@ export type GroupResultCountAggregateOutputType = {
 export type GroupResultMinAggregateInputType = {
   id?: true
   workspaceId?: true
+  name?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -58,6 +62,7 @@ export type GroupResultMinAggregateInputType = {
 export type GroupResultMaxAggregateInputType = {
   id?: true
   workspaceId?: true
+  name?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -65,6 +70,7 @@ export type GroupResultMaxAggregateInputType = {
 export type GroupResultCountAggregateInputType = {
   id?: true
   workspaceId?: true
+  name?: true
   members?: true
   createdAt?: true
   updatedAt?: true
@@ -146,6 +152,7 @@ export type GroupResultGroupByArgs<ExtArgs extends runtime.Types.Extensions.Inte
 export type GroupResultGroupByOutputType = {
   id: string
   workspaceId: string
+  name: string
   members: runtime.JsonValue
   createdAt: Date
   updatedAt: Date
@@ -175,6 +182,7 @@ export type GroupResultWhereInput = {
   NOT?: Prisma.GroupResultWhereInput | Prisma.GroupResultWhereInput[]
   id?: Prisma.UuidFilter<"GroupResult"> | string
   workspaceId?: Prisma.UuidFilter<"GroupResult"> | string
+  name?: Prisma.StringFilter<"GroupResult"> | string
   members?: Prisma.JsonFilter<"GroupResult">
   createdAt?: Prisma.DateTimeFilter<"GroupResult"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"GroupResult"> | Date | string
@@ -184,6 +192,7 @@ export type GroupResultWhereInput = {
 export type GroupResultOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   workspaceId?: Prisma.SortOrder
+  name?: Prisma.SortOrder
   members?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -192,19 +201,22 @@ export type GroupResultOrderByWithRelationInput = {
 
 export type GroupResultWhereUniqueInput = Prisma.AtLeast<{
   id?: string
-  workspaceId?: string
+  workspaceId_name?: Prisma.GroupResultWorkspaceIdNameCompoundUniqueInput
   AND?: Prisma.GroupResultWhereInput | Prisma.GroupResultWhereInput[]
   OR?: Prisma.GroupResultWhereInput[]
   NOT?: Prisma.GroupResultWhereInput | Prisma.GroupResultWhereInput[]
+  workspaceId?: Prisma.UuidFilter<"GroupResult"> | string
+  name?: Prisma.StringFilter<"GroupResult"> | string
   members?: Prisma.JsonFilter<"GroupResult">
   createdAt?: Prisma.DateTimeFilter<"GroupResult"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"GroupResult"> | Date | string
   workspace?: Prisma.XOR<Prisma.WorkspaceScalarRelationFilter, Prisma.WorkspaceWhereInput>
-}, "id" | "workspaceId">
+}, "id" | "workspaceId_name">
 
 export type GroupResultOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   workspaceId?: Prisma.SortOrder
+  name?: Prisma.SortOrder
   members?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -219,6 +231,7 @@ export type GroupResultScalarWhereWithAggregatesInput = {
   NOT?: Prisma.GroupResultScalarWhereWithAggregatesInput | Prisma.GroupResultScalarWhereWithAggregatesInput[]
   id?: Prisma.UuidWithAggregatesFilter<"GroupResult"> | string
   workspaceId?: Prisma.UuidWithAggregatesFilter<"GroupResult"> | string
+  name?: Prisma.StringWithAggregatesFilter<"GroupResult"> | string
   members?: Prisma.JsonWithAggregatesFilter<"GroupResult">
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"GroupResult"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"GroupResult"> | Date | string
@@ -226,15 +239,17 @@ export type GroupResultScalarWhereWithAggregatesInput = {
 
 export type GroupResultCreateInput = {
   id?: string
+  name: string
   members: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
-  workspace: Prisma.WorkspaceCreateNestedOneWithoutGroupResultInput
+  workspace: Prisma.WorkspaceCreateNestedOneWithoutGroupResultsInput
 }
 
 export type GroupResultUncheckedCreateInput = {
   id?: string
   workspaceId: string
+  name: string
   members: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -242,15 +257,17 @@ export type GroupResultUncheckedCreateInput = {
 
 export type GroupResultUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
   members?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  workspace?: Prisma.WorkspaceUpdateOneRequiredWithoutGroupResultNestedInput
+  workspace?: Prisma.WorkspaceUpdateOneRequiredWithoutGroupResultsNestedInput
 }
 
 export type GroupResultUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   workspaceId?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
   members?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -259,6 +276,7 @@ export type GroupResultUncheckedUpdateInput = {
 export type GroupResultCreateManyInput = {
   id?: string
   workspaceId: string
+  name: string
   members: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -266,6 +284,7 @@ export type GroupResultCreateManyInput = {
 
 export type GroupResultUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
   members?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -274,19 +293,31 @@ export type GroupResultUpdateManyMutationInput = {
 export type GroupResultUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   workspaceId?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
   members?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
-export type GroupResultNullableScalarRelationFilter = {
-  is?: Prisma.GroupResultWhereInput | null
-  isNot?: Prisma.GroupResultWhereInput | null
+export type GroupResultListRelationFilter = {
+  every?: Prisma.GroupResultWhereInput
+  some?: Prisma.GroupResultWhereInput
+  none?: Prisma.GroupResultWhereInput
+}
+
+export type GroupResultOrderByRelationAggregateInput = {
+  _count?: Prisma.SortOrder
+}
+
+export type GroupResultWorkspaceIdNameCompoundUniqueInput = {
+  workspaceId: string
+  name: string
 }
 
 export type GroupResultCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   workspaceId?: Prisma.SortOrder
+  name?: Prisma.SortOrder
   members?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -295,6 +326,7 @@ export type GroupResultCountOrderByAggregateInput = {
 export type GroupResultMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   workspaceId?: Prisma.SortOrder
+  name?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -302,44 +334,56 @@ export type GroupResultMaxOrderByAggregateInput = {
 export type GroupResultMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   workspaceId?: Prisma.SortOrder
+  name?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
 
-export type GroupResultCreateNestedOneWithoutWorkspaceInput = {
-  create?: Prisma.XOR<Prisma.GroupResultCreateWithoutWorkspaceInput, Prisma.GroupResultUncheckedCreateWithoutWorkspaceInput>
-  connectOrCreate?: Prisma.GroupResultCreateOrConnectWithoutWorkspaceInput
-  connect?: Prisma.GroupResultWhereUniqueInput
+export type GroupResultCreateNestedManyWithoutWorkspaceInput = {
+  create?: Prisma.XOR<Prisma.GroupResultCreateWithoutWorkspaceInput, Prisma.GroupResultUncheckedCreateWithoutWorkspaceInput> | Prisma.GroupResultCreateWithoutWorkspaceInput[] | Prisma.GroupResultUncheckedCreateWithoutWorkspaceInput[]
+  connectOrCreate?: Prisma.GroupResultCreateOrConnectWithoutWorkspaceInput | Prisma.GroupResultCreateOrConnectWithoutWorkspaceInput[]
+  createMany?: Prisma.GroupResultCreateManyWorkspaceInputEnvelope
+  connect?: Prisma.GroupResultWhereUniqueInput | Prisma.GroupResultWhereUniqueInput[]
 }
 
-export type GroupResultUncheckedCreateNestedOneWithoutWorkspaceInput = {
-  create?: Prisma.XOR<Prisma.GroupResultCreateWithoutWorkspaceInput, Prisma.GroupResultUncheckedCreateWithoutWorkspaceInput>
-  connectOrCreate?: Prisma.GroupResultCreateOrConnectWithoutWorkspaceInput
-  connect?: Prisma.GroupResultWhereUniqueInput
+export type GroupResultUncheckedCreateNestedManyWithoutWorkspaceInput = {
+  create?: Prisma.XOR<Prisma.GroupResultCreateWithoutWorkspaceInput, Prisma.GroupResultUncheckedCreateWithoutWorkspaceInput> | Prisma.GroupResultCreateWithoutWorkspaceInput[] | Prisma.GroupResultUncheckedCreateWithoutWorkspaceInput[]
+  connectOrCreate?: Prisma.GroupResultCreateOrConnectWithoutWorkspaceInput | Prisma.GroupResultCreateOrConnectWithoutWorkspaceInput[]
+  createMany?: Prisma.GroupResultCreateManyWorkspaceInputEnvelope
+  connect?: Prisma.GroupResultWhereUniqueInput | Prisma.GroupResultWhereUniqueInput[]
 }
 
-export type GroupResultUpdateOneWithoutWorkspaceNestedInput = {
-  create?: Prisma.XOR<Prisma.GroupResultCreateWithoutWorkspaceInput, Prisma.GroupResultUncheckedCreateWithoutWorkspaceInput>
-  connectOrCreate?: Prisma.GroupResultCreateOrConnectWithoutWorkspaceInput
-  upsert?: Prisma.GroupResultUpsertWithoutWorkspaceInput
-  disconnect?: Prisma.GroupResultWhereInput | boolean
-  delete?: Prisma.GroupResultWhereInput | boolean
-  connect?: Prisma.GroupResultWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.GroupResultUpdateToOneWithWhereWithoutWorkspaceInput, Prisma.GroupResultUpdateWithoutWorkspaceInput>, Prisma.GroupResultUncheckedUpdateWithoutWorkspaceInput>
+export type GroupResultUpdateManyWithoutWorkspaceNestedInput = {
+  create?: Prisma.XOR<Prisma.GroupResultCreateWithoutWorkspaceInput, Prisma.GroupResultUncheckedCreateWithoutWorkspaceInput> | Prisma.GroupResultCreateWithoutWorkspaceInput[] | Prisma.GroupResultUncheckedCreateWithoutWorkspaceInput[]
+  connectOrCreate?: Prisma.GroupResultCreateOrConnectWithoutWorkspaceInput | Prisma.GroupResultCreateOrConnectWithoutWorkspaceInput[]
+  upsert?: Prisma.GroupResultUpsertWithWhereUniqueWithoutWorkspaceInput | Prisma.GroupResultUpsertWithWhereUniqueWithoutWorkspaceInput[]
+  createMany?: Prisma.GroupResultCreateManyWorkspaceInputEnvelope
+  set?: Prisma.GroupResultWhereUniqueInput | Prisma.GroupResultWhereUniqueInput[]
+  disconnect?: Prisma.GroupResultWhereUniqueInput | Prisma.GroupResultWhereUniqueInput[]
+  delete?: Prisma.GroupResultWhereUniqueInput | Prisma.GroupResultWhereUniqueInput[]
+  connect?: Prisma.GroupResultWhereUniqueInput | Prisma.GroupResultWhereUniqueInput[]
+  update?: Prisma.GroupResultUpdateWithWhereUniqueWithoutWorkspaceInput | Prisma.GroupResultUpdateWithWhereUniqueWithoutWorkspaceInput[]
+  updateMany?: Prisma.GroupResultUpdateManyWithWhereWithoutWorkspaceInput | Prisma.GroupResultUpdateManyWithWhereWithoutWorkspaceInput[]
+  deleteMany?: Prisma.GroupResultScalarWhereInput | Prisma.GroupResultScalarWhereInput[]
 }
 
-export type GroupResultUncheckedUpdateOneWithoutWorkspaceNestedInput = {
-  create?: Prisma.XOR<Prisma.GroupResultCreateWithoutWorkspaceInput, Prisma.GroupResultUncheckedCreateWithoutWorkspaceInput>
-  connectOrCreate?: Prisma.GroupResultCreateOrConnectWithoutWorkspaceInput
-  upsert?: Prisma.GroupResultUpsertWithoutWorkspaceInput
-  disconnect?: Prisma.GroupResultWhereInput | boolean
-  delete?: Prisma.GroupResultWhereInput | boolean
-  connect?: Prisma.GroupResultWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.GroupResultUpdateToOneWithWhereWithoutWorkspaceInput, Prisma.GroupResultUpdateWithoutWorkspaceInput>, Prisma.GroupResultUncheckedUpdateWithoutWorkspaceInput>
+export type GroupResultUncheckedUpdateManyWithoutWorkspaceNestedInput = {
+  create?: Prisma.XOR<Prisma.GroupResultCreateWithoutWorkspaceInput, Prisma.GroupResultUncheckedCreateWithoutWorkspaceInput> | Prisma.GroupResultCreateWithoutWorkspaceInput[] | Prisma.GroupResultUncheckedCreateWithoutWorkspaceInput[]
+  connectOrCreate?: Prisma.GroupResultCreateOrConnectWithoutWorkspaceInput | Prisma.GroupResultCreateOrConnectWithoutWorkspaceInput[]
+  upsert?: Prisma.GroupResultUpsertWithWhereUniqueWithoutWorkspaceInput | Prisma.GroupResultUpsertWithWhereUniqueWithoutWorkspaceInput[]
+  createMany?: Prisma.GroupResultCreateManyWorkspaceInputEnvelope
+  set?: Prisma.GroupResultWhereUniqueInput | Prisma.GroupResultWhereUniqueInput[]
+  disconnect?: Prisma.GroupResultWhereUniqueInput | Prisma.GroupResultWhereUniqueInput[]
+  delete?: Prisma.GroupResultWhereUniqueInput | Prisma.GroupResultWhereUniqueInput[]
+  connect?: Prisma.GroupResultWhereUniqueInput | Prisma.GroupResultWhereUniqueInput[]
+  update?: Prisma.GroupResultUpdateWithWhereUniqueWithoutWorkspaceInput | Prisma.GroupResultUpdateWithWhereUniqueWithoutWorkspaceInput[]
+  updateMany?: Prisma.GroupResultUpdateManyWithWhereWithoutWorkspaceInput | Prisma.GroupResultUpdateManyWithWhereWithoutWorkspaceInput[]
+  deleteMany?: Prisma.GroupResultScalarWhereInput | Prisma.GroupResultScalarWhereInput[]
 }
 
 export type GroupResultCreateWithoutWorkspaceInput = {
   id?: string
+  name: string
   members: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -347,6 +391,7 @@ export type GroupResultCreateWithoutWorkspaceInput = {
 
 export type GroupResultUncheckedCreateWithoutWorkspaceInput = {
   id?: string
+  name: string
   members: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -357,19 +402,50 @@ export type GroupResultCreateOrConnectWithoutWorkspaceInput = {
   create: Prisma.XOR<Prisma.GroupResultCreateWithoutWorkspaceInput, Prisma.GroupResultUncheckedCreateWithoutWorkspaceInput>
 }
 
-export type GroupResultUpsertWithoutWorkspaceInput = {
-  update: Prisma.XOR<Prisma.GroupResultUpdateWithoutWorkspaceInput, Prisma.GroupResultUncheckedUpdateWithoutWorkspaceInput>
-  create: Prisma.XOR<Prisma.GroupResultCreateWithoutWorkspaceInput, Prisma.GroupResultUncheckedCreateWithoutWorkspaceInput>
-  where?: Prisma.GroupResultWhereInput
+export type GroupResultCreateManyWorkspaceInputEnvelope = {
+  data: Prisma.GroupResultCreateManyWorkspaceInput | Prisma.GroupResultCreateManyWorkspaceInput[]
+  skipDuplicates?: boolean
 }
 
-export type GroupResultUpdateToOneWithWhereWithoutWorkspaceInput = {
-  where?: Prisma.GroupResultWhereInput
+export type GroupResultUpsertWithWhereUniqueWithoutWorkspaceInput = {
+  where: Prisma.GroupResultWhereUniqueInput
+  update: Prisma.XOR<Prisma.GroupResultUpdateWithoutWorkspaceInput, Prisma.GroupResultUncheckedUpdateWithoutWorkspaceInput>
+  create: Prisma.XOR<Prisma.GroupResultCreateWithoutWorkspaceInput, Prisma.GroupResultUncheckedCreateWithoutWorkspaceInput>
+}
+
+export type GroupResultUpdateWithWhereUniqueWithoutWorkspaceInput = {
+  where: Prisma.GroupResultWhereUniqueInput
   data: Prisma.XOR<Prisma.GroupResultUpdateWithoutWorkspaceInput, Prisma.GroupResultUncheckedUpdateWithoutWorkspaceInput>
+}
+
+export type GroupResultUpdateManyWithWhereWithoutWorkspaceInput = {
+  where: Prisma.GroupResultScalarWhereInput
+  data: Prisma.XOR<Prisma.GroupResultUpdateManyMutationInput, Prisma.GroupResultUncheckedUpdateManyWithoutWorkspaceInput>
+}
+
+export type GroupResultScalarWhereInput = {
+  AND?: Prisma.GroupResultScalarWhereInput | Prisma.GroupResultScalarWhereInput[]
+  OR?: Prisma.GroupResultScalarWhereInput[]
+  NOT?: Prisma.GroupResultScalarWhereInput | Prisma.GroupResultScalarWhereInput[]
+  id?: Prisma.UuidFilter<"GroupResult"> | string
+  workspaceId?: Prisma.UuidFilter<"GroupResult"> | string
+  name?: Prisma.StringFilter<"GroupResult"> | string
+  members?: Prisma.JsonFilter<"GroupResult">
+  createdAt?: Prisma.DateTimeFilter<"GroupResult"> | Date | string
+  updatedAt?: Prisma.DateTimeFilter<"GroupResult"> | Date | string
+}
+
+export type GroupResultCreateManyWorkspaceInput = {
+  id?: string
+  name: string
+  members: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Date | string
+  updatedAt?: Date | string
 }
 
 export type GroupResultUpdateWithoutWorkspaceInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
   members?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -377,6 +453,15 @@ export type GroupResultUpdateWithoutWorkspaceInput = {
 
 export type GroupResultUncheckedUpdateWithoutWorkspaceInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  members?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type GroupResultUncheckedUpdateManyWithoutWorkspaceInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
   members?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -387,6 +472,7 @@ export type GroupResultUncheckedUpdateWithoutWorkspaceInput = {
 export type GroupResultSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   workspaceId?: boolean
+  name?: boolean
   members?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -396,6 +482,7 @@ export type GroupResultSelect<ExtArgs extends runtime.Types.Extensions.InternalA
 export type GroupResultSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   workspaceId?: boolean
+  name?: boolean
   members?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -405,6 +492,7 @@ export type GroupResultSelectCreateManyAndReturn<ExtArgs extends runtime.Types.E
 export type GroupResultSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   workspaceId?: boolean
+  name?: boolean
   members?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -414,12 +502,13 @@ export type GroupResultSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.E
 export type GroupResultSelectScalar = {
   id?: boolean
   workspaceId?: boolean
+  name?: boolean
   members?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type GroupResultOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "workspaceId" | "members" | "createdAt" | "updatedAt", ExtArgs["result"]["groupResult"]>
+export type GroupResultOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "workspaceId" | "name" | "members" | "createdAt" | "updatedAt", ExtArgs["result"]["groupResult"]>
 export type GroupResultInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   workspace?: boolean | Prisma.WorkspaceDefaultArgs<ExtArgs>
 }
@@ -438,6 +527,7 @@ export type $GroupResultPayload<ExtArgs extends runtime.Types.Extensions.Interna
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
     workspaceId: string
+    name: string
     members: runtime.JsonValue
     createdAt: Date
     updatedAt: Date
@@ -867,6 +957,7 @@ export interface Prisma__GroupResultClient<T, Null = never, ExtArgs extends runt
 export interface GroupResultFieldRefs {
   readonly id: Prisma.FieldRef<"GroupResult", 'String'>
   readonly workspaceId: Prisma.FieldRef<"GroupResult", 'String'>
+  readonly name: Prisma.FieldRef<"GroupResult", 'String'>
   readonly members: Prisma.FieldRef<"GroupResult", 'Json'>
   readonly createdAt: Prisma.FieldRef<"GroupResult", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"GroupResult", 'DateTime'>

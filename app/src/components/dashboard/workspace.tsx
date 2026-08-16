@@ -1,9 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { BoardConfirmationDialog } from "@/components/dashboard/board-confirmation-dialog";
+import { GroupResultNameDialog } from "@/components/dashboard/group-result-name-dialog";
 import { RosterBoard } from "@/components/dashboard/roster-board";
 import { RosterBoardInput } from "@/components/dashboard/roster-board-input";
 import { RegroupConfirmationDialog } from "@/components/dashboard/regroup-confirmation-dialog";
+import { SavedGroupResultsToolbar } from "@/components/dashboard/saved-group-results-toolbar";
 import { Spinner } from "@/components/spinner";
 import { Toast } from "@/components/toast";
 import {
@@ -13,13 +16,13 @@ import {
   TOAST_TONES,
   UI_LABELS,
   UI_MESSAGES,
+  formatDefaultGroupResultName,
 } from "@/lib/config/app";
 import {
   addPeopleToDraft,
   allBoardPeople,
   createRosterBoardDraft,
   removePersonFromDraft,
-  type BoardPerson,
   updateUnassignedPerson,
 } from "@/lib/roster-board/draft";
 import {
@@ -36,9 +39,14 @@ import type {
 } from "@/lib/types/domain";
 
 type WorkspaceProps = {
-  groupResult: StoredGroupResult | null;
-  people: BoardPerson[];
+  savedGroupResults: StoredGroupResult[];
 };
+
+type PendingConfirmation =
+  | { kind: "delete"; name: string; resultId: string }
+  | { kind: "load"; resultId: string }
+  | { kind: "new" }
+  | { kind: "overwrite"; name: string };
 
 type ToastState = {
   id: string;
@@ -46,44 +54,79 @@ type ToastState = {
   tone: (typeof TOAST_TONES)[keyof typeof TOAST_TONES];
 };
 
-async function saveRoster<T>(body: unknown): Promise<T> {
-  const response = await fetch("/api/roster", {
-    body: JSON.stringify(body),
+type SaveGroupResultOutcome =
+  | { duplicate: true }
+  | { duplicate: false; result: StoredGroupResult };
+
+async function saveGroupResult(
+  name: string,
+  draft: RosterBoardDraft,
+  overwrite: boolean,
+): Promise<SaveGroupResultOutcome> {
+  const response = await fetch("/api/group-results", {
+    body: JSON.stringify({
+      name,
+      overwrite,
+      snapshot: {
+        members: createGroupResultMembers(draft),
+        people: allBoardPeople(draft),
+      },
+    }),
     headers: { "Content-Type": "application/json" },
     method: "POST",
   });
-  const responseBody = (await response.json()) as { error?: string } & T;
+  const responseBody = (await response.json()) as {
+    duplicate?: boolean;
+    error?: string;
+  } & StoredGroupResult;
+
+  if (response.status === 409 && responseBody.duplicate) {
+    return { duplicate: true };
+  }
 
   if (!response.ok) {
     throw new Error(responseBody.error ?? UI_MESSAGES.saveFailed);
   }
 
-  return responseBody;
+  return { duplicate: false, result: responseBody };
+}
+
+async function deleteGroupResult(resultId: string) {
+  const response = await fetch(`/api/group-results/${resultId}`, {
+    method: "DELETE",
+  });
+  const responseBody = (await response.json()) as { error?: string; id?: string };
+
+  if (!response.ok) {
+    throw new Error(responseBody.error ?? UI_MESSAGES.groupResultDeleteFailed);
+  }
 }
 
 function createClientMembers(people: PersonInput[]): GroupMember[] {
   return people.map((person) => ({ ...person, id: crypto.randomUUID() }));
 }
 
-export function Workspace({
-  groupResult,
-  people,
-}: WorkspaceProps) {
+export function Workspace({ savedGroupResults }: WorkspaceProps) {
   const draft = useRosterBoardStore((state) => state.draft);
   const hasHydrated = useRosterBoardStore((state) => state.hasHydrated);
   const initializeDraft = useRosterBoardStore((state) => state.initializeDraft);
   const replaceDraft = useRosterBoardStore((state) => state.replaceDraft);
   const setHasHydrated = useRosterBoardStore((state) => state.setHasHydrated);
-  const hasGroupResult = useRef(groupResult !== null);
-  const saveQueue = useRef(Promise.resolve());
   const hasInitializedGroupCount = useRef(false);
+  const [confirmation, setConfirmation] =
+    useState<PendingConfirmation | null>(null);
   const [isGrouping, setIsGrouping] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [isRegroupConfirmationOpen, setIsRegroupConfirmationOpen] = useState(false);
+  const [isSaveDialogOpen, setIsSaveDialogOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [groupCountInput, setGroupCountInput] = useState("1");
+  const [results, setResults] = useState(savedGroupResults);
+  const [selectedResultId, setSelectedResultId] = useState("");
   const [toast, setToast] = useState<ToastState | null>(null);
   const initialDraft = useMemo(
-    () => createRosterBoardDraft(people, groupResult?.members ?? null),
-    [groupResult?.members, people],
+    () => createRosterBoardDraft([], null),
+    [],
   );
 
   useEffect(() => {
@@ -95,10 +138,6 @@ export function Workspace({
       initializeDraft(initialDraft);
     }
   }, [hasHydrated, initialDraft, initializeDraft]);
-
-  useEffect(() => {
-    hasGroupResult.current = groupResult !== null;
-  }, [groupResult]);
 
   useEffect(() => {
     if (draft && !hasInitializedGroupCount.current) {
@@ -120,34 +159,8 @@ export function Workspace({
     showToast(message, TOAST_TONES.error);
   }
 
-  function saveResultDraft(nextDraft: RosterBoardDraft) {
-    if (!hasGroupResult.current) {
-      return;
-    }
-
-    saveQueue.current = saveQueue.current
-      .then(() =>
-        saveRoster({
-          members: createGroupResultMembers(nextDraft),
-          people: allBoardPeople(nextDraft),
-        }),
-      )
-      .then(() => undefined)
-      .catch((error: unknown) => {
-        showError(
-          error instanceof Error
-            ? error.message
-            : UI_MESSAGES.groupResultSaveFailed,
-        );
-      });
-  }
-
-  function commitDraft(nextDraft: RosterBoardDraft, saveResult = true) {
+  function commitDraft(nextDraft: RosterBoardDraft) {
     replaceDraft(nextDraft);
-
-    if (saveResult) {
-      saveResultDraft(nextDraft);
-    }
   }
 
   if (!hasHydrated || !draft) {
@@ -193,18 +206,37 @@ export function Workspace({
       return;
     }
 
-    const nextDraft = createGroupedDraft(currentDraft, groupCount);
-    replaceDraft(nextDraft);
     setIsGrouping(true);
 
     try {
-      await saveQueue.current;
-      await saveRoster<{ id: string }>({
-        members: createGroupResultMembers(nextDraft),
-        people: allBoardPeople(nextDraft),
+      await new Promise<void>((resolve) => {
+        requestAnimationFrame(() => resolve());
       });
+      replaceDraft(createGroupedDraft(currentDraft, groupCount));
+    } finally {
+      setIsGrouping(false);
+    }
+  }
 
-      hasGroupResult.current = true;
+  async function persistResult(name: string, overwrite: boolean) {
+    setIsSaving(true);
+
+    try {
+      const outcome = await saveGroupResult(name, currentDraft, overwrite);
+
+      if (outcome.duplicate) {
+        setIsSaveDialogOpen(false);
+        setConfirmation({ kind: "overwrite", name });
+        return;
+      }
+
+      setResults((currentResults) => [
+        outcome.result,
+        ...currentResults.filter((result) => result.id !== outcome.result.id),
+      ]);
+      setSelectedResultId(outcome.result.id);
+      setIsSaveDialogOpen(false);
+      showToast(UI_MESSAGES.groupResultSaved);
     } catch (error) {
       showError(
         error instanceof Error
@@ -212,9 +244,117 @@ export function Workspace({
           : UI_MESSAGES.groupResultSaveFailed,
       );
     } finally {
-      setIsGrouping(false);
+      setIsSaving(false);
     }
   }
+
+  function loadResult(resultId: string) {
+    const result = results.find((item) => item.id === resultId);
+
+    if (!result) {
+      showError(UI_MESSAGES.groupResultNotFound);
+      return;
+    }
+
+    const nextDraft = createRosterBoardDraft([], result.members);
+    replaceDraft(nextDraft);
+    setGroupCountInput(String(Math.max(nextDraft.groups.length, 1)));
+    setSelectedResultId(result.id);
+    showToast(UI_MESSAGES.groupResultLoaded);
+  }
+
+  function createNewResult() {
+    replaceDraft(createRosterBoardDraft([], null));
+    setGroupCountInput("1");
+    setSelectedResultId("");
+  }
+
+  async function deleteSavedResult(resultId: string) {
+    setIsDeleting(true);
+
+    try {
+      await deleteGroupResult(resultId);
+      setResults((currentResults) =>
+        currentResults.filter((result) => result.id !== resultId),
+      );
+      setSelectedResultId("");
+      setConfirmation(null);
+      showToast(UI_MESSAGES.groupResultDeleted);
+    } catch (error) {
+      showError(
+        error instanceof Error
+          ? error.message
+          : UI_MESSAGES.groupResultDeleteFailed,
+      );
+    } finally {
+      setIsDeleting(false);
+    }
+  }
+
+  function resolveConfirmation() {
+    if (!confirmation) {
+      return;
+    }
+
+    const pendingConfirmation = confirmation;
+
+    if (pendingConfirmation.kind === "delete") {
+      void deleteSavedResult(pendingConfirmation.resultId);
+      return;
+    }
+
+    setConfirmation(null);
+
+    if (pendingConfirmation.kind === "load") {
+      loadResult(pendingConfirmation.resultId);
+      return;
+    }
+
+    if (pendingConfirmation.kind === "new") {
+      createNewResult();
+      return;
+    }
+
+    void persistResult(pendingConfirmation.name, true);
+  }
+
+  const confirmationContent = confirmation
+    ? confirmation.kind === "delete"
+      ? {
+          confirmLabel: ROSTER_BOARD.deleteResult,
+          message: UI_MESSAGES.groupResultDeleteConfirmation(
+            confirmation.name,
+          ),
+          title: ROSTER_BOARD.deleteResultTitle,
+          variant: "danger" as const,
+        }
+      : confirmation.kind === "load"
+      ? {
+          confirmLabel: UI_LABELS.loadResult,
+          message: UI_MESSAGES.loadResultConfirmation,
+          title: ROSTER_BOARD.loadResultTitle,
+          variant: "default" as const,
+        }
+      : confirmation.kind === "new"
+        ? {
+            confirmLabel: ROSTER_BOARD.createNewResult,
+            message: UI_MESSAGES.newResultConfirmation,
+            title: ROSTER_BOARD.createNewResultTitle,
+            variant: "danger" as const,
+          }
+        : {
+            confirmLabel: UI_LABELS.overwrite,
+            message: UI_MESSAGES.overwriteResultConfirmation,
+            title: ROSTER_BOARD.overwriteResultTitle,
+            variant: "danger" as const,
+          }
+    : null;
+
+  const selectedResult = results.find(
+    (result) => result.id === selectedResultId,
+  );
+  const suggestedResultName =
+    selectedResult?.name ?? formatDefaultGroupResultName(new Date());
 
   function requestGrouping() {
     if (currentDraft.groups.some((group) => group.members.length > 0)) {
@@ -244,32 +384,87 @@ export function Workspace({
           }}
         />
       ) : null}
+      {isSaveDialogOpen ? (
+        <GroupResultNameDialog
+          initialName={suggestedResultName}
+          isSaving={isSaving}
+          onCancel={() => setIsSaveDialogOpen(false)}
+          onConfirm={(name) => void persistResult(name, false)}
+        />
+      ) : null}
+      {confirmationContent ? (
+        <BoardConfirmationDialog
+          {...confirmationContent}
+          isConfirming={isDeleting}
+          onCancel={() => setConfirmation(null)}
+          onConfirm={resolveConfirmation}
+        />
+      ) : null}
       <RosterBoard
         draft={currentDraft}
         leftPanelFooter={
-          <div className="flex flex-col items-stretch gap-3 border border-[var(--border)] bg-[var(--surface)] p-3">
-            <label className="text-sm font-medium">
-              {ROSTER_BOARD.groupCount}
-              <input
-                className="mt-2 w-full border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm"
-                inputMode="numeric"
-                max={Math.max(maximumGroupCount, 1)}
-                min={GROUPING_LIMITS.minimumGroupCount}
-                onChange={(event) => setGroupCountInput(event.target.value)}
-                type="number"
-                value={groupCountInput}
-              />
-            </label>
-            <p className="text-sm text-[var(--muted)]">{groupingMessage}</p>
-            <button
-              className={`flex items-center justify-center gap-2 px-4 py-2 text-sm ${canRunGrouping ? INPUT_DEPENDENT_BUTTON_CLASSES.enabled : INPUT_DEPENDENT_BUTTON_CLASSES.disabled}`}
-              disabled={!canRunGrouping}
-              onClick={requestGrouping}
-              type="button"
-            >
-              {isGrouping ? <Spinner size="sm" /> : null}
-              {isGrouping ? UI_LABELS.grouping : ROSTER_BOARD.autoGrouping}
-            </button>
+          <div className="space-y-4">
+            <div className="flex flex-col items-stretch gap-3 border border-[var(--border)] bg-[var(--surface)] p-3">
+              <label className="text-sm font-medium">
+                {ROSTER_BOARD.groupCount}
+                <input
+                  className="mt-2 w-full border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm"
+                  inputMode="numeric"
+                  max={Math.max(maximumGroupCount, 1)}
+                  min={GROUPING_LIMITS.minimumGroupCount}
+                  onChange={(event) => setGroupCountInput(event.target.value)}
+                  type="number"
+                  value={groupCountInput}
+                />
+              </label>
+              <p className="text-sm text-[var(--muted)]">{groupingMessage}</p>
+              <button
+                className={`flex items-center justify-center gap-2 px-4 py-2 text-sm ${canRunGrouping ? INPUT_DEPENDENT_BUTTON_CLASSES.enabled : INPUT_DEPENDENT_BUTTON_CLASSES.disabled}`}
+                disabled={!canRunGrouping}
+                onClick={requestGrouping}
+                type="button"
+              >
+                {isGrouping ? <Spinner size="sm" /> : null}
+                {isGrouping ? UI_LABELS.grouping : ROSTER_BOARD.autoGrouping}
+              </button>
+            </div>
+            <SavedGroupResultsToolbar
+              canSave={totalPeople > 0 && !isSaving}
+              onCreateNew={() => {
+                if (totalPeople > 0) {
+                  setConfirmation({ kind: "new" });
+                } else {
+                  createNewResult();
+                }
+              }}
+              onDelete={() => {
+                if (selectedResult) {
+                  setConfirmation({
+                    kind: "delete",
+                    name: selectedResult.name,
+                    resultId: selectedResult.id,
+                  });
+                }
+              }}
+              onSave={() => setIsSaveDialogOpen(true)}
+              onSelect={(resultId) => {
+                if (!resultId) {
+                  setSelectedResultId("");
+                  return;
+                }
+
+                if (totalPeople > 0) {
+                  setConfirmation({
+                    kind: "load",
+                    resultId,
+                  });
+                } else {
+                  loadResult(resultId);
+                }
+              }}
+              savedResults={results}
+              selectedResultId={selectedResultId}
+            />
           </div>
         }
         leftPanelHeader={

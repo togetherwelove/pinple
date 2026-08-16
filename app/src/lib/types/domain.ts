@@ -28,8 +28,11 @@ export type GroupResultMembers = {
 };
 
 export type StoredGroupResult = {
+  createdAt: string;
   id: string;
   members: GroupResultMembers;
+  name: string;
+  updatedAt: string;
 };
 
 export type RosterBoardDraft = {

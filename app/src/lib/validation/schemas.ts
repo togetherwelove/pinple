@@ -75,3 +75,15 @@ export const boardSnapshotSchema = z
       });
     }
   });
+
+export const saveGroupResultSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(1)
+    .max(GROUPING_LIMITS.groupResultNameMaximumLength),
+  overwrite: z.boolean().optional().default(false),
+  snapshot: boardSnapshotSchema,
+});
+
+export const groupResultIdSchema = z.string().uuid();

@@ -29,12 +29,30 @@ export const ROSTER_PARSING = {
 
 export const GROUPING_LIMITS = {
   groupNameMaximumLength: 80,
+  groupResultNameMaximumLength: 80,
   maximumGroupCount: 50,
   minimumGroupCount: 1,
   minimumPeoplePerGroup: 1,
 } as const;
 
 export const GROUP_NAME_SUFFIX = "조";
+
+export const GROUP_RESULT_NAME = {
+  dateLocale: "sv-SE",
+  suffix: "조 결과",
+  timeZone: "Asia/Seoul",
+} as const;
+
+export function formatDefaultGroupResultName(date: Date) {
+  const formattedDate = new Intl.DateTimeFormat(GROUP_RESULT_NAME.dateLocale, {
+    day: "2-digit",
+    month: "2-digit",
+    timeZone: GROUP_RESULT_NAME.timeZone,
+    year: "numeric",
+  }).format(date);
+
+  return `${formattedDate} ${GROUP_RESULT_NAME.suffix}`;
+}
 
 export const LEGACY_GROUP_NAME_PREFIX = "그룹";
 
@@ -65,10 +83,23 @@ export const ROSTER_BOARD = {
   addedPeople: "대기 명단에 인원을 추가했습니다.",
   autoGrouping: "자동 조 편성",
   boardTitle: "명단 관리 보드",
-  distributionPreview: (groupSizes: number[]) =>
-    `예상 배정: ${groupSizes.map((size) => `${size}명`).join(" · ")}`,
+  distributionPreview: (groupSizes: number[]) => {
+    const groupCountBySize = new Map<number, number>();
+
+    groupSizes.forEach((size) => {
+      groupCountBySize.set(size, (groupCountBySize.get(size) ?? 0) + 1);
+    });
+
+    return `예상 배정: ${[...groupCountBySize.entries()]
+      .map(([size, count]) => `${size}명씩 ${count}조`)
+      .join(" · ")}`;
+  },
   createGroup: "새 조 만들기",
   createGroupHint: "인원 카드를 여기에 놓으면 새 조가 생성됩니다.",
+  createNewResult: "새로운 조 편성",
+  createNewResultTitle: "새로운 조 편성을 시작할까요?",
+  deleteResult: "조 결과 삭제",
+  deleteResultTitle: "조 결과를 삭제할까요?",
   editGroupName: "조 이름 변경",
   groupCount: "조 개수",
   groupName: "조 이름",
@@ -87,6 +118,12 @@ export const ROSTER_BOARD = {
   personName: "이름",
   rosterTitle: "명단",
   regroupTitle: "조를 다시 편성할까요?",
+  resultName: "조 편성 이름",
+  resultNamePlaceholder: "예: 오늘 모임 조 편성",
+  loadResultTitle: "저장된 조 편성을 불러올까요?",
+  overwriteResultTitle: "기존 조 편성을 덮어쓸까요?",
+  savedResults: "조 결과",
+  selectSavedResult: "불러올 조 편성 선택",
   removePerson: "인원 삭제",
   savePerson: "수정 완료",
   unassigned: "대기 명단",
@@ -128,6 +165,13 @@ export const UI_MESSAGES = {
     `조 개수는 1개 이상 ${maximumCount}개 이하로 입력해 주세요.`,
   groupResultNotFound: "조 편성 결과를 찾을 수 없습니다.",
   groupResultInvalid: "조 편성 데이터를 확인해 주세요.",
+  groupResultNameDuplicate: "같은 이름의 조 편성이 이미 있습니다.",
+  groupResultSaved: "조 편성을 저장했습니다.",
+  groupResultLoaded: "조 결과를 불러왔습니다.",
+  groupResultDeleted: "조 결과를 삭제했습니다.",
+  groupResultDeleteFailed: "조 결과를 삭제하지 못했습니다.",
+  groupResultDeleteConfirmation: (name: string) =>
+    `‘${name}’ 저장 항목을 영구적으로 삭제합니다. 현재 브라우저 보드는 유지됩니다.`,
   groupResultSaveFailed: "조 편성 결과를 저장하지 못했습니다. 브라우저 초안은 유지됩니다.",
   groupUnassignConfirmation: (groupName: string, memberCount: number) =>
     `${groupName}의 ${memberCount}명을 대기 명단으로 이동할까요?`,
@@ -136,6 +180,10 @@ export const UI_MESSAGES = {
   leaderConflict: "대상 조에 이미 조장이 있습니다.",
   noPeople: "먼저 인원 정보를 등록해 주세요.",
   regroupConfirmation: "현재 조 편성은 새 결과로 교체됩니다.",
+  loadResultConfirmation: "현재 브라우저 작업 내용을 버리고 선택한 조 편성을 불러옵니다.",
+  newResultConfirmation: "현재 명단과 조 편성을 모두 비우고 새로 시작합니다.",
+  noSavedGroupResults: "아직 저장된 조 편성이 없습니다.",
+  overwriteResultConfirmation: "기존 저장 내용을 현재 조 편성으로 덮어쓸까요?",
   saveFailed: "저장하지 못했습니다. 다시 시도해 주세요.",
   unknownError: "예상하지 못한 오류가 발생했습니다.",
 } as const;
@@ -153,12 +201,16 @@ export const UI_LABELS = {
   leaderAssignmentMode: "조장 선출 방식",
   loadingBoard: "명단 보드를 준비하는 중...",
   loadingRosterFile: "불러오는 중...",
+  loadResult: "불러오기",
+  loadingResult: "불러오는 중...",
   moveGroupToUnassigned: "대기 명단으로 이동",
   moveGroupToUnassignedTitle: "조 전체 이동",
   retainExistingLeader: "A. 기존 조장 유지",
   regroup: "다시 편성",
   revokeLeader: "조장 해제",
   savingRoster: "저장 중...",
+  saveResult: "저장",
+  overwrite: "덮어쓰기",
   saveGroupName: "조 이름 저장",
 } as const;
 
