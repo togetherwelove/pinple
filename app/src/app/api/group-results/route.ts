@@ -1,12 +1,12 @@
 import { errorResponse } from "@/lib/api/response";
 import { UI_MESSAGES } from "@/lib/config/app";
 import { prisma } from "@/lib/prisma";
-import { requireAnonymousSession } from "@/lib/session/anonymous-session";
+import { requireWorkspaceSession } from "@/lib/session/workspace-session";
 import { saveGroupResultSchema } from "@/lib/validation/schemas";
 
 export async function POST(request: Request) {
   try {
-    const session = await requireAnonymousSession();
+    const session = await requireWorkspaceSession();
     const parsed = saveGroupResultSchema.safeParse(await request.json());
 
     if (!parsed.success) {

@@ -1,7 +1,7 @@
-import { AnonymousSessionError } from "@/lib/session/anonymous-session";
+import { WorkspaceSessionError } from "@/lib/session/workspace-session";
 
 export function errorResponse(error: unknown) {
-  if (error instanceof AnonymousSessionError) {
+  if (error instanceof WorkspaceSessionError) {
     return Response.json({ error: "브라우저 세션을 확인해 주세요." }, { status: 401 });
   }
 

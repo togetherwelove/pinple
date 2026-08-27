@@ -1,7 +1,7 @@
 import { errorResponse } from "@/lib/api/response";
 import { UI_MESSAGES } from "@/lib/config/app";
 import { prisma } from "@/lib/prisma";
-import { requireAnonymousSession } from "@/lib/session/anonymous-session";
+import { requireWorkspaceSession } from "@/lib/session/workspace-session";
 import { groupResultIdSchema } from "@/lib/validation/schemas";
 
 type GroupResultRouteContext = {
@@ -13,7 +13,7 @@ export async function DELETE(
   context: GroupResultRouteContext,
 ) {
   try {
-    const session = await requireAnonymousSession();
+    const session = await requireWorkspaceSession();
     const parsedId = groupResultIdSchema.safeParse(
       (await context.params).groupResultId,
     );

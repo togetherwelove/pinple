@@ -1,29 +1,27 @@
-import { NextResponse, type NextRequest } from "next/server";
+import type { NextRequest } from "next/server";
 import {
   ANONYMOUS_SESSION_COOKIE,
   ANONYMOUS_SESSION_MAX_AGE_SECONDS,
   isAnonymousSessionId,
 } from "@/lib/session/config";
+import { updateSupabaseSession } from "@/lib/supabase/proxy";
 
-export function proxy(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const currentSessionId = request.cookies.get(ANONYMOUS_SESSION_COOKIE)?.value;
+  let createdSessionId: string | null = null;
 
-  if (isAnonymousSessionId(currentSessionId)) {
-    return NextResponse.next();
+  if (!isAnonymousSessionId(currentSessionId)) {
+    createdSessionId = crypto.randomUUID();
+    request.cookies.set(ANONYMOUS_SESSION_COOKIE, createdSessionId);
   }
 
-  const sessionId = crypto.randomUUID();
-  const requestHeaders = new Headers(request.headers);
-  const currentCookieHeader = requestHeaders.get("cookie");
-  const sessionCookie = `${ANONYMOUS_SESSION_COOKIE}=${sessionId}`;
+  const response = await updateSupabaseSession(request);
 
-  requestHeaders.set(
-    "cookie",
-    currentCookieHeader ? `${currentCookieHeader}; ${sessionCookie}` : sessionCookie,
-  );
+  if (!createdSessionId) {
+    return response;
+  }
 
-  const response = NextResponse.next({ request: { headers: requestHeaders } });
-  response.cookies.set(ANONYMOUS_SESSION_COOKIE, sessionId, {
+  response.cookies.set(ANONYMOUS_SESSION_COOKIE, createdSessionId, {
     httpOnly: true,
     maxAge: ANONYMOUS_SESSION_MAX_AGE_SECONDS,
     path: "/",

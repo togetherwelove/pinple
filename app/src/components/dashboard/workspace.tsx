@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { AccountSyncPanel } from "@/components/dashboard/account-sync-panel";
 import { BoardConfirmationDialog } from "@/components/dashboard/board-confirmation-dialog";
 import { GroupResultNameDialog } from "@/components/dashboard/group-result-name-dialog";
 import { RosterBoard } from "@/components/dashboard/roster-board";
@@ -31,6 +32,7 @@ import {
   createGroupResultMembers,
 } from "@/lib/roster-board/group-result";
 import { useRosterBoardStore } from "@/lib/roster-board/store";
+import type { WorkspaceAccount } from "@/lib/session/workspace-session";
 import type {
   GroupMember,
   PersonInput,
@@ -39,6 +41,8 @@ import type {
 } from "@/lib/types/domain";
 
 type WorkspaceProps = {
+  account: WorkspaceAccount | null;
+  hasAuthenticationError: boolean;
   savedGroupResults: StoredGroupResult[];
 };
 
@@ -106,7 +110,11 @@ function createClientMembers(people: PersonInput[]): GroupMember[] {
   return people.map((person) => ({ ...person, id: crypto.randomUUID() }));
 }
 
-export function Workspace({ savedGroupResults }: WorkspaceProps) {
+export function Workspace({
+  account,
+  hasAuthenticationError,
+  savedGroupResults,
+}: WorkspaceProps) {
   const draft = useRosterBoardStore((state) => state.draft);
   const hasHydrated = useRosterBoardStore((state) => state.hasHydrated);
   const initializeDraft = useRosterBoardStore((state) => state.initializeDraft);
@@ -468,10 +476,16 @@ export function Workspace({ savedGroupResults }: WorkspaceProps) {
           </div>
         }
         leftPanelHeader={
-          <RosterBoardInput
-            onAddPeople={handleAddPeople}
-            onError={showError}
-          />
+          <div className="space-y-4">
+            <AccountSyncPanel
+              account={account}
+              hasAuthenticationError={hasAuthenticationError}
+            />
+            <RosterBoardInput
+              onAddPeople={handleAddPeople}
+              onError={showError}
+            />
+          </div>
         }
         onDraftChange={commitDraft}
         onRemovePerson={(personId, groupId) =>

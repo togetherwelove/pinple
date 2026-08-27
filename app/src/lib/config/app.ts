@@ -7,8 +7,31 @@ export function formatCopyrightNotice(year: number) {
 }
 
 export const ROUTES = {
+  authCallback: "/auth/callback",
   rosters: "/rosters",
   root: "/",
+} as const;
+
+export const AUTH_QUERY = {
+  errorParameter: "auth",
+  errorValue: "error",
+} as const;
+
+export const ACCOUNT_SYNC = {
+  connectedDescription: "저장한 조 편성을 다른 컴퓨터와 모바일에서도 불러올 수 있습니다.",
+  connectedTitle: "Google 계정에 연결됨",
+  googleLogin: "Google로 로그인",
+  loginDescription: "Google 로그인 후 저장하면 다른 컴퓨터와 모바일에서도 같은 조 편성을 이어서 사용할 수 있어요.",
+  loginError: "Google 로그인을 시작하지 못했습니다. 잠시 후 다시 시도해 주세요.",
+  loginTitle: "다른 기기에서도 이어서 작업하세요",
+  logout: "로그아웃",
+  logoutError: "로그아웃하지 못했습니다. 잠시 후 다시 시도해 주세요.",
+  transferredResultSuffix: "가져옴",
+} as const;
+
+export const GOOGLE_AUTH = {
+  accountSelectionPrompt: "select_account",
+  provider: "google",
 } as const;
 
 export const INPUT_DEPENDENT_BUTTON_CLASSES = {

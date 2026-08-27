@@ -1,10 +1,16 @@
 import { Workspace } from "@/components/dashboard/workspace";
+import { AUTH_QUERY } from "@/lib/config/app";
 import { prisma } from "@/lib/prisma";
-import { requireAnonymousSession } from "@/lib/session/anonymous-session";
+import { requireWorkspaceSession } from "@/lib/session/workspace-session";
 import type { StoredGroupResult } from "@/lib/types/domain";
 
-export default async function RosterPage() {
-  const session = await requireAnonymousSession();
+type RosterPageProps = {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+};
+
+export default async function RosterPage({ searchParams }: RosterPageProps) {
+  const session = await requireWorkspaceSession();
+  const authenticationState = (await searchParams)[AUTH_QUERY.errorParameter];
   const workspace = await prisma.workspace.findUniqueOrThrow({
     select: {
       groupResults: {
@@ -32,7 +38,11 @@ export default async function RosterPage() {
 
   return (
     <div className="h-full overflow-hidden bg-[var(--canvas)]">
-      <Workspace savedGroupResults={savedGroupResults} />
+      <Workspace
+        account={session.account}
+        hasAuthenticationError={authenticationState === AUTH_QUERY.errorValue}
+        savedGroupResults={savedGroupResults}
+      />
     </div>
   );
 }
